@@ -3563,6 +3563,7 @@ function render(){
  if(!window.A20WORLD?.hidesPlayer())WORLD.drawKid(ctx,player.x,player.y,player.dir,player.walking,player.shirt,false,(['sit','bench','swing'].includes(player.pose)||(player.pose==='eat'&&player.eatRestore!=='stand')),player.pose);
  if(player.scene==='street')window.A20WORLD?.render(ctx,player);
  SHOPS.renderHeld(ctx,player.x,player.y,player.dir,player.pose,t);
+ window.A25NET?.renderSelfBubble(ctx,player.scene);
  if(running&&!openDialog&&!window.A20WORLD?.hidesPlayer()){let h=nearest();if(h){const xx=h.x,yy=player.scene==='street'?(h.type==='swing'?126:h.type==='door'?153:165):154;
   let bob=Math.round(Math.sin(t*3)*2);ctx.fillStyle='#f4e3af';ctx.fillRect(Math.round(xx-5),yy+bob,11,11);
   ctx.fillStyle='#3c5159';ctx.font='bold 8px monospace';ctx.fillText('E',Math.round(xx-2),yy+8+bob);
@@ -3982,6 +3983,9 @@ const friends=new Map();
 const subscribers=new Set();
 function announce(d){for(const callback of subscribers){try{callback(d)}catch(e){console.warn("A26 network subscriber",e)}}}
 let ws=null,myId=null,currentRoom=null,lastSend=0,ready=false,manualClose=false;
+// The server echoes accepted chat to EVERYONE, including the speaker.
+// Keep the speaker's bubble separately, since `friends` contains only peers.
+let selfBubble='',selfBubbleUntil=0;
 const PREFIX='2006_a25_name';
 try{const name=localStorage.getItem(PREFIX);if(name)localName.value=name}catch{}
 const fromURL=new URLSearchParams(location.search).get('room');
@@ -3998,7 +4002,7 @@ function logEntry(name,text,kind='chat'){
 }
 function updateCount(){roomCount.textContent=ready?`${friends.size+1}명 접속`:'오프라인'}
 function send(obj){if(ws&&ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify(obj))}
-function close(){announce({type:'network_close'});manualClose=true;if(ws){ws.close();ws=null}ready=false;myId=null;currentRoom=null;friends.clear();connectBtn.textContent='방 입장';label('연결 안 됨');updateCount();message.disabled=true;}
+function close(){selfBubble='';selfBubbleUntil=0;announce({type:'network_close'});manualClose=true;if(ws){ws.close();ws=null}ready=false;myId=null;currentRoom=null;friends.clear();connectBtn.textContent='방 입장';label('연결 안 됨');updateCount();message.disabled=true;}
 function assignState(d){
  let old=friends.get(d.id);if(!old){old={id:d.id,name:d.name||'친구',renderX:d.x,renderY:d.y};friends.set(d.id,old)}
  if(d.name)old.name=d.name;
@@ -4031,7 +4035,10 @@ function connect(){
   if(msg.type==='left'){const friend=friends.get(msg.id);if(friend)logEntry('안내',friend.name+' 님이 나갔어.','system');friends.delete(msg.id);updateCount();return}
   if(msg.type==='chat'){
    logEntry(msg.name,msg.text,'chat');
-   const friend=friends.get(msg.id);if(friend){friend.bubble=msg.text;friend.bubbleUntil=performance.now()+5100}
+   // For the author, show the exact same bubble shown to other players.
+   // React to the server echo, not the submit event, so rejected chat is not displayed.
+   if(msg.id===myId){selfBubble=msg.text;selfBubbleUntil=performance.now()+5100;}
+   else {const friend=friends.get(msg.id);if(friend){friend.bubble=msg.text;friend.bubbleUntil=performance.now()+5100}}
    return;
   }
   if(msg.type==='error'){
@@ -4042,7 +4049,7 @@ function connect(){
   }
  });
  active.addEventListener('close',()=>{
-  if(ws!==active)return;announce({type:'network_close'});ws=null;ready=false;myId=null;currentRoom=null;friends.clear();updateCount();connectBtn.textContent='방 입장';message.disabled=true;
+  if(ws!==active)return;selfBubble='';selfBubbleUntil=0;announce({type:'network_close'});ws=null;ready=false;myId=null;currentRoom=null;friends.clear();updateCount();connectBtn.textContent='방 입장';message.disabled=true;
   label(manualClose?'연결 안 됨':'서버 연결 종료');
   if(!manualClose)logEntry('안내','서버 연결이 끊어졌어. 다시 입장해 줘.','system');
  });
@@ -4072,6 +4079,21 @@ function tick(dt,p,running){
   if(Number.isFinite(f.x)){const a=Math.min(1,dt*12);f.renderX+=(f.x-f.renderX)*a;f.renderY+=(f.y-f.renderY)*a;}
  }
 }
+// One painter for remote and local bubbles: identical styling and lifetime.
+function drawBubble(c,x,top,body){
+ const txt=body.length>24?body.slice(0,23)+'…':body;
+ const bw=Math.min(205,Math.max(37,txt.length*8+13));
+ const cx=Math.round(x),yy=Math.round(top);
+ c.fillStyle='#fff9e8';c.fillRect(Math.round(cx-bw/2),yy,bw,22);
+ c.strokeStyle='#a18f75';c.strokeRect(Math.round(cx-bw/2)+.5,yy+.5,bw-1,21);
+ c.fillStyle='#23394a';c.font='9px sans-serif';c.fillText(txt,cx,yy+15);
+}
+// Called after the local avatar is drawn so the speech bubble stays visible.
+function renderSelfBubble(c,scene){
+ if(!ready||player.scene!==scene||!selfBubble||performance.now()>=selfBubbleUntil)return;
+ c.save();c.textAlign='center';c.textBaseline='bottom';
+ drawBubble(c,player.x,player.y-81,selfBubble);c.restore();
+}
 function render(c,cam,scene){
  if(!ready)return;
  c.save();c.textAlign='center';c.textBaseline='bottom';
@@ -4083,17 +4105,11 @@ function render(c,cam,scene){
   const w=Math.min(95,Math.max(28,f.name.length*8+12)),ny=f.renderY-42;
   c.fillStyle='#20374bcc';c.fillRect(Math.round(f.renderX-w/2),Math.round(ny-12),w,13);
   c.fillStyle='#fff2d5';c.font='bold 9px sans-serif';c.fillText(f.name,Math.round(f.renderX),Math.round(ny-1));
-  if(f.bubble && performance.now()<f.bubbleUntil){
-    const txt=f.bubble.length>24?f.bubble.slice(0,23)+'…':f.bubble;
-    const bw=Math.min(205,Math.max(37,txt.length*8+13));
-    c.fillStyle='#fff9e8';c.fillRect(Math.round(f.renderX-bw/2),Math.round(ny-39),bw,22);
-    c.strokeStyle='#a18f75';c.strokeRect(Math.round(f.renderX-bw/2)+.5,Math.round(ny-39)+.5,bw-1,21);
-    c.fillStyle='#23394a';c.font='9px sans-serif';c.fillText(txt,Math.round(f.renderX),Math.round(ny-24));
-  }
+  if(f.bubble && performance.now()<f.bubbleUntil)drawBubble(c,f.renderX,ny-39,f.bubble);
  }
  c.restore();
 }
-window.A25NET={connect,close,tick,render,send,subscribe(fn){subscribers.add(fn);return()=>subscribers.delete(fn)},get state(){return{ready,room:currentRoom,id:myId,peers:friends.size}},get peers(){return [...friends.values()].map(f=>({id:f.id,name:f.name,scene:f.scene,x:f.x,y:f.y,pose:f.pose}))}};
+window.A25NET={connect,close,tick,render,renderSelfBubble,send,subscribe(fn){subscribers.add(fn);return()=>subscribers.delete(fn)},get state(){return{ready,room:currentRoom,id:myId,peers:friends.size}},get peers(){return [...friends.values()].map(f=>({id:f.id,name:f.name,scene:f.scene,x:f.x,y:f.y,pose:f.pose}))}};
 updateCount();
 })();
 
