@@ -1,0 +1,14 @@
+{
+  "name": "2006-reminiscence-web-a27",
+  "version": "0.27.0",
+  "private": true,
+  "description": "2006년 90년대생의 회상 - 12인 멀티플레이 링크 공유형 웹앱",
+  "scripts": {
+    "start": "node server.js",
+    "test:coop": "node tests/test_a26_coop.js",
+    "test:share": "node tests/test_a27_share.js"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
