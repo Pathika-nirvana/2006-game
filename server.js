@@ -50,7 +50,7 @@ function frame(payload,opcode=1){
 }
 function send(session,obj){if(!session.socket.writable)return;try{const data=frame(JSON.stringify(obj));if(data)session.socket.write(data)}catch{end(session)}}
 function cast(room,msg,except=null){for(const session of rooms.get(room)||[])if(session!==except)send(session,msg)}
-function publicState(s){return {id:s.id,name:s.name,scene:s.state.scene,x:s.state.x,y:s.state.y,pose:s.state.pose,dir:s.state.dir,look:s.state.look}}
+function publicState(s){return {id:s.id,name:s.name,scene:s.state.scene,x:s.state.x,y:s.state.y,pose:s.state.pose,dir:s.state.dir,look:s.state.look,held:s.state.held||null}}
 function end(s){
   if(s.closed)return;s.closed=true;sessions.delete(s);
   if(s.room)PLAY.clearUser(physicsRooms.get(s.room),s.id);
@@ -60,7 +60,8 @@ function end(s){
 const code=/^[A-Z0-9]{4,8}$/;
 const validScene=/^[a-z0-9_]{1,30}$/;
 const poses=new Set(['stand','walk','jump','sit','bench','wave','eat','climb','swing']);
-const looks=new Set(['boy_shaggy','boy_highlight','boy_sanggo','boy_sports','girl_pony','girl_bob','boy_taekwondo','girl_taekwondo']);
+const looks=new Set(["boy_main_blue", "boy_main_green", "boy_main_dobok", "girl_main_pink", "girl_main_yellow", "girl_main_dobok"]);
+const heldFoods=new Set(['zzon','fish','cola','stars','ring','straw','tteok','odeng','slushred','slushblue','skewer','fry','sundae','gimmari','hotdog','broth']);
 function cleanName(s){return String(s||'').normalize('NFC').replace(/[<>\x00-\x1f\x7f]/g,'').trim().slice(0,14)||'이름 없는 친구'}
 function onMessage(s,obj){
  if(!obj||typeof obj!=='object'||Array.isArray(obj))return;
@@ -90,8 +91,8 @@ function onMessage(s,obj){
    const x=Number(obj.x),y=Number(obj.y);if(!Number.isFinite(x)||!Number.isFinite(y))return;
    const arena=physicsRooms.get(s.room);const occ=PLAY.occupancy(arena,s.id),flight=arena?.flights.get(s.id);
    if(obj.scene!=='street'&&(occ||flight))PLAY.clearUser(arena,s.id);
-   if(!occ&&!flight){s.state={scene:obj.scene,x:Math.max(0,Math.min(20000,x)),y:Math.max(-100,Math.min(500,y)),pose:poses.has(obj.pose)?obj.pose:'stand',dir:obj.dir===0?0:1,look:looks.has(obj.look)?obj.look:'boy_shaggy'};}
-   else{s.state.dir=obj.dir===0?0:1;s.state.look=looks.has(obj.look)?obj.look:'boy_shaggy'}
+   if(!occ&&!flight){s.state={scene:obj.scene,x:Math.max(0,Math.min(20000,x)),y:Math.max(-100,Math.min(500,y)),pose:poses.has(obj.pose)?obj.pose:'stand',dir:obj.dir===0?0:1,look:looks.has(obj.look)?obj.look:'boy_main_blue',held:heldFoods.has(obj.held)?obj.held:null};}
+   else{s.state.dir=obj.dir===0?0:1;s.state.look=looks.has(obj.look)?obj.look:'boy_main_blue';s.state.held=heldFoods.has(obj.held)?obj.held:null}
    cast(s.room,{type:'state',id:s.id,...s.state},s);return;
  }
  if(obj.type==='chat'){
@@ -138,7 +139,7 @@ app.on('upgrade',(req,socket,head)=>{
   }
   const accept=crypto.createHash('sha1').update(key+G).digest('base64');
   socket.write('HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: '+accept+'\r\n\r\n');
-  const s={socket,id:crypto.randomUUID().slice(0,12),name:'',room:null,buffer:Buffer.alloc(0),closed:false,lastPong:Date.now(),lastState:0,lastChat:0,state:{scene:'street',x:508,y:207,pose:'stand',dir:1,look:'boy_shaggy'}};
+  const s={socket,id:crypto.randomUUID().slice(0,12),name:'',room:null,buffer:Buffer.alloc(0),closed:false,lastPong:Date.now(),lastState:0,lastChat:0,state:{scene:'street',x:508,y:207,pose:'stand',dir:1,look:'boy_main_blue',held:null}};
   sessions.add(s);socket.on('data',ch=>onData(s,ch));socket.on('close',()=>end(s));socket.on('error',()=>end(s));
   if(head.length)onData(s,head);
 });

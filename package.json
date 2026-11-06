@@ -1,14 +1,33 @@
 {
-  "name": "2006-reminiscence-web-a27",
-  "version": "0.27.0",
+  "name": "2006-reminiscence-a38-review",
+  "version": "0.48.0",
   "private": true,
-  "description": "2006년 90년대생의 회상 - 12인 멀티플레이 링크 공유형 웹앱",
+  "description": "A48 동일초등학교 거리",
   "scripts": {
     "start": "node server.js",
     "test:coop": "node tests/test_a26_coop.js",
-    "test:share": "node tests/test_a27_share.js"
+    "test:share": "node tests/test_a27_share.js",
+    "test:characters": "node tests/test_characters.cjs",
+    "art:build": "node tools/build-atlases.cjs",
+    "test:engine": "node tests/test_engine.cjs",
+    "test:eating": "node tests/test_eating.cjs",
+    "art:food": "node tools/build-food-atlas.cjs",
+    "test:food": "node tests/test_food_art.cjs",
+    "art:carry": "node tools/build-carry-eat.cjs",
+    "test:carry": "node tests/test_carry_assets.cjs",
+    "art:npc": "node tools/build-npc-atlas.cjs",
+    "test:npc": "node tests/test_npcs.cjs",
+    "test:scale": "node tests/test_display_scale.cjs",
+    "art:palette": "node tools/harmonize-player-palettes.cjs",
+    "test:palette": "node tests/test_unified_palette.cjs",
+    "test:render": "node tests/test_render_resolution.cjs",
+    "art:map": "node tools/build-map.cjs"
   },
   "engines": {
     "node": ">=22"
+  },
+  "devDependencies": {
+    "@napi-rs/canvas": "0.1.100",
+    "sharp": "0.35.5"
   }
 }
