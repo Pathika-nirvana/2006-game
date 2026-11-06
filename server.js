@@ -20,7 +20,7 @@ const G = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
 const sessions = new Set();
 const rooms = new Map();
 const physicsRooms=new Map();
-const types = {'.html':'text/html; charset=utf-8','.js':'application/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.png':'image/png','.json':'application/json; charset=utf-8','.ico':'image/x-icon'};
+const types = {'.html':'text/html; charset=utf-8','.js':'application/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.webp':'image/webp','.png':'image/png','.json':'application/json; charset=utf-8','.ico':'image/x-icon'};
 const publicPaths = new Set(['/', '/index.html', '/src/', '/assets/']);
 const app = http.createServer((req,res)=>{
   if(req.method!=='GET'){res.writeHead(405);res.end('GET only');return}
@@ -50,7 +50,7 @@ function frame(payload,opcode=1){
 }
 function send(session,obj){if(!session.socket.writable)return;try{const data=frame(JSON.stringify(obj));if(data)session.socket.write(data)}catch{end(session)}}
 function cast(room,msg,except=null){for(const session of rooms.get(room)||[])if(session!==except)send(session,msg)}
-function publicState(s){return {id:s.id,name:s.name,scene:s.state.scene,x:s.state.x,y:s.state.y,pose:s.state.pose,dir:s.state.dir,look:s.state.look,held:s.state.held||null}}
+function publicState(s){return {id:s.id,name:s.name,scene:s.state.scene,x:s.state.x,y:s.state.y,pose:s.state.pose,dir:s.state.dir,look:s.state.look,held:s.state.held||null,playground:!!s.state.playground}}
 function end(s){
   if(s.closed)return;s.closed=true;sessions.delete(s);
   if(s.room)PLAY.clearUser(physicsRooms.get(s.room),s.id);
@@ -91,7 +91,7 @@ function onMessage(s,obj){
    const x=Number(obj.x),y=Number(obj.y);if(!Number.isFinite(x)||!Number.isFinite(y))return;
    const arena=physicsRooms.get(s.room);const occ=PLAY.occupancy(arena,s.id),flight=arena?.flights.get(s.id);
    if(obj.scene!=='street'&&(occ||flight))PLAY.clearUser(arena,s.id);
-   if(!occ&&!flight){s.state={scene:obj.scene,x:Math.max(0,Math.min(20000,x)),y:Math.max(-100,Math.min(500,y)),pose:poses.has(obj.pose)?obj.pose:'stand',dir:obj.dir===0?0:1,look:looks.has(obj.look)?obj.look:'boy_main_blue',held:heldFoods.has(obj.held)?obj.held:null};}
+   if(!occ&&!flight){s.state={playground:!!obj.playground,scene:obj.scene,x:Math.max(0,Math.min(20000,x)),y:Math.max(-100,Math.min(500,y)),pose:poses.has(obj.pose)?obj.pose:'stand',dir:obj.dir===0?0:1,look:looks.has(obj.look)?obj.look:'boy_main_blue',held:heldFoods.has(obj.held)?obj.held:null};}
    else{s.state.dir=obj.dir===0?0:1;s.state.look=looks.has(obj.look)?obj.look:'boy_main_blue';s.state.held=heldFoods.has(obj.held)?obj.held:null}
    cast(s.room,{type:'state',id:s.id,...s.state},s);return;
  }
@@ -110,7 +110,7 @@ function onData(s,chunk){
     if((a&0x70)!==0 || !(a&0x80) || !(b&0x80)){end(s);return}
     let len=b&127,at=2;
     if(len===126){if(s.buffer.length<4)return;len=s.buffer.readUInt16BE(2);at=4}
-    if(len===127){if(s.buffer.length<10)return;const high=s.buffer.readUInt32BE(2),low=s.buffer.readUInt32BE(6);if(high!==0||low>MAX_FRAME){end(s);return}len=low;at=10}
+    else if(len===127){if(s.buffer.length<10)return;const high=s.buffer.readUInt32BE(2),low=s.buffer.readUInt32BE(6);if(high!==0||low>MAX_FRAME){end(s);return}len=low;at=10}
     if(len>MAX_FRAME){end(s);return}
     if(s.buffer.length<at+4+len)return;
     const mask=s.buffer.subarray(at,at+4);at+=4;

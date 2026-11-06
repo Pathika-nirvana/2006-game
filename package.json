@@ -1,8 +1,8 @@
 {
   "name": "2006-reminiscence-a38-review",
-  "version": "0.48.0",
+  "version": "0.58.0",
   "private": true,
-  "description": "A48 동일초등학교 거리",
+  "description": "A57 은하아파트 단지 내부 시점과 깊이 이동",
   "scripts": {
     "start": "node server.js",
     "test:coop": "node tests/test_a26_coop.js",
@@ -21,7 +21,12 @@
     "art:palette": "node tools/harmonize-player-palettes.cjs",
     "test:palette": "node tests/test_unified_palette.cjs",
     "test:render": "node tests/test_render_resolution.cjs",
-    "art:map": "node tools/build-map.cjs"
+    "art:map": "node tools/build-map.cjs",
+    "art:alley": "node tools/build-side-alley.cjs",
+    "art:parking": "node tools/build-apartment-path.cjs",
+    "test:parking": "node tests/test_apartment_parking.cjs",
+    "art:optimize": "node tools/optimize-runtime.cjs",
+    "release": "python3 tools/package-release.py"
   },
   "engines": {
     "node": ">=22"

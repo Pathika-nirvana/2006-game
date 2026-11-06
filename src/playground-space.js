@@ -1,0 +1,27 @@
+/* A53: shared street coordinates, playground depth and layered native-pixel equipment. */
+(function(w){'use strict';
+const X0=3435,X1=4000,Y0=148,Y1=201,BASE=185;
+const devices=[{id:'swing_pair',x:3562},{id:'roundabout',x:3740}];
+const py=y=>BASE+(y-207)*.70;
+const imgs={};const readyPromise=Promise.all(['swing-frame','ground',...Array.from({length:8},(_,i)=>'round-'+i)].map(id=>new Promise(resolve=>{const im=new w.Image();imgs[id]=im;im.onload=()=>resolve(true);im.onerror=()=>resolve(false);im.src='assets/playground/'+id+(id==='ground'?'.webp':'.png')})));
+let groundCache=null;
+function ground(c){const im=imgs.ground;if(!im?.width)return;if(!groundCache){groundCache=w.document.createElement('canvas');groundCache.width=2820;groundCache.height=192;const g=groundCache.getContext('2d');g.imageSmoothingEnabled=false;for(let x=0;x<2820;x+=540)g.drawImage(im,x,0,540,192);g.globalCompositeOperation='destination-in';let fade=g.createLinearGradient(0,0,0,24);fade.addColorStop(0,'#0000');fade.addColorStop(1,'#000');g.fillStyle=fade;g.fillRect(0,0,2820,192);fade=g.createLinearGradient(0,0,90,0);fade.addColorStop(0,'#0000');fade.addColorStop(1,'#000');g.fillStyle=fade;g.fillRect(0,0,2820,192)}c.save();c.beginPath();c.moveTo(3300,207);c.lineTo(3435,207);c.lineTo(3435,174);c.lineTo(4240,174);c.lineTo(4240,244);c.lineTo(3300,244);c.closePath();c.clip();c.drawImage(groundCache,3300,181,940,45);c.drawImage(groundCache,0,166,2820,26,3300,226,940,14);c.restore()}
+function enter(p){p.playground=true;p.x=Math.max(X0+15,Math.min(X1-15,p.x));p.y=199;p.vy=0;p.pose='stand';p.onGround=true}
+function leave(p){if(w.A20WORLD?.mode==='helping')w.A20WORLD.stop();p.playground=false;p.y=207;p.pose='stand';p.vy=0;p.onGround=true}
+function near(p){if(!p.playground)return null;return devices.map(d=>({...d,dist:Math.hypot(p.x-d.x,(p.y-BASE)*1.5)})).filter(d=>d.dist<39).sort((a,b)=>a.dist-b.dist)[0]||null}
+function walk(p,h,v,dt){if(v>0&&p.y>=200){leave(p);return}const n=Math.hypot(h,v)||1;p.x=Math.max(X0,Math.min(X1,p.x+h/n*86*dt));p.y=Math.max(Y0,Math.min(Y1,p.y+v/n*61*dt));p.vy=0;p.onGround=true;if(h)p.dir=h>0?1:0;p.walking=h||v?p.walking+dt*11:0;if(p.pose!=='eat')p.pose='stand'}
+function shadow(c,x,y,r=9){c.save();c.fillStyle='#4d463035';c.beginPath();c.ellipse(x,y+1,r,2.6,0,0,7);c.fill();c.restore()}
+function tube(c,x1,y1,x2,y2,width=3){c.lineCap='round';c.strokeStyle='#354d4c';c.lineWidth=width+1.5;c.beginPath();c.moveTo(x1,y1);c.lineTo(x2,y2);c.stroke();c.strokeStyle='#6e9690';c.lineWidth=width;c.stroke();c.strokeStyle='#a9c1ad';c.lineWidth=.7;c.beginPath();c.moveTo(x1-0.6,y1);c.lineTo(x2-.6,y2);c.stroke()}
+function avatar(c,a){shadow(c,a.x,a.y);c.save();c.translate(a.x,a.y);const scale=a.playground?Math.max(.88,Math.min(1,.88+(a.y-148)*.0023)):1;c.scale(scale,scale);w.CHARART?.drawRemote?.(c,a.look||w.CHARART.selected,0,0,a.dir??1,a.pose||'stand',a.id||'self',a.held);c.restore();}
+function frame(c,x){shadow(c,x,BASE,45);const im=imgs['swing-frame'];if(im?.width)c.drawImage(im,x-48,BASE-87,96,87)}
+function swing(c,data,rider){const x=3562;frame(c,x);for(let i=0;i<2;i++){const s=data?.swings?.[i]||{angle:0};const a=s.angle||0,ax=x-15+i*30,bx=ax+43*Math.sin(a),by=py(101+77*Math.cos(a));for(const dx of[-7,7]){tube(c,ax+dx,110,bx+dx,by,0.8);c.fillStyle='#d8d4b1';for(let t=0;t<1;t+=.08)c.fillRect(ax+dx+(bx-ax)*t,110+(by-110)*t,.8,1.3)}c.fillStyle='#3e4034';c.fillRect(bx-10,by,20,3);c.fillStyle='#a07a45';c.fillRect(bx-9,by,18,1);const id=s.rider||s.riderId;if(id)rider(id,bx,by);}}
+function round(c,data,rider){const x=3740,angle=data?.roundabout?.angle||0;shadow(c,x,BASE,40);const frame=((Math.floor(angle/(Math.PI/16))%8)+8)%8,im=imgs['round-'+frame];if(im?.width)c.drawImage(im,x-43,BASE-44,86,44);for(const[i,id]of (data?.roundabout?.riders||data?.roundabout?.riderIds||[]).entries())rider(id,x+19*Math.cos(angle+i*2),BASE-10+4*Math.sin(angle+i*2));}
+function render(c,p,t){const online=w.A26NET?.ready,data=online?w.A26NET.snapshot:w.A20WORLD?.sim?.state;const peers=w.A25NET?.peers||[],mine=w.A25NET?.state?.id;const riding=new Set();for(const s of data?.swings||[])if(s.rider||s.riderId)riding.add(s.rider||s.riderId);for(const id of data?.roundabout?.riders||data?.roundabout?.riderIds||[])riding.add(id);const drawRider=(id,x,y)=>{const self=online?id===mine:id==='rider';const a=self?p:peers.find(a=>a.id===id);if(a)avatar(c,{...a,id,look:self?w.CHARART.selected:a.look,held:self?w.SHOPS?.heldKind:a.held,x,y,pose:'sit'})};const actors=[];
+ if(p.x>=X0-100&&p.x<=X1+100&&!w.A20WORLD?.hidesPlayer())actors.push({...p,id:'self',look:w.CHARART.selected,held:w.SHOPS?.heldKind,pose:p.walking?'walk':p.pose});
+ for(const a of peers){const ph=w.A26NET?.physical?.(a.id);if(ph?.flight&&!ph.flight.landed){avatar(c,{...a,x:ph.flight.x,y:py(ph.flight.y),pose:'jump'});continue}if(a.scene==='street'&&a.x>=X0-100&&a.x<=X1+100&&!riding.has(a.id))actors.push(a);}
+ actors.sort((a,b)=>a.y-b.y);for(const a of actors.filter(a=>a.y<BASE))avatar(c,a);swing(c,data,drawRider);round(c,data,drawRider);for(const a of actors.filter(a=>a.y>=BASE))avatar(c,a);
+ // Ejected players retain their real trajectories, projected into playground depth.
+ if(w.A20WORLD?.hidesPlayer()&&!riding.has(mine)&&(!online&&!riding.has('rider')||online)){avatar(c,{...p,look:w.CHARART.selected,y:py(p.y),pose:p.pose})}
+}
+w.PlaygroundSpace={readyPromise,ground,enter,leave,near,walk,render,contains:x=>x>=X0-100&&x<=X1+100,base:BASE};
+})(window);

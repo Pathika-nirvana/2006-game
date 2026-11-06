@@ -6,7 +6,7 @@
 const STEP=1/60;
 const DEVICES={
  swing_pair:{id:'swing_pair',name:'그네',x:3515,w:94,mid:3562,ground:207},
- roundabout:{id:'roundabout',name:'뺑뺑이',x:3840,w:116,mid:3898,ground:207}
+ roundabout:{id:'roundabout',name:'뺑뺑이',x:3682,w:116,mid:3740,ground:207}
 };
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const round=x=>Math.round(x*1000)/1000;
@@ -23,8 +23,10 @@ function clearUser(room,id){
  room.flights.delete(id);room.lastPush.delete(id);
 }
 function controlled(session,device){
+ if(session?.state?.playground===false)return false;
  if(!DEVICES[device]||!session?.room||session.state.scene!=='street')return false;
  const x=Number(session.state.x),y=Number(session.state.y);
+ if(session.state.playground===true&&(Math.abs(x-DEVICES[device].mid)>70||Math.abs(y-185)>28))return false;
  return Number.isFinite(x)&&Number.isFinite(y)&&Math.abs(x-DEVICES[device].mid)<=145&&Math.abs(y-207)<65;
 }
 function act(room,s,command,people){

@@ -1,0 +1,54 @@
+{
+  "frameWidth": 128,
+  "frameHeight": 128,
+  "columns": 8,
+  "rows": 15,
+  "anchor": [
+    48,
+    124
+  ],
+  "groups": [
+    "tteok",
+    "hotdog",
+    "skewer",
+    "slushred",
+    "slushblue",
+    "generic"
+  ],
+  "perGroup": {
+    "eat": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "walk": [
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "front": 16,
+    "side": 17,
+    "sit": 18,
+    "jump": 19
+  },
+  "eatDurations": [
+    120,
+    150,
+    160,
+    190,
+    180,
+    150,
+    180,
+    120
+  ]
+}

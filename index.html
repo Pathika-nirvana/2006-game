@@ -696,7 +696,7 @@ window.A14_EMBEDDED_IMAGES = {"prop_arcade": "data:image/png;base64,iVBORw0KGgoA
  function get(id){const d=def(id);if(!d)throw Error('알 수 없는 배치 객체: '+id);return {...d,...state[id]}}
  function list(){return DEF.map(d=>get(d.id))}
  function x(id){return get(id).x}
- function portal(id){if(id==='laneWest')return Math.round(x('wallQuiet')-31);if(id==='laneEast')return Math.round(x('wallApartment')+get('wallApartment').w+64);throw Error('없는 골목 입구 '+id)}
+ function portal(id){if(id==='laneWest')return 2147;if(id==='laneEast')return 2502;throw Error('없는 골목 입구 '+id)}
  function poles(){return [921,1659,x('poleMarket'),x('poleApartment'),4093]}
  function validate(next,buildings){const errors=[];if(!next||typeof next!=='object')return ['배치 데이터가 없습니다.'];
   if(Object.keys(next).some(k=>!def(k)))errors.push('알 수 없는 객체 ID가 있습니다.');
@@ -771,10 +771,8 @@ window.A14_EMBEDDED_IMAGES = {"prop_arcade": "data:image/png;base64,iVBORw0KGgoA
   return errors;
  }
  function validateForLayout(buildings){return validate(state,buildings)}
- function platforms(){const st=stairInfo(),pg=playgroundInfo(),r=[];
-  r.push({id:'play_deck',x1:pg.x,x2:pg.end,y:pg.top,kind:'play-deck'});return r;
- }
- function ladders(){const p=playgroundInfo();return [{id:'play_ladder',x:p.ladderX,top:p.top,bottom:207,label:'정글짐 사다리'}]}
+ function platforms(){return []}
+ function ladders(){return []}
  function get(id){if(!state[id])throw Error('없는 지형 객체 '+id);return clone(state[id])}
  function snapshot(){return {schema:1,terrain:clone(state),stairs:stairInfo(),play:playgroundInfo(),revision}}
  function apply(candidate){const errs=validate(candidate);if(errs.length)return {ok:false,errors:errs};
@@ -815,7 +813,7 @@ window.A14_EMBEDDED_IMAGES = {"prop_arcade": "data:image/png;base64,iVBORw0KGgoA
    swing_pair:{id:'swing_pair',kind:'pendulum_swing',name:'그네 두 자리 · 구상',relativeX:-120,w:94,groundY:207,
      physics:{model:'damped_pendulum',ropeLengthM:1.75,gravity:9.81,damping:0.14,maxAngleRad:0.9},
      roles:['seat_left','seat_right','pusher'],control:'server_authoritative_impulses'},
-   roundabout:{id:'roundabout',kind:'playground_roundabout',name:'뺑뺑이 · 구상',relativeX:205,w:116,groundY:207,
+   roundabout:{id:'roundabout',kind:'playground_roundabout',name:'뺑뺑이 · 구상',relativeX:47,w:116,groundY:207,
      physics:{model:'rotational_inertia',inertiaKgM2:135,drag:0.24,maxAngularSpeedRadS:2.5},
      roles:['rider','pusher'],control:'server_authoritative_torque'}
   },
@@ -1388,7 +1386,7 @@ function board(t){if(!busAtStop(t))return false;state.waiting=false;state.boarde
 function hotspots(phase,t,rain){
  return [
  {x:STOP+16,r:46,type:'buswait',title:'버스 정류장',icon:'🚌',txt:'오래된 노선 안내판과 벤치. 버스가 올 때까지 가만히 있어도 좋다.'},
- {x:2146,r:26,type:'letterbox',title:'골목 입구 우편함',icon:'✉️',txt:'누군가에게 온 우편물과 접힌 전단지. 꺼내 보지는 않고 그냥 지나간다.'},
+ {x:2192,r:18,type:'letterbox',title:'골목 입구 우편함',icon:'✉️',txt:'누군가에게 온 우편물과 접힌 전단지. 꺼내 보지는 않고 그냥 지나간다.'},
  {x:1823,r:29,type:'window',title:'열린 집 창문',icon:'📻',txt:phase===2?'방안에서 저녁 뉴스가 작게 새어 나온다.':'작은 라디오 소리, 저녁 준비하는 접시 소리.'},
  {x:3119,r:37,type:'yard',title:rain?'비에 젖은 작은 화단':'단지 입구 화단',icon:rain?'☔':'🌿',txt:rain?'젖은 나뭇잎 끝에서 빗방울이 뚝뚝 떨어진다.':'작은 화단에 물을 준 흔적. 바닥이 조금 젖어 있다.'},
  ...(rain?[{x:2060,r:36,type:'shelter',title:'비 피하는 처마',icon:'☂️',txt:'담장 옆 좁은 처마에 잠깐 들어선다. 빗물이 배수구로 모여든다.'}]:[])
@@ -1473,13 +1471,13 @@ const sizes={courtyard:980,lobby:820,hall:1050,rooftop:1140};
 const names={courtyard:'주택가의 작은 마당',lobby:'아파트 공동현관',hall:'2층 공동복도',rooftop:'공동주택 옥상'};
 const sceneLinks={
  courtyard:[{x:64,r:47,type:'resLink',to:'street',spawn:1756,title:'골목으로 나가는 대문',icon:'🚪',txt:'대문을 나서면 익숙한 주택가 골목이다.'}],
- lobby:[{x:62,r:40,type:'resLink',to:'street',spawn:4083,title:'공동현관 바깥',icon:'🚪',txt:'아파트 단지의 나무 사이 길이 보인다.'},{x:717,r:64,type:'resLink',to:'hall',spawn:115,title:'2층으로 올라가는 계단',icon:'↗',txt:'계단을 오르면 윗집의 복도가 이어진다.'}],
+ lobby:[{x:62,r:40,type:'resLink',to:'street',spawn:4070,title:'공동현관 바깥',icon:'🚪',txt:'아파트 단지의 나무 사이 길이 보인다.'},{x:717,r:64,type:'resLink',to:'hall',spawn:115,title:'2층으로 올라가는 계단',icon:'↗',txt:'계단을 오르면 윗집의 복도가 이어진다.'}],
  hall:[{x:84,r:57,type:'resLink',to:'lobby',spawn:703,title:'1층으로 내려가는 계단',icon:'↙',txt:'아래층 공동현관으로 이어진다.'},{x:957,r:64,type:'resLink',to:'rooftop',spawn:105,title:'옥상으로 이어지는 계단',icon:'↗',txt:'낡은 철문을 지나 옥상으로 올라갈 수 있다.'}],
  rooftop:[{x:80,r:49,type:'resLink',to:'hall',spawn:912,title:'다시 내려가는 옥상문',icon:'🚪',txt:'아래층 복도로 내려가자.'}]
 };
 const streetEntries=[
  {x:1756,r:26,type:'resDoor',to:'courtyard',title:'열린 주택 대문',icon:'🏡',txt:'담장 너머로 작은 마당과 빨랫줄이 보인다.'},
- {x:4085,r:48,type:'resDoor',to:'lobby',title:'아파트 공동현관',icon:'🏢',txt:'여러 집의 발소리가 모이는 공동현관이다.'}
+ {x:4070,r:28,type:'resDoor',to:'lobby',title:'아파트 공동현관',icon:'🏢',txt:'여러 집의 발소리가 모이는 공동현관이다.'}
 ];
 const details={
  courtyard:[
@@ -1491,7 +1489,7 @@ const details={
  lobby:[
  {x:234,r:45,type:'resNote',key:'mail',title:'집집마다 다른 우편함',icon:'✉️'},
  {x:440,r:47,type:'resNote',key:'notice',title:'게시판의 안내문',icon:'📌'},
- {x:603,r:48,type:'resNpc',key:'guard',title:'경비실 아저씨',icon:'💬'}
+ {x:603,r:38,type:'resNote',key:'notice',title:'공동현관 안내판',icon:'📌'}
  ],
  hall:[
  {x:280,r:44,type:'resNote',key:'shoes',title:'집 앞에 놓인 신발',icon:'👟'},
@@ -1709,7 +1707,7 @@ const actors=[
  {id:'playChild',scene:'street',x:3320,shirt:'#c68b77',kind:'student',name:'놀이터 친구',speed:29,face:1},
  {id:'courtyardWorker',scene:'courtyard',x:795,shirt:'#b29a8f',kind:'laundry',name:'마당의 이웃',speed:20,face:0},
  {id:'hallResident',scene:'hall',x:793,shirt:'#b0a18b',kind:'hall',name:'복도의 이웃',speed:18,face:0},
- {id:'caretaker',scene:'lobby',x:607,shirt:'#a0a992',kind:'guard',name:'경비실 아저씨',speed:13,face:0},
+ {id:'caretaker',scene:'street',x:2542,shirt:'#a0a992',kind:'guard',name:'경비실 아저씨',speed:13,face:0},
  {id:'roofNeighbor',scene:'rooftop',x:780,shirt:'#9d9a8c',kind:'laundry',name:'옥상에서 빨래를 정리하는 이웃',speed:17,face:1}
 ];
 function step(x,action,hold=2){return{x,action,hold}}
@@ -1723,7 +1721,7 @@ function plan(a,phase,rain){
  case 'playChild':return rain?[step(3362,'walk'),step(3362,'gone',Infinity)]:phase===2?[step(3432,'walk'),step(3432,'gone',Infinity)]:phase===1?[step(3465,'walk'),step(3465,'sit',4),step(3365,'walk'),step(3365,'wave',1.5)]:[step(3380,'walk'),step(3380,'wait',2),step(3478,'walk'),step(3478,'sit',4),step(3405,'walk'),step(3405,'wave',2)];
  case 'courtyardWorker':return rain?[step(470,'walk'),step(470,'gather',4),step(786,'walk'),step(786,'carry',5)]:phase===0?[step(431,'walk'),step(431,'hang',6),step(645,'walk'),step(645,'carry',2),step(431,'walk'),step(431,'hang',6)]:phase===1?[step(443,'walk'),step(443,'gather',6),step(785,'walk'),step(785,'carry',5)]:[step(800,'walk'),step(800,'sit',6),step(715,'walk'),step(715,'wait',4)];
  case 'hallResident':return phase===2?[step(745,'walk'),step(745,'wave',3),step(806,'walk'),step(806,'gone',7)]:[step(810,'wait',3),step(742,'walk'),step(742,'bagAdjust',2),step(778,'walk'),step(778,'wave',2)];
- case 'caretaker':return phase===2?[step(610,'sit',8),step(610,'write',6)]:[step(610,'write',6),step(632,'walk'),step(632,'wave',2.3),step(607,'walk'),step(607,'sit',5)];
+ case 'caretaker':return phase===2?[step(2542,'wait',8),step(2542,'sweep',6)]:[step(2542,'sweep',6),step(2562,'walk'),step(2562,'wave',2.3),step(2540,'walk'),step(2540,'wait',5)];
  case 'roofNeighbor':return rain?[step(831,'walk'),step(831,'gather',4),step(765,'walk'),step(765,'carry',5)]:phase===2?[step(824,'walk'),step(824,'gather',4),step(773,'walk'),step(773,'gone',Infinity)]:[step(802,'walk'),step(802,'hang',5),step(739,'walk'),step(739,'wait',3)];
  default:return [step(a.x,'wait',2)];
  }
@@ -2241,7 +2239,7 @@ window.PLAYROOM={get isOpen(){return open},close,handleKey,openArcade,openCapsul
 (function(){
 'use strict';
 const G=207;const names={side_alley:'주택가 샛길',apartment_path:'아파트 안쪽 길'};
-const widths={side_alley:1460,apartment_path:1260};
+const widths={side_alley:1182,apartment_path:1182};
 const p=(c,x,y,w,h,color)=>{c.fillStyle=color;c.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h))};
 const txt=(c,s,x,y,size=8,color='#38484c')=>{c.fillStyle=color;c.font=`bold ${size}px "Malgun Gothic",sans-serif`;c.fillText(s,x,y)};
 function line(c,x,y,X,Y,col='#657d7b'){c.strokeStyle=col;c.lineWidth=1;c.beginPath();c.moveTo(x,y);c.lineTo(X,Y);c.stroke()}
@@ -2323,22 +2321,26 @@ function markStreet(c){
 }
 function streetHotspots(){return [
  {type:'routeGate',x:A16SCENE.portal('laneWest'),r:33,to:'side_alley',spawn:95,title:'조용한 주택가 샛길',txt:'주택가 뒤로 난 좁은 길. 조금 돌아서 가도 된다.',icon:'↗'},
- {type:'routeGate',x:A16SCENE.portal('laneEast'),r:44,to:'apartment_path',spawn:1165,title:'아파트 단지 안쪽 길',txt:'큰길을 지나지 않고 단지 안쪽으로 걸어갈 수 있다.',icon:'↗'}
+ {type:'routeGate',x:A16SCENE.portal('laneEast'),r:44,to:'apartment_path',spawn:90,spawnY:190,title:'아파트 단지 안쪽 길',txt:'큰길을 지나지 않고 단지 안쪽으로 걸어갈 수 있다.',icon:'↗'}
 ]}
 function hotspots(scene,phase,rain,t){if(scene==='side_alley')return [
  {type:'routeGate',x:54,r:42,to:'street',spawn:A16SCENE.portal('laneWest'),title:'큰길로 돌아가기',txt:'아까 지나온 골목으로 돌아간다.',icon:'↶'},
- {type:'routeNote',x:350,r:39,title:'오래된 현관문',txt:'붉은 벽돌집의 도어록 대신 작은 열쇠 구멍과 도어벨이 보인다. 누군가의 평범한 집이다.',icon:'🚪'},
- {type:'routeNote',x:710,r:42,title:'담벼락의 낮은 햇살',txt:rain?'빗물이 담벼락을 따라 아래로 흐른다.':'특별한 일은 없다. 이 길의 절반은 평범한 담벼락이다.',icon:'🍃'},
- {type:'routeNpc',x:940+Math.sin(t*.31)*43,r:36,title:'자전거를 끌고 가는 학생',txt:'“나 오늘 이쪽으로 갈래. 큰길은 차가 많잖아.”',icon:'🚲'},
- {type:'routeGate',x:1387,r:46,to:'apartment_path',spawn:75,title:'아파트 단지 뒤쪽으로',txt:'낮은 담장을 지나 산책길로 이어진다.',icon:'↗'}
-];if(scene==='apartment_path')return [
- {type:'routeGate',x:54,r:44,to:'side_alley',spawn:1375,title:'주택가 샛길로 돌아가기',txt:'학교 쪽으로 돌아가는 조용한 길.',icon:'↶'},
- {type:'routeNote',x:431,r:40,title:'낡은 단지 게시판',txt:'주차 안내, 분리수거 공지, 관리사무소 전화번호가 붙어 있다. 누구도 특별히 신경 쓰지 않는 안내문.',icon:'📃'},
- {type:'routeSit',x:585,r:41,title:'나무 아래 긴 벤치',txt:'바람이 지나가는 단지 안쪽 길. 한동안 앉아 있어도 아무 일도 일어나지 않는다.',icon:'🌿'},
- {type:'routeNpc',x:813+Math.sin(t*.37)*41,r:36,title:'장을 보고 돌아가는 이웃',txt:phase===2?'“벌써 어두워졌네. 얼른 들어가야지.”':'“단지 안쪽 길로 가면 차가 덜 다녀서 좋아.”',icon:'🧺'},
- {type:'routeGate',x:1207,r:43,to:'street',spawn:A16SCENE.portal('laneEast'),title:'단지 밖 큰길로',txt:'다시 익숙한 동네 길로 나온다.',icon:'↗'}
+ {type:'routeNote',x:354,r:27,title:'벽돌집 철제 대문',txt:'붉은 벽돌집의 도어록 대신 작은 열쇠 구멍과 도어벨이 보인다. 누군가의 평범한 집이다.',icon:'🚪'},
+ {type:'routeNote',x:209,r:30,title:'주차된 파란 포터',txt:'좁은 주차 틈에 파란 포터가 들어가 있다. 적재함의 천막은 끈으로 단단히 묶여 있다.',icon:'🚚'},
+ {type:'routeNote',x:910,r:31,title:'검은 구형 쏘나타',txt:'작은 은색 휠과 초록색 번호판. 검은 차체에 맞은편 집 창문이 비친다.',icon:'🚗'},
+
+ {type:'routeGate',x:1134,r:35,to:'apartment_path',spawn:75,spawnY:190,title:'아파트 단지 뒤쪽으로',txt:'낮은 담장을 지나 산책길로 이어진다.',icon:'↗'}
+ ];if(scene==='apartment_path')return [
+ {type:'routeGate',x:28,y:235,r:23,to:'side_alley',spawn:1118,title:'단지 뒤 샛길로',txt:'주차장 옆 좁은 길이 주택가로 이어진다.',icon:'↶'},
+ {type:'routeGate',x:55,y:145,r:26,to:'street',spawn:A16SCENE.portal('laneEast'),title:'경비실 옆 정문으로 나가기',txt:'안에서 바라본 정문 너머로 큰길이 보인다.',icon:'↗'},
+ {type:'routeSit',x:320,y:186,approachY:217,r:24,title:'101동 안쪽 화단 벤치',txt:'단지 안쪽에 앉으니 주차된 차들과 동 사이로 난 길이 보인다.',icon:'🌿'},
+ {type:'routeNote',x:256,y:219,r:22,title:'단지 내 서행 현수막',txt:'단지 안쪽 가로등 사이에 흰 천을 끈으로 묶었다. 차가 드나드는 내부 도로에서는 천천히.',icon:'🚸'},
+ {type:'routeNote',x:446,y:219,r:24,title:'은하아파트 게시판',txt:'관리비와 주차 안내, 여름 소독 일정이 겹쳐 붙어 있다. 게시판 뒤로 102동 주차 칸이 이어진다.',icon:'📃'},
+ {type:'routeNote',x:650,y:220,r:26,title:'동 앞 주차 칸',txt:'비슷한 시간에 돌아온 차들이 줄지어 서 있다. 파란 포터 옆 빈 칸에는 희미한 주차선과 바퀴 자국이 남아 있다.',icon:'🚙'},
+ {type:'routeNpc',...window.ApartmentPathMap.neighbor(t),r:28,title:'장을 보고 돌아가는 이웃',txt:phase===2?'“어두워졌네. 차 나오는지 보고 다녀.”':'“동 사이로 가면 돼. 주차된 차 옆에서는 조심하고.”',icon:'🧺'},
+ {type:'routeNote',x:1110,y:219,r:28,title:'수요일 분리수거 안내',txt:'단지 안쪽 수거장이다. 흰 현수막 아래 철망 수거함과 묶은 상자가 놓여 있고, 종류별로 나누어 담는다.',icon:'♻️'}
 ];return []}
-function dynamic(c,scene,phase,rain,t){
+function dynamic(c,scene,phase,rain,t){if(scene==='apartment_path'&&window.ApartmentPathMap?.ready){return}if(scene==='side_alley'&&window.SideAlleyMap?.ready)return;
  // c translated into scene coordinates.
  if(scene==='side_alley'){
    // Laundry hanging quietly from a private upper window.
@@ -3229,7 +3231,7 @@ window.A12ART={retouch,retouchRoute,dynamic,get enabled(){return enabled},set en
 })();
 
 /* END src/16_pilot_art.js */
-</script><script src="assets/maps/after-school/manifest.js"></script><script src="src/after-school-map.js"></script><script>
+</script><script src="assets/maps/after-school/manifest.js"></script><script src="src/after-school-map.js"></script><script src="src/playground-space.js"></script><script src="src/side-alley-map.js"></script><script src="src/apartment-path-map.js"></script><script>
 /* BEGIN src/13_game_core.js */
 
 /* 《2006년.. 90년대생의 회상》 ART STAGE 10 (everyday neighborhood detours + A8 routines)
@@ -3297,8 +3299,9 @@ function changeOutfit(){shirtIndex=(shirtIndex+1)%shirts.length;player.shirt=shi
 function toast(msg,s=2.6){D.hint.textContent=msg;D.hint.classList.add('show');toastTimer=s}
 function closeDialog(){openDialog=false;D.dialog.classList.add('hidden')}
 function showDialog(title,msg,icon='✿'){D.title.textContent=title;D.text.textContent=msg;D.icon.textContent=icon;D.dialog.classList.remove('hidden');openDialog=true}
-function setScene(next,spawn){
+function setScene(next,spawn,spawnY){
  closeDialog();input.clear();
+ player.playground=false;
  const previous=player.scene;
  if(next==='street'){
   player.scene='street';player.x=typeof spawn==='number'?spawn:sceneReturnX;player.y=GROUND;
@@ -3309,6 +3312,7 @@ function setScene(next,spawn){
   toast(ROUTES.isRoute(next)?'건물 사이로 난 조용한 길을 따라 들어왔다.':RESIDENTIAL.isRoom(next)?'누군가 살고 있는 건물의 평범한 하루가 이어진다.':next==='stationery'?'문방구 문에 달린 방울이 딸랑 울린다.':'키보드 소리와 컴퓨터 팬 소음이 들린다.',3.3);
  }
  player.vy=0;player.onGround=true;player.pose='stand';player.sitAt=null;
+ if(next==='apartment_path')window.ApartmentPathMap?.enter(player,spawnY);
  cam=Math.max(player.scene==='street'?359:0,Math.min(sceneWidth()-W,player.x-206));
  D.scene.textContent=player.scene==='street'?'거리':ROUTES.isRoute(player.scene)?'산책길':RESIDENTIAL.isRoom(player.scene)?'주거 공간':'실내';
  if(next!=='street'){
@@ -3319,13 +3323,13 @@ function setScene(next,spawn){
 }
 
 function nearest(){
- // A19 draft playground prototype: interact from the world without locking its layout.
- if(player.scene==='street' && player.onGround && player.y>=GROUND-10 && window.A18WORLD){
-  const device=A18WORLD.getDevices().find(d=>Math.abs(player.x-(d.x+d.w/2))<Math.max(34,d.w*.46));
-  if(device)return{x:device.x+device.w/2,r:Math.max(50,device.w*.46),type:'a20Device',device:device.id,title:device.id==='swing_pair'?'그네 타기 / 친구와 밀기':'뺑뺑이 타기 / 친구와 돌리기',icon:'☆'};
- }
+ if(player.scene==='street'&&player.playground){const d=PlaygroundSpace.near(player);if(d)return{x:d.x,r:39,type:'a20Device',device:d.id,title:d.id==='swing_pair'?'그네 타기':'뺑뺑이 타기'};return null;}
+ if(player.scene==='street'&&player.x>3435&&player.x<4000)return null;
  let candidate=null,dist=Infinity;
  const hotspots=player.scene==='street' ? [
+  {x:2910,r:24,type:'note',title:'동네 철물',txt:'입구에 빗자루와 고무호스, 색색의 양동이가 놓여 있다. 가게 안에서 쇠붙이 부딪치는 소리가 난다.',icon:'🔧'},
+  {x:3072,r:24,type:'note',title:'중앙 이발관',txt:'유리문 너머 의자와 흰 가운이 보인다. 텔레비전 소리가 작게 흘러나온다.',icon:'💈'},
+  {x:2318,r:26,type:'routeSit',title:'담장 아래 벤치',txt:'나무 그늘이 내려앉은 벤치. 단지 안에서 누군가 이불을 터는 소리가 들린다.',icon:'🌿'},
   ...WORLD.hotspots.filter(h=>h.type!=='swing'),
   ...ROUTES.streetHotspots(),
   ...A13LAYOUT.interactions().filter(h=>h.type!=='door'),
@@ -3345,18 +3349,20 @@ function nearest(){
    {x:544,r:48,type:'pc',seat:17,title:'PC방 17번 자리',txt:'모니터 옆에는 종이컵이 놓여 있다. 누군가 친구를 기다리는 것 같다.',icon:'⌨️'}
   ])
  ]);
- for(const a of hotspots){if(player.scene==='street'&&a.x>=1541&&a.x<=2133&&!['resDoor','routineNpc'].includes(a.type))continue;const d=Math.abs(a.x-player.x);if(d<a.r&&d<dist){candidate=a;dist=d}}
+ for(const a of hotspots){if(player.scene==='street'&&a.x>=3316&&!['routineNpc','resDoor'].includes(a.type))continue;if(player.scene==='street'&&a.x>=2724&&a.x<3316&&!['routineNpc'].includes(a.type)&&!['동네 철물','중앙 이발관'].includes(a.title))continue;if(player.scene==='street'&&a.x>2133&&a.x<2724&&!['routeGate','letterbox','routeSit','routineNpc'].includes(a.type))continue;if(player.scene==='street'&&a.x>=1541&&a.x<=2133&&!['resDoor','routineNpc'].includes(a.type))continue;const d=player.scene==='apartment_path'?Math.hypot(a.x-player.x,((a.approachY??a.y??222)-(player.apartmentFloorY??player.y))*1.25):Math.abs(a.x-player.x);if(d<a.r&&d<dist){candidate=a;dist=d}}
  return candidate;
 }
 function interact(){
  if(!running){start();return}
  if(openDialog){closeDialog();return}
  const a=nearest();if(!a){toast('여기서는 잠깐 서 있어도 좋아.');return}
+ if(a.type==='playEnter'){PlaygroundSpace.enter(player);closeDialog();toast('↑↓←→ 모래밭 걷기 · 기구 가까이 E · 보도 쪽에서 E로 나오기',4);return}
+ if(a.type==='playExit'){PlaygroundSpace.leave(player);return}
  if(a.type==='a20Device'){const r=window.A20WORLD?.mount(a.device,player);toast(r?.message||'친구와 놀아 보자.',2.3);return}
  if(a.type==='roofView'){window.A22ROOF?.open();MEMO.add('옥상에서 본 2006년 저녁','차들이 지나고 사람들이 걸어간다. 평범한 동네의 하루를 내려다보았다.',phase);return}
- if(a.type==='routeGate'){if(!player.onGround){toast('갈림길 앞 보도로 내려와 보자.');return}setScene(a.to,a.spawn);return}
+ if(a.type==='routeGate'){if(!player.onGround){toast('갈림길 앞 보도로 내려와 보자.');return}setScene(a.to,a.spawn,a.spawnY);return}
  if(a.type==='routeNote'||a.type==='routeNpc'){showDialog(a.title,a.txt,a.icon);MEMO.add(a.title,a.txt,phase);return}
- if(a.type==='routeSit'){if(['sit','bench'].includes(player.pose)){unsit();return}player.pose='bench';player.sitAt=a.x;player.x=a.x;player.y=199;player.onGround=true;showDialog(a.title,a.txt,a.icon);return}
+ if(a.type==='routeSit'){if(['sit','bench'].includes(player.pose)){unsit();return}player.pose='bench';player.sitAt=a.x;player.x=a.x;if(player.scene==='apartment_path'){player.apartmentStandY=a.approachY;player.apartmentFloorY=a.approachY}player.y=a.y??199;player.onGround=true;showDialog(a.title,a.txt,a.icon);return}
  if(a.type==='resDoor'||a.type==='resLink'){
   if(!player.onGround||player.y<201){toast('출입구 쪽 바닥으로 내려와 보자.');return}
   setScene(a.to,a.spawn);return;
@@ -3398,7 +3404,7 @@ function unsit(){player.pose='stand';player.sitAt=null;player.y=GROUND;player.on
 function sit(){if(!running||player.pose==='eat')return;closeDialog();if(['sit','bench','swing'].includes(player.pose)){unsit();toast('다시 걸어볼까?');return}if(!player.onGround)return;player.pose='sit';toast('조금 쉬어 가자.');}
 function wave(){if(!running||player.pose==='eat')return;closeDialog();if(['sit','bench','swing'].includes(player.pose))unsit();player.pose='wave';player.waveEnd=t+1.3;toast(ROUTINES.reactWave(player.scene,player.x,t)||'안녕! 👋',2.1)}
 function keydown(e){const k=e.code;
- if(window.A20WORLD?.key(k,player,{running,scene:player.scene,dialog:openDialog,uiBusy:SHOPS.isOpen||MEMO.isOpen||PLAYROOM.isOpen||ROUTES.isMapOpen})){e.preventDefault();return}
+ if((player.playground||window.A20WORLD?.hidesPlayer())&&window.A20WORLD?.key(k,player,{running,scene:player.scene,dialog:openDialog,uiBusy:SHOPS.isOpen||MEMO.isOpen||PLAYROOM.isOpen||ROUTES.isMapOpen})){e.preventDefault();return}
  if(ROUTES.isMapOpen){if(['KeyM','Escape'].includes(k)){e.preventDefault();ROUTES.toggleMap(false)}return}
  if(PLAYROOM.isOpen){PLAYROOM.handleKey(k,e);return}
  if(MEMO.isOpen){if(['Escape','KeyJ'].includes(k)){e.preventDefault();MEMO.hide()}return}
@@ -3409,6 +3415,9 @@ function keydown(e){const k=e.code;
  }
  if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Space','KeyA','KeyD','KeyW','KeyS','KeyE','KeyC','KeyT','KeyX','KeyV','KeyI','KeyF','KeyJ','KeyR','KeyM','Escape','Enter'].includes(k))e.preventDefault();input.add(k);
  if(e.repeat)return;
+
+ if(player.playground&&k==='Space')return;
+ if(running&&player.scene==='apartment_path'&&k==='Space'){window.ApartmentPathMap?.jump(player);closeDialog();return;}
  if(k==='Enter'&&!running){start();return}if(!running)return;
  if(k==='KeyM'){ROUTES.toggleMap();return}if(k==='KeyR'){changeWeather();return}if(k==='KeyI'){SHOPS.openBag();return}if(k==='KeyJ'){MEMO.show();return}if(k==='KeyF'){takeBite();return}if(k==='KeyE'){interact();return}if(k==='KeyC'){sit();return}if(k==='KeyT'){changeTime();return}if(k==='KeyX'){wave();return}if(k==='KeyV'){changeOutfit();return}
  if(k==='Escape'&&openDialog){closeDialog();return}
@@ -3464,10 +3473,20 @@ function update(dt){
  if(sound.enabled&&player.scene==='street'&&t-sound.lastChirp>8+Math.sin(t)*4){sound.lastChirp=t;chirp()}
  if(sound.noise){sound.noise.filter.frequency.value=player.scene==='pcroom'?210:(weather?980:450);sound.noise.vol.gain.value=player.scene==='pcroom'?.14:(weather?.27:.14)}
  if(!running||SHOPS.isOpen||MEMO.isOpen||PLAYROOM.isOpen||ROUTES.isMapOpen)return;
+ if(player.scene==='street'&&!player.playground&&player.x>3435&&player.x<4000&&inputV()<0)PlaygroundSpace.enter(player);
  const a20Locked=window.A20WORLD?.update(dt,player);
  if(a20Locked){const target=Math.max(player.scene==='street'?359:0,Math.min(sceneWidth()-W,player.x-206));cam+=(target-cam)*Math.min(1,dt*6);D.action.textContent=window.A20WORLD.hint();return;}
+ if(player.playground){if(player.pose==='eat'&&t>=player.eatEnd){SHOPS.consumeHeld();player.pose='stand'}const h=player.pose==='eat'?0:inputH(),v=player.pose==='eat'?0:inputV();PlaygroundSpace.walk(player,h,v,dt);const target=Math.max(3340,Math.min(3540,player.x-240));cam+=(target-cam)*Math.min(1,dt*5);const a=nearest();D.area.textContent='아파트 모래 놀이터';D.action.textContent=a?'E · '+a.title:'↑↓←→ 걷기 · 놀이기구 가까이 E';return;}
  const busNow=NEIGHBOR.busAtStop(t);if(busNow&&!busWasHere&&player.scene==='street'&&Math.abs(player.x-2623)<100)toast('버스가 도착했다. 정류장에서 E를 누르면 탈 수 있어.',3.6);busWasHere=busNow;
  if(player.pose==='eat'&&t>=player.eatEnd){const msg=SHOPS.consumeHeld();player.pose=player.eatRestore||'stand';player.walking=0;toast(msg||'천천히 한 입 먹었다.',3.5)}
+ if(player.scene==='apartment_path'){
+  if(player.pose==='wave'&&t>player.waveEnd)player.pose='stand';
+  const h=player.pose==='eat'?0:inputH(),v=player.pose==='eat'?0:inputV();
+  if(h||v){if(openDialog)closeDialog();if(player.pose==='wave')player.pose='stand'}
+  window.ApartmentPathMap?.walk(player,h,v,dt);
+  const target=Math.max(0,Math.min(sceneWidth()-W,player.x-206));cam+=(target-cam)*Math.min(1,dt*6);
+  D.area.textContent='은하아파트 단지 내부';const a=nearest();D.action.textContent=a?'E · '+a.title:'↑↓←→ 단지 안 걷기 · Space 점프';return;
+ }
  const horizontal=player.pose==='eat'?0:inputH(),vertical=player.pose==='eat'?0:inputV();
  if(player.pose==='wave'&&t>player.waveEnd)player.pose='stand';
  const ladder=player.scene==='street'?WORLD.ladders.find(l=>Math.abs(l.x-player.x)<13):null;
@@ -3515,12 +3534,12 @@ function render(){
  ctx.setTransform(RENDER_SCALE,0,0,RENDER_SCALE,0,0);
  ctx.imageSmoothingEnabled=false;
  // A46: move the street camera up 40 world units; preserve all shared physics coordinates.
- if(player.scene==='street'){ctx.fillStyle=phase===2?'#273b57':phase===1?'#d5aba0':'#78b9eb';ctx.fillRect(0,0,W,H);ctx.translate(0,40);}
+ if(player.scene==='street'||player.scene==='side_alley'){ctx.fillStyle=phase===2?'#273b57':phase===1?'#d5aba0':'#78b9eb';ctx.fillRect(0,0,W,H);ctx.translate(0,40);}
  if(player.scene==='street'){
   WORLD.sky(ctx,cam,phase,t);ctx.drawImage(A12ART.enabled?bg:bgA11,-Math.round(cam),0);window.A14ART?.draw(ctx,cam,phase,t);window.A21SPACE?.draw(ctx,cam,phase,weather,t);WORLD.drawAmbient(ctx,cam,t,phase);
   if(A12ART.enabled)A12ART.dynamic(ctx,cam,phase,weather,t);
  }else if(ROUTES.isRoute(player.scene)){
-  WORLD.sky(ctx,cam,phase,t);ctx.drawImage(ROUTES.background(player.scene),-Math.round(cam),0);
+  WORLD.sky(ctx,cam,phase,t);if(!(player.scene==='side_alley'&&window.SideAlleyMap?.draw(ctx,cam))&&!(player.scene==='apartment_path'&&window.ApartmentPathMap?.draw(ctx,cam)))ctx.drawImage(ROUTES.background(player.scene),-Math.round(cam),0);
   if(phase===2){ctx.fillStyle='#233c5230';ctx.fillRect(0,0,W,H)}
  }else if(RESIDENTIAL.isRoom(player.scene)){
   RESIDENTIAL.drawInterior(ctx,player.scene,cam,phase,weather,t);
@@ -3534,14 +3553,15 @@ function render(){
  }
  ctx.save();ctx.translate(-Math.round(cam),0);
  if(player.scene==='street'){NEIGHBOR.renderWorld(ctx,phase,t,weather);LIFE.render(ctx,phase,t,weather);RESIDENTIAL.streetLayer(ctx,phase,weather,t);}
- if(player.scene==='street'){if(!window.AfterSchoolMap?.draw(ctx,t))window.FoodArt?.counter(ctx);}
- ROUTINES.render(ctx,player.scene,t,weather);
+ if(player.scene==='street'){if(!window.AfterSchoolMap?.draw(ctx,t))window.FoodArt?.counter(ctx);PlaygroundSpace.ground(ctx);}
+ if(player.scene!=='street')ROUTINES.render(ctx,player.scene,t,weather);
  window.CHARART?.drawAmbient?.(ctx,player.scene,t);
- window.A25NET?.render(ctx,cam,player.scene);
+ if(player.scene!=='apartment_path')window.A25NET?.render(ctx,cam,player.scene);
  if(ROUTES.isRoute(player.scene))ROUTES.dynamic(ctx,player.scene,phase,weather,t);
- if(!window.A20WORLD?.hidesPlayer())WORLD.drawKid(ctx,player.x,player.y,player.dir,player.walking,player.shirt,false,(['sit','bench','swing'].includes(player.pose)||(player.pose==='eat'&&player.eatRestore!=='stand')),player.pose);
- if(player.scene==='street')window.A20WORLD?.render(ctx,player);
- SHOPS.renderHeld(ctx,player.x,player.y,player.dir,player.pose,t);
+ if(player.scene==='apartment_path')window.ApartmentPathMap?.render(ctx,player,t);
+ if(player.scene!=='apartment_path'&&!(player.scene==='street'&&PlaygroundSpace.contains(player.x))&&!window.A20WORLD?.hidesPlayer())WORLD.drawKid(ctx,player.x,player.y,player.dir,player.walking,player.shirt,false,(['sit','bench','swing'].includes(player.pose)||(player.pose==='eat'&&player.eatRestore!=='stand')),player.pose);
+ if(player.scene==='street'){PlaygroundSpace.render(ctx,player,t);ROUTINES.render(ctx,player.scene,t,weather);}
+ if(player.scene!=='apartment_path'&&!(player.scene==='street'&&PlaygroundSpace.contains(player.x)))SHOPS.renderHeld(ctx,player.x,player.y,player.dir,player.pose,t);
  window.A25NET?.renderSelfBubble(ctx,player.scene);
  if(running&&!openDialog&&!window.A20WORLD?.hidesPlayer()){let h=nearest();if(h){const xx=h.x;let yy=player.scene==='street'?(h.type==='swing'?126:h.type==='counter'?126:['routineNpc','resNpc'].includes(h.type)?126:h.type==='door'?153:165):154;if(Math.abs(xx-player.x)<22)yy=Math.min(yy,player.y-74);
   let bob=Math.round(Math.sin(t*3)*2);ctx.fillStyle='#f4e3af';ctx.fillRect(Math.round(xx-5),yy+bob,11,11);
@@ -3562,7 +3582,7 @@ function render(){
 }
 function frame(now){const dt=Math.min(.033,(now-last)/1000||.016);last=now;update(dt);render();requestAnimationFrame(frame)}
 requestAnimationFrame(frame);
-window.__GAME_DEBUG__={nearest:()=>nearest(),playground:()=>window.A20WORLD?.snapshot(),environment:()=>A16SCENE.snapshot(),terrain:()=>A17TERRAIN.snapshot(),changeTerrain:(id,patch)=>A17TERRAIN.change(id,patch),moveEnvironment:(id,x)=>A16SCENE.move(id,x),layout:()=>A13LAYOUT.snapshot(),audit:()=>A13LAYOUT.validate(Object.fromEntries(A13LAYOUT.list().map(d=>[d.id,{x:d.x,w:d.w,h:d.h}]))),movePrefab:(id,x)=>A13LAYOUT.move(id,x),get art(){return A12ART.enabled?'A12':'A11'},player,residential:()=>RESIDENTIAL.debug(phase,weather),routines:()=>ROUTINES.debug(),shops:()=>({coins:SHOPS.coins,bag:SHOPS.inventory,open:SHOPS.isOpen}),playroom:()=>PLAYROOM.debug(),neighborhood:()=>NEIGHBOR.debug(t),routes:()=>({current:player.scene,branch:ROUTES.isRoute(player.scene),width:sceneWidth(),mapOpen:ROUTES.isMapOpen}),setWeather(x){weather=x?1:0;el('weatherLabel').textContent=weather?'비 내림':'맑음'},moveTo(x){player.x=x;player.pose='stand';player.y=GROUND;player.onGround=true;cam=Math.max(player.scene==='street'?359:0,Math.min(sceneWidth()-W,x-206))},setScene,get status(){return{running,phase,weather,camera:cam,scene:player.scene,area:D.area.textContent,pose:player.pose,footY:player.y,held:SHOPS.held,notes:MEMO.entries.length}}};
+window.__GAME_DEBUG__={nearest:()=>nearest(),playground:()=>window.A20WORLD?.snapshot(),environment:()=>A16SCENE.snapshot(),terrain:()=>A17TERRAIN.snapshot(),changeTerrain:(id,patch)=>A17TERRAIN.change(id,patch),moveEnvironment:(id,x)=>A16SCENE.move(id,x),layout:()=>A13LAYOUT.snapshot(),audit:()=>A13LAYOUT.validate(Object.fromEntries(A13LAYOUT.list().map(d=>[d.id,{x:d.x,w:d.w,h:d.h}]))),movePrefab:(id,x)=>A13LAYOUT.move(id,x),get art(){return A12ART.enabled?'A12':'A11'},player,residential:()=>RESIDENTIAL.debug(phase,weather),routines:()=>ROUTINES.debug(),shops:()=>({coins:SHOPS.coins,bag:SHOPS.inventory,open:SHOPS.isOpen}),playroom:()=>PLAYROOM.debug(),neighborhood:()=>NEIGHBOR.debug(t),routes:()=>({current:player.scene,branch:ROUTES.isRoute(player.scene),width:sceneWidth(),mapOpen:ROUTES.isMapOpen}),setWeather(x){weather=x?1:0;el('weatherLabel').textContent=weather?'비 내림':'맑음'},moveTo(x){player.x=x;player.pose='stand';player.y=GROUND;player.onGround=true;if(player.scene==='apartment_path')window.ApartmentPathMap?.enter(player);cam=Math.max(player.scene==='street'?359:0,Math.min(sceneWidth()-W,x-206))},setScene,get status(){return{running,phase,weather,camera:cam,scene:player.scene,area:D.area.textContent,pose:player.pose,footY:player.y,held:SHOPS.held,notes:MEMO.entries.length}}};
 })();
 
 
@@ -3766,7 +3786,7 @@ function close(){selfBubble='';selfBubbleUntil=0;announce({type:'network_close'}
 function assignState(d){
  let old=friends.get(d.id);if(!old){old={id:d.id,name:d.name||'친구',renderX:d.x,renderY:d.y};friends.set(d.id,old)}
  if(d.name)old.name=d.name;
- Object.assign(old,{scene:d.scene||'street',x:d.x,y:d.y,pose:d.pose||'stand',dir:d.dir===0?0:1,look:d.look||'boy_main_blue',held:d.held||null});
+ Object.assign(old,{scene:d.scene||'street',x:d.x,y:d.y,pose:d.pose||'stand',dir:d.dir===0?0:1,look:d.look||'boy_main_blue',held:d.held||null,playground:!!d.playground});
  if(!Number.isFinite(old.renderX))old.renderX=old.x;
  if(!Number.isFinite(old.renderY))old.renderY=old.y;
  updateCount();
@@ -3819,7 +3839,7 @@ function sendState(){
  if(!ready)return;
  const pose=(player.pose==='stand'&&Math.abs(player.walking)>0.2&&['stand','street'].includes(player.pose)?'walk':player.pose);
  // Walking is a presentation-only pose; its physics remains local.
- send({type:'state',scene:player.scene,x:Math.round(player.x*10)/10,y:Math.round(player.y*10)/10,pose,dir:player.dir,look:window.CHARART?.selected||'boy_main_blue',held:window.SHOPS?.heldKind||null});
+ send({type:'state',playground:!!player.playground,scene:player.scene,x:Math.round(player.x*10)/10,y:Math.round(player.y*10)/10,pose,dir:player.dir,look:window.CHARART?.selected||'boy_main_blue',held:window.SHOPS?.heldKind||null});
 }
 connectBtn.addEventListener('click',()=>ready?close():connect());
 share.addEventListener('click',async()=>{
@@ -3858,6 +3878,7 @@ function render(c,cam,scene){
  if(!ready)return;
  c.save();c.textAlign='center';c.textBaseline='bottom';
  for(const f of friends.values()){
+  if(f.scene==='street'&&window.PlaygroundSpace?.contains(f.renderX))continue;
   if(f.scene!==scene || window.A26NET?.skipAvatar?.(f.id) || !Number.isFinite(f.renderX)||!Number.isFinite(f.renderY))continue;
   const rx=f.renderX-cam;if(rx< -45||rx>525)continue;
   let ok=window.CHARART?.drawRemote?.(c,f.look,f.renderX,f.renderY,f.dir,f.pose,f.id,f.held);
@@ -3869,7 +3890,7 @@ function render(c,cam,scene){
  }
  c.restore();
 }
-window.A25NET={connect,close,tick,render,renderSelfBubble,send,subscribe(fn){subscribers.add(fn);return()=>subscribers.delete(fn)},get state(){return{ready,room:currentRoom,id:myId,peers:friends.size}},get peers(){return [...friends.values()].map(f=>({id:f.id,name:f.name,scene:f.scene,x:f.x,y:f.y,pose:f.pose}))}};
+window.A25NET={connect,close,tick,render,renderSelfBubble,send,subscribe(fn){subscribers.add(fn);return()=>subscribers.delete(fn)},get state(){return{ready,room:currentRoom,id:myId,peers:friends.size}},get peers(){return [...friends.values()].map(f=>({id:f.id,name:f.name,scene:f.scene,x:f.x,y:f.y,pose:f.pose,look:f.look,dir:f.dir,held:f.held,playground:f.playground}))}};
 updateCount();
 })();
 
@@ -3880,7 +3901,7 @@ updateCount();
    Two browsers in one room see the same swings, spinning platform and launch arcs.
    This uses the server's canonical playground geometry while online. */
 (function(){'use strict';
-const $=id=>document.getElementById(id);const NET=window.A25NET;const devicesFallback={swing_pair:{id:'swing_pair',mid:3562,w:94},roundabout:{id:'roundabout',mid:3898,w:116}};
+const $=id=>document.getElementById(id);const NET=window.A25NET;const devicesFallback={swing_pair:{id:'swing_pair',mid:3562,w:94},roundabout:{id:'roundabout',mid:3740,w:116}};
 let snapshot=null, lastResult='';
 const me=()=>NET.state.id, connected=()=>NET.state.ready;
 const physical=(id)=>{const data=snapshot;if(!data||!id)return null;
@@ -3977,7 +3998,7 @@ function panel(p){const box=$('a20Panel');if(!p||p.scene!=='street'){box?.classL
 function hint(){return physical(me())?.mode==='riding'?'E 내리기 · 친구가 H/K로 밀어줄 수 있어': 'Q 타기 · H/K 친구 밀어주기'}
 $('a26Teleport')?.addEventListener('click',()=>{const p=window.__GAME_DEBUG__;if(!p)return;const target=snapshot?.devices?.swing_pair||devicesFallback.swing_pair;p.setScene('street',target.mid-78);p.moveTo(target.mid-78);display('그네 앞에 도착했어. 친구가 타면 H/K로 밀어줘.')});
 $('a26Release')?.addEventListener('click',()=>{const current=physical(me());if(current)action('dismount',current.device)});
-window.A26NET={get ready(){return connected()},get snapshot(){return snapshot},physical,mount,help,push,updateLocal,hidesPlayer,skipAvatar,render,key,button,panel,hint};
+window.A26NET={get snapshot(){return snapshot},get ready(){return connected()},physical,mount,help,push,updateLocal,hidesPlayer,skipAvatar,render,key,button,panel,hint};
 })();
 
 /* END src/29_coop_playground.js */

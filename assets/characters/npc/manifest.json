@@ -1,0 +1,702 @@
+{
+  "npc_shopkeeper": {
+    "label": "문방구 아주머니",
+    "sheet": "assets/characters/npc/npc_shopkeeper.png",
+    "frameWidth": 192,
+    "frameHeight": 160,
+    "columns": 8,
+    "rows": 3,
+    "anchor": [
+      80,
+      156
+    ],
+    "displayHeight": 78,
+    "kind": "adult",
+    "idle": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "walk": [
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11
+    ],
+    "sit": [
+      12,
+      13
+    ],
+    "wave": [
+      14,
+      15,
+      16
+    ],
+    "work": [
+      17,
+      18,
+      19,
+      20
+    ],
+    "jump": [
+      21,
+      22
+    ],
+    "side": 23
+  },
+  "npc_snack": {
+    "label": "분식집 아주머니",
+    "sheet": "assets/characters/npc/npc_snack.png",
+    "frameWidth": 192,
+    "frameHeight": 160,
+    "columns": 8,
+    "rows": 3,
+    "anchor": [
+      80,
+      156
+    ],
+    "displayHeight": 78,
+    "kind": "adult",
+    "idle": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "walk": [
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11
+    ],
+    "sit": [
+      12,
+      13
+    ],
+    "wave": [
+      14,
+      15,
+      16
+    ],
+    "work": [
+      17,
+      18,
+      19,
+      20
+    ],
+    "jump": [
+      21,
+      22
+    ],
+    "side": 23
+  },
+  "npc_guard": {
+    "label": "아파트 경비 아저씨",
+    "sheet": "assets/characters/npc/npc_guard.png",
+    "frameWidth": 192,
+    "frameHeight": 160,
+    "columns": 8,
+    "rows": 3,
+    "anchor": [
+      80,
+      156
+    ],
+    "displayHeight": 78,
+    "kind": "adult",
+    "idle": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "walk": [
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11
+    ],
+    "sit": [
+      12,
+      13
+    ],
+    "wave": [
+      14,
+      15,
+      16
+    ],
+    "work": [
+      17,
+      18,
+      19,
+      20
+    ],
+    "jump": [
+      21,
+      22
+    ],
+    "side": 23
+  },
+  "npc_maintenance": {
+    "label": "동네 수리공",
+    "sheet": "assets/characters/npc/npc_maintenance.png",
+    "frameWidth": 192,
+    "frameHeight": 160,
+    "columns": 8,
+    "rows": 3,
+    "anchor": [
+      80,
+      156
+    ],
+    "displayHeight": 78,
+    "kind": "adult",
+    "idle": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "walk": [
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11
+    ],
+    "sit": [
+      12,
+      13
+    ],
+    "wave": [
+      14,
+      15,
+      16
+    ],
+    "work": [
+      17,
+      18,
+      19,
+      20
+    ],
+    "jump": [
+      21,
+      22
+    ],
+    "side": 23
+  },
+  "npc_neighbor": {
+    "label": "빨래 걷는 이웃",
+    "sheet": "assets/characters/npc/npc_neighbor.png",
+    "frameWidth": 192,
+    "frameHeight": 160,
+    "columns": 8,
+    "rows": 3,
+    "anchor": [
+      80,
+      156
+    ],
+    "displayHeight": 78,
+    "kind": "adult",
+    "idle": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "walk": [
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11
+    ],
+    "sit": [
+      12,
+      13
+    ],
+    "wave": [
+      14,
+      15,
+      16
+    ],
+    "work": [
+      17,
+      18,
+      19,
+      20
+    ],
+    "jump": [
+      21,
+      22
+    ],
+    "side": 23
+  },
+  "npc_neighbor2": {
+    "label": "복도에서 인사하는 이웃",
+    "sheet": "assets/characters/npc/npc_neighbor2.png",
+    "frameWidth": 192,
+    "frameHeight": 160,
+    "columns": 8,
+    "rows": 3,
+    "anchor": [
+      80,
+      156
+    ],
+    "displayHeight": 78,
+    "kind": "adult",
+    "idle": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "walk": [
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11
+    ],
+    "sit": [
+      12,
+      13
+    ],
+    "wave": [
+      14,
+      15,
+      16
+    ],
+    "work": [
+      17,
+      18,
+      19,
+      20
+    ],
+    "jump": [
+      21,
+      22
+    ],
+    "side": 23
+  },
+  "npc_market": {
+    "label": "장바구니 든 주민",
+    "sheet": "assets/characters/npc/npc_market.png",
+    "frameWidth": 192,
+    "frameHeight": 160,
+    "columns": 8,
+    "rows": 3,
+    "anchor": [
+      80,
+      156
+    ],
+    "displayHeight": 78,
+    "kind": "adult",
+    "idle": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "walk": [
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11
+    ],
+    "sit": [
+      12,
+      13
+    ],
+    "wave": [
+      14,
+      15,
+      16
+    ],
+    "work": [
+      17,
+      18,
+      19,
+      20
+    ],
+    "jump": [
+      21,
+      22
+    ],
+    "side": 23
+  },
+  "npc_grandma": {
+    "label": "동네 할머니",
+    "sheet": "assets/characters/npc/npc_grandma.png",
+    "frameWidth": 192,
+    "frameHeight": 160,
+    "columns": 8,
+    "rows": 3,
+    "anchor": [
+      80,
+      156
+    ],
+    "displayHeight": 74,
+    "kind": "adult",
+    "idle": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "walk": [
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11
+    ],
+    "sit": [
+      12,
+      13
+    ],
+    "wave": [
+      14,
+      15,
+      16
+    ],
+    "work": [
+      17,
+      18,
+      19,
+      20
+    ],
+    "jump": [
+      21,
+      22
+    ],
+    "side": 23
+  },
+  "npc_office": {
+    "label": "퇴근하는 회사원",
+    "sheet": "assets/characters/npc/npc_office.png",
+    "frameWidth": 192,
+    "frameHeight": 160,
+    "columns": 8,
+    "rows": 3,
+    "anchor": [
+      80,
+      156
+    ],
+    "displayHeight": 78,
+    "kind": "adult",
+    "idle": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "walk": [
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11
+    ],
+    "sit": [
+      12,
+      13
+    ],
+    "wave": [
+      14,
+      15,
+      16
+    ],
+    "work": [
+      17,
+      18,
+      19,
+      20
+    ],
+    "jump": [
+      21,
+      22
+    ],
+    "side": 23
+  },
+  "npc_delivery": {
+    "label": "동네 배달 직원",
+    "sheet": "assets/characters/npc/npc_delivery.png",
+    "frameWidth": 192,
+    "frameHeight": 160,
+    "columns": 8,
+    "rows": 3,
+    "anchor": [
+      80,
+      156
+    ],
+    "displayHeight": 78,
+    "kind": "adult",
+    "idle": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "walk": [
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11
+    ],
+    "sit": [
+      12,
+      13
+    ],
+    "wave": [
+      14,
+      15,
+      16
+    ],
+    "work": [
+      17,
+      18,
+      19,
+      20
+    ],
+    "jump": [
+      21,
+      22
+    ],
+    "side": 23
+  },
+  "npc_worker": {
+    "label": "공사 마치고 돌아가는 인부",
+    "sheet": "assets/characters/npc/npc_worker.png",
+    "frameWidth": 192,
+    "frameHeight": 160,
+    "columns": 8,
+    "rows": 3,
+    "anchor": [
+      80,
+      156
+    ],
+    "displayHeight": 78,
+    "kind": "adult",
+    "idle": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "walk": [
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11
+    ],
+    "sit": [
+      12,
+      13
+    ],
+    "wave": [
+      14,
+      15,
+      16
+    ],
+    "work": [
+      17,
+      18,
+      19,
+      20
+    ],
+    "jump": [
+      21,
+      22
+    ],
+    "side": 23
+  },
+  "npc_studentA": {
+    "label": "하굣길 남학생",
+    "sheet": "assets/characters/npc/npc_studentA.png",
+    "frameWidth": 192,
+    "frameHeight": 160,
+    "columns": 8,
+    "rows": 3,
+    "anchor": [
+      80,
+      156
+    ],
+    "displayHeight": 61,
+    "kind": "child",
+    "idle": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "walk": [
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11
+    ],
+    "sit": [
+      12,
+      13
+    ],
+    "wave": [
+      14,
+      15,
+      16
+    ],
+    "work": [
+      17,
+      18,
+      19,
+      20
+    ],
+    "jump": [
+      21,
+      22
+    ],
+    "side": 23
+  },
+  "npc_studentB": {
+    "label": "하굣길 여학생",
+    "sheet": "assets/characters/npc/npc_studentB.png",
+    "frameWidth": 192,
+    "frameHeight": 160,
+    "columns": 8,
+    "rows": 3,
+    "anchor": [
+      80,
+      156
+    ],
+    "displayHeight": 61,
+    "kind": "child",
+    "idle": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "walk": [
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11
+    ],
+    "sit": [
+      12,
+      13
+    ],
+    "wave": [
+      14,
+      15,
+      16
+    ],
+    "work": [
+      17,
+      18,
+      19,
+      20
+    ],
+    "jump": [
+      21,
+      22
+    ],
+    "side": 23
+  },
+  "npc_hakwondo": {
+    "label": "태권도 학원 가는 아이",
+    "sheet": "assets/characters/npc/npc_hakwondo.png",
+    "frameWidth": 192,
+    "frameHeight": 160,
+    "columns": 8,
+    "rows": 3,
+    "anchor": [
+      80,
+      156
+    ],
+    "displayHeight": 61,
+    "kind": "child",
+    "idle": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "walk": [
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11
+    ],
+    "sit": [
+      12,
+      13
+    ],
+    "wave": [
+      14,
+      15,
+      16
+    ],
+    "work": [
+      17,
+      18,
+      19,
+      20
+    ],
+    "jump": [
+      21,
+      22
+    ],
+    "side": 23
+  }
+}
