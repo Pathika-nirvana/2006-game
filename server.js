@@ -20,7 +20,9 @@ const G = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
 const sessions = new Set();
 const rooms = new Map();
 const physicsRooms=new Map();
-const types = {'.html':'text/html; charset=utf-8','.js':'application/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.webp':'image/webp','.png':'image/png','.json':'application/json; charset=utf-8','.ico':'image/x-icon'};
+const musicRooms=new Map();const MUSIC_DURATION=95.6865+205.035083;
+function musicSnapshot(room){const m=musicRooms.get(room);return m?{enabled:m.enabled,position:m.position,updatedAt:m.updatedAt,serverTime:Date.now()}:null}
+const types = {'.mp3':'audio/mpeg','.html':'text/html; charset=utf-8','.js':'application/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.otf':'font/otf','.webp':'image/webp','.png':'image/png','.json':'application/json; charset=utf-8','.ico':'image/x-icon'};
 const publicPaths = new Set(['/', '/index.html', '/src/', '/assets/']);
 const app = http.createServer((req,res)=>{
   if(req.method!=='GET'){res.writeHead(405);res.end('GET only');return}
@@ -36,6 +38,16 @@ const app = http.createServer((req,res)=>{
   if(!full.startsWith(ROOT+path.sep)){res.writeHead(403);res.end();return}
   fs.stat(full,(err,st)=>{
     if(err||!st.isFile()){res.writeHead(404);res.end();return}
+    if(path.extname(full)==='.mp3'){
+      const headers={'content-type':'audio/mpeg','accept-ranges':'bytes','cache-control':'public, max-age=3600','x-content-type-options':'nosniff'};
+      if(req.headers.range){
+        const m=/^bytes=(\d*)-(\d*)$/.exec(req.headers.range);let start,end;
+        if(m&&(m[1]||m[2])){start=m[1]?Number(m[1]):Math.max(0,st.size-Number(m[2]));end=m[1]?(m[2]?Math.min(Number(m[2]),st.size-1):st.size-1):st.size-1}
+        if(!Number.isSafeInteger(start)||!Number.isSafeInteger(end)||start<0||start>=st.size||end<start){res.writeHead(416,{'content-range':'bytes */'+st.size});res.end();return}
+        res.writeHead(206,{...headers,'content-range':`bytes ${start}-${end}/${st.size}`,'content-length':end-start+1});fs.createReadStream(full,{start,end}).pipe(res);return;
+      }
+      res.writeHead(200,{...headers,'content-length':st.size});fs.createReadStream(full).pipe(res);return;
+    }
     res.writeHead(200,{'content-type':types[path.extname(full)]||'application/octet-stream','x-content-type-options':'nosniff','cache-control':'no-cache'});
     fs.createReadStream(full).pipe(res);
   });
@@ -54,14 +66,14 @@ function publicState(s){return {id:s.id,name:s.name,scene:s.state.scene,x:s.stat
 function end(s){
   if(s.closed)return;s.closed=true;sessions.delete(s);
   if(s.room)PLAY.clearUser(physicsRooms.get(s.room),s.id);
-  if(s.room){const group=rooms.get(s.room);group?.delete(s);if(group?.size===0){rooms.delete(s.room);physicsRooms.delete(s.room)}else cast(s.room,{type:'left',id:s.id})}
+  if(s.room){const group=rooms.get(s.room);group?.delete(s);if(group?.size===0){rooms.delete(s.room);physicsRooms.delete(s.room);musicRooms.delete(s.room)}else cast(s.room,{type:'left',id:s.id})}
   try{s.socket.destroy()}catch{}
 }
 const code=/^[A-Z0-9]{4,8}$/;
 const validScene=/^[a-z0-9_]{1,30}$/;
 const poses=new Set(['stand','walk','jump','sit','bench','wave','eat','climb','swing']);
 const looks=new Set(["boy_main_blue", "boy_main_green", "boy_main_dobok", "girl_main_pink", "girl_main_yellow", "girl_main_dobok"]);
-const heldFoods=new Set(['zzon','fish','cola','stars','ring','straw','tteok','odeng','slushred','slushblue','skewer','fry','sundae','gimmari','hotdog','broth']);
+const heldFoods=new Set(['zzon','fish','cola','chikani','pill','stars','ring','straw','tteok','odeng','slushred','slushblue','skewer','fry','sundae','gimmari','hotdog','broth']);
 function cleanName(s){return String(s||'').normalize('NFC').replace(/[<>\x00-\x1f\x7f]/g,'').trim().slice(0,14)||'이름 없는 친구'}
 function onMessage(s,obj){
  if(!obj||typeof obj!=='object'||Array.isArray(obj))return;
@@ -73,11 +85,20 @@ function onMessage(s,obj){
    // If identical display names collide, retain names: stable ids disambiguate players.
    s.room=room;s.name=name;rooms.set(room,group);
    if(!physicsRooms.has(room))physicsRooms.set(room,PLAY.createRoom());
-   send(s,{type:'welcome',id:s.id,room,players:[...group].map(publicState)});
+   if(!musicRooms.has(room))musicRooms.set(room,{enabled:true,position:0,updatedAt:Date.now()});
+   send(s,{type:'welcome',id:s.id,room,players:[...group].map(publicState),music:musicSnapshot(room)});
    group.add(s);send(s,{type:'playground_state',state:PLAY.snapshot(physicsRooms.get(room))});cast(room,{type:'joined',player:publicState(s)},s);
    return;
  }
  if(!s.room)return;
+ if(obj.type==='music'){
+   if(typeof obj.enabled!=='boolean'&&!['restart','next'].includes(obj.action))return;
+   const now=Date.now();if(now-(s.lastMusic||0)<300)return;s.lastMusic=now;
+   const m=musicRooms.get(s.room);if(!m)return;
+   if(['restart','next'].includes(obj.action)){const pos=(m.position+(m.enabled?(now-m.updatedAt)/1000:0))%MUSIC_DURATION;const second=pos>=95.6865-1e-6;m.position=obj.action==='restart'?(second?95.6865:0):(second?0:95.6865);m.updatedAt=now}
+   else if(m.enabled!==obj.enabled){m.position=(m.position+(m.enabled?(now-m.updatedAt)/1000:0))%MUSIC_DURATION;m.updatedAt=now;m.enabled=obj.enabled}
+   cast(s.room,{type:'music',music:musicSnapshot(s.room)});return;
+ }
  if(obj.type==='playground'){
    const arena=physicsRooms.get(s.room);const people=new Map([...rooms.get(s.room)].map(p=>[p.id,p]));
    const result=PLAY.act(arena,s,obj,people);
@@ -156,4 +177,4 @@ const playgroundClock=setInterval(()=>{physicsNetTicks++;
  }
 },1000/60);playgroundClock.unref();
 if(require.main===module){app.listen(PORT,HOST,()=>console.log(`2006 A27: http://${HOST}:${PORT} — 최대 ${MAX_ROOM}명/방`))}
-module.exports={app,rooms,sessions,physicsRooms};
+module.exports={app,rooms,sessions,physicsRooms,musicRooms};

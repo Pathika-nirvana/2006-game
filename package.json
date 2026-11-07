@@ -1,8 +1,8 @@
 {
   "name": "2006-reminiscence-a38-review",
-  "version": "0.60.0",
+  "version": "0.72.0",
   "private": true,
-  "description": "A60 큰길 건물·차량 비율, 상호 간판과 건축 변주 수정",
+  "description": "A70 PC방1번 시안 횡스크롤 재구성·청회색/먹색·웰치스 캔",
   "scripts": {
     "start": "node server.js",
     "test:coop": "node tests/test_a26_coop.js",
@@ -28,13 +28,27 @@
     "art:optimize": "node tools/optimize-runtime.cjs",
     "release": "python3 tools/package-release.py",
     "art:road": "node tools/build-main-road.cjs",
-    "test:road": "node tests/test_main_road.cjs"
+    "test:road": "node tests/test_main_road.cjs",
+    "art:back-alley": "node tools/build-back-alley.cjs",
+    "test:back-alley": "node tests/test_back_alley.cjs",
+    "art:stationery": "node tools/build-stationery-interior.cjs",
+    "test:stationery": "node tests/test_stationery_interior.cjs",
+    "art:stationery-products": "node tools/build-stationery-products.cjs",
+    "test:stationery-products": "node tests/test_stationery_products_arcade.cjs",
+    "test:stationery-browser": "node tests/test_stationery_products_browser.cjs",
+    "test:bgm": "node tests/test_background_music.cjs",
+    "test:music-server": "node tests/test_music_server.cjs",
+    "art:courtyard": "node tools/build-courtyard.cjs",
+    "test:courtyard": "node tests/test_courtyard.cjs",
+    "art:pcroom": "node tools/build-pcroom.cjs",
+    "test:pcroom": "node tests/test_pcroom.cjs"
   },
   "engines": {
     "node": ">=22"
   },
   "devDependencies": {
     "@napi-rs/canvas": "0.1.100",
-    "sharp": "0.35.5"
+    "sharp": "0.35.5",
+    "playwright": "1.62.1"
   }
 }

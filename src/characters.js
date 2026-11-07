@@ -78,11 +78,11 @@ const ambient=[
 ];
 function drawAmbient(c,scene,t){
  // Period-appropriate shopkeepers: plain casual clothes, apron; no chef's toque or fantasy costume.
- if(scene==='stationery'){
+ if(scene==='stationery'){if(window.StationeryInterior?.ready)return;
   drawFrame(c,'npc_shopkeeper',580,201,1,poseIndex(Math.floor(t/5)%2?'work':'idle',0),true);
   return;
  }
- if(scene==='pcroom'){
+ if(scene==='pcroom'){if(window.PcRoomMap?.ready)return;
   drawFrame(c,'npc_office',709,202,1,poseIndex('idle',0),true);
   return;
  }

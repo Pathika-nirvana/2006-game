@@ -12,3 +12,5 @@
 - Keep scale grounded in actual rendered actors, not nominal atlas-cell size: the current child is about51 logical pixels high. Same-plane doors must clear the child substantially; passing foreground sedans must have credible full-size proportions. Do not shrink characters to fix scenery.
 - Main-road signs should carry believable named business identities with relevant services/floor information, not repeated industry-only placeholders. Vary building massing, roofline, window systems and setbacks as well as materials.
 - Main-road paving and curb must share one height plane across facade revisions. Preserve intentional side-road openings and rounded curb ends in their entirety.
+
+- Never fix raster sign lettering by placing flat opaque UI rectangles over the authored scene. Preserve sign emblems, material texture, physical frames, shading and glass transparency; improve embedded lettering through localized art edits.

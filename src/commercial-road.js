@@ -1,16 +1,16 @@
 /* A59: one continuous world master, fixed common sidewalk and curb plane. */
 (function(w){'use strict';
-const SCALE=.8,Y=-261,WIDTH=4572,imgs={};
+const SCALE=.48,Y=-73.8,WIDTH=2743,imgs={};
 let ready=false;
 const readyPromise=Promise.all(['master','floor','sonata','porter'].map(id=>new Promise(resolve=>{const im=imgs[id]=new w.Image();im.onload=()=>resolve(true);im.onerror=()=>resolve(false);im.src='assets/maps/main-road/'+id+'.webp'}))).then(r=>ready=r.every(Boolean));
-function draw(c,cam){const camera=Math.round(cam);c.save();c.imageSmoothingEnabled=false;c.fillStyle='#5b5d67';c.fillRect(0,-17,480,287);if(ready){const im=imgs.master,left=Math.max(0,camera),right=Math.min(camera+480,WIDTH);if(right>left)c.drawImage(im,left/SCALE,0,(right-left)/SCALE,im.height,left-camera,Y,right-left,im.height*SCALE);
+function draw(c,cam){const camera=Math.round(cam);c.save();c.imageSmoothingEnabled=false;c.fillStyle='#5b5d67';c.fillRect(0,-24,480,294);if(ready){const im=imgs.master,left=Math.max(0,camera),right=Math.min(camera+480,WIDTH);if(right>left)c.drawImage(im,left/SCALE,0,(right-left)/SCALE,im.height,left-camera,Y,right-left,im.height*SCALE);
  // A single shared paving/curb strip replaces all former joins at one fixed height.
  const tile=imgs.floor,tw=240*SCALE,ty=Math.round(578*SCALE+Y);
  for(let i=Math.floor(camera/tw);i*tw<camera+480;i++)c.drawImage(tile,Math.round(i*tw-camera),ty,tw,70*SCALE);
  // Crosswalk openings intentionally interrupt the curb; their road plane is retained.
  for(const[a,b]of [[1980,2345],[5280,5716]]){const x=Math.max(left,a*SCALE),end=Math.min(right,b*SCALE);if(end>x)c.drawImage(im,x/SCALE,578,(end-x)/SCALE,70,x-camera,ty,end-x,70*SCALE)}
  // Local drains sit in the shared curb, rather than returning old mismatched curb heights.
- for(const x of [250,1420,2710,3820,4820])if(x*SCALE>camera-60&&x*SCALE<camera+500)c.drawImage(im,1407,594,48,17,x*SCALE-camera,214,48*SCALE,17*SCALE);
+ for(const x of [250,1420,2710,3820,4820])if(x*SCALE>camera-60&&x*SCALE<camera+500)c.drawImage(im,1407,594,48,17,x*SCALE-camera,211,48*SCALE,17*SCALE);
  }c.restore();return true}
 function hotspots(t){return[
  {type:'routeGate',x:24,r:22,to:'street',spawn:920,title:'별빛문구 옆 골목으로',txt:'익숙한 문구점 골목으로 돌아간다.',icon:'↶'},
@@ -30,9 +30,9 @@ function hotspots(t){return[
  {type:'routeNote',x:2200,r:24,title:'큰길 끝 교차로',txt:'상가가 이어진 길 끝에서 주택가로 향하는 길이 다시 갈라진다.',icon:'🚦'},
  {type:'routeNote',x:1370,r:25,title:'정진입시학원과 솔빛영어학원',txt:'3층은 정진입시학원, 2층은 솔빛영어학원이다. 계단실 옆 안내판에 층별 입주 학원과 수업 대상이 적혀 있다.',icon:'📚'},
  {type:'routeNote',x:820,r:24,title:'교차로 모퉁이',txt:'큰길과 골목이 만나는 자리. 신호등 아래로 횡단보도가 이어진다.',icon:'🚦'}
-].map(a=>({...a,x:a.x*2,...(a.y===undefined?{}:{y:207+(a.y-207)*2})}))}
-function traffic(t){return [['sonata',-180,440,236,180],['porter',150,2200,249,200]].map(([id,speed,offset,y,width])=>({id,speed,x:((offset+t*speed)%(WIDTH+440)+(WIDTH+440))%(WIDTH+440)-220,y,width}))}
+].map(a=>({...a,x:a.x*1.2,...(a.y===undefined?{}:{y:207+(a.y-207)*1.2})}))}
+function traffic(t){return [['sonata',-180,440,236,180],['porter',150,2200,249,200]].map(([id,speed,offset,y,width])=>({id,speed,x:((offset*.6+t*speed)%(WIDTH+440)+(WIDTH+440))%(WIDTH+440)-220,y,width:width*.72}))}
 function foreground(c,t){if(!ready)return;for(const a of traffic(t)){const im=imgs[a.id],height=a.width*im.height/im.width;c.save();c.translate(a.x,a.y);if(a.speed<0)c.scale(-1,1);c.drawImage(im,-a.width/2,-height,a.width,height);c.restore()}}
-function dynamic(c,t){if(!ready)return;for(const [look,base,speed,range]of [['npc_studentA',1120,.23,190],['npc_market',2820,.17,240],['npc_studentB',3860,.19,140]]){const x=base+Math.sin(t*speed)*range;c.save();c.fillStyle='#34484232';c.beginPath();c.ellipse(x,208,8,2,0,0,7);c.fill();w.CHARART?.drawRemote?.(c,look,x,207,Math.cos(t*speed)>0?1:0,'walk','main-road-'+look);c.restore()}}
-w.CommercialRoad={readyPromise,draw,hotspots,dynamic,foreground,traffic,geometry:{scale:SCALE,offsetY:Y,screenOffset:17,walkY:207,curbTop:214,curbBottom:228},width:WIDTH,get ready(){return ready}};
+function dynamic(c,t){if(!ready)return;for(const [look,base,speed,range]of [['npc_studentA',672,.23,114],['npc_market',1692,.17,144],['npc_studentB',2316,.19,84]]){const x=base+Math.sin(t*speed)*range;c.save();c.fillStyle='#34484232';c.beginPath();c.ellipse(x,208,8,2,0,0,7);c.fill();c.translate(x,207);c.scale(.72,.72);w.CHARART?.drawRemote?.(c,look,0,0,Math.cos(t*speed)>0?1:0,'walk','main-road-'+look);c.restore()}}
+w.CommercialRoad={readyPromise,draw,hotspots,dynamic,foreground,traffic,geometry:{scale:SCALE,offsetY:Y,screenOffset:24,walkY:207,curbTop:211,curbBottom:220,actorScale:.72},width:WIDTH,get ready(){return ready}};
 })(window);

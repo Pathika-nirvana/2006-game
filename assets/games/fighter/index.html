@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>동네 태권 대전</title>
+<style>
+:root{--bg:#07050d;--wood:#2a1d16;--metal:#15121c}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);overflow:hidden;font-family:"Malgun Gothic","Apple SD Gothic Neo","Noto Sans CJK KR","Noto Sans KR",sans-serif;-webkit-user-select:none;user-select:none}
+body{display:flex;justify-content:center;align-items:stretch}
+/* 오락기 정면 */
+.cab{height:100%;width:min(100vw,calc(100vh * 1.05));display:flex;flex-direction:column;background:linear-gradient(90deg,#0d0a14,#1c1622 8%,#1c1622 92%,#0d0a14);border-left:2px solid #2b2236;border-right:2px solid #2b2236;box-shadow:0 0 80px #000 inset}
+.marquee{flex:0 0 clamp(34px,9vh,86px);margin:clamp(4px,1.2vh,12px) clamp(8px,3vw,40px) 0;border-radius:6px 6px 2px 2px;background:linear-gradient(#ffb23a,#e0592b);display:flex;justify-content:center;align-items:center;position:relative;overflow:hidden;box-shadow:0 0 24px #ff8a3a88,inset 0 -6px 12px #0006}
+.marquee b{font-weight:900;font-size:clamp(16px,4.6vh,44px);color:#fff7d6;letter-spacing:.12em;text-shadow:0 2px 0 #7a1a10,0 0 14px #fff3;white-space:nowrap}
+.marquee i{position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 22px,#ffffff10 22px 24px)}
+.bezel{flex:1 1 auto;min-height:0;margin:clamp(4px,1.2vh,12px) clamp(6px,2.4vw,30px);padding:clamp(6px,1.6vh,18px);background:linear-gradient(145deg,#0a0810,#1b1523);border-radius:12px;box-shadow:inset 0 0 0 2px #2d2438,inset 0 0 30px #000,0 0 0 2px #000;display:flex}
+.glass{position:relative;flex:1;min-width:0;min-height:0;border-radius:14px/12px;overflow:hidden;background:#000;box-shadow:0 0 0 3px #000,0 0 30px #6aa0ff22 inset}
+#screen{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;image-rendering:pixelated;image-rendering:crisp-edges;background:#000;outline:none}
+.glass::before{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.20) 0 1px,transparent 1px 3px)}
+.glass::after{content:"";position:absolute;inset:0;z-index:3;pointer-events:none;background:radial-gradient(ellipse at 50% 45%,transparent 58%,rgba(0,0,0,.55) 100%),linear-gradient(160deg,rgba(255,255,255,.07),transparent 28%)}
+/* 조작판 */
+.panel{flex:0 0 clamp(70px,22vh,210px);margin:0 clamp(4px,1.6vw,22px) clamp(4px,1.2vh,12px);background:linear-gradient(#2a2233,#171220);border-top:3px solid #3a2f48;border-radius:6px 6px 10px 10px;display:flex;justify-content:space-around;align-items:center;gap:2vw;transform:perspective(600px) rotateX(12deg);overflow:hidden;transform-origin:50% 0;box-shadow:0 -4px 20px #000a}
+.player{display:flex;align-items:center;gap:clamp(6px,2vw,40px)}
+.stick{position:relative;width:min(clamp(40px,10vh,92px),8.5vw);height:min(clamp(40px,10vh,92px),8.5vw);border-radius:50%;background:radial-gradient(#0b0910,#1e1828);box-shadow:inset 0 0 0 3px #3b3148}
+.shaft{position:absolute;left:50%;top:50%;width:14%;height:46%;background:linear-gradient(90deg,#999,#eee,#999);transform-origin:50% 100%;transform:translate(-50%,-100%) rotate(0);transition:transform .05s}
+.ball{position:absolute;left:50%;top:-34%;width:150%;aspect-ratio:1;border-radius:50%;transform:translateX(-50%);background:radial-gradient(circle at 35% 30%,#ff9a8a,#d4261a 55%,#7d130d)}
+.btns{display:grid;grid-template-columns:repeat(4,auto);gap:clamp(3px,1vw,16px);align-items:end}
+.btn{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:min(clamp(8px,1.5vh,13px),1.5vw);color:#c8bfd8;font-weight:700}
+.btn span{display:block;width:min(clamp(24px,6.4vh,58px),4.6vw);aspect-ratio:1;border-radius:50%;border:3px solid #0006;box-shadow:0 5px 0 #0008,inset 0 3px 6px #fff4;transition:transform .04s,box-shadow .04s,filter .04s;filter:saturate(.85) brightness(.8)}
+.btn:nth-child(1) span{background:#e04a3c}.btn:nth-child(2) span{background:#e8b83a}.btn:nth-child(3) span{background:#58b86a}.btn:nth-child(4) span{background:#4a86e0}
+.btn.on span{transform:translateY(4px);box-shadow:0 1px 0 #0008,inset 0 3px 6px #fff4,0 0 16px currentColor;filter:saturate(1.2) brightness(1.25)}
+.pl{position:absolute;font-size:10px;color:#8b7fa0;margin-top:-6px}
+.coin{display:flex;flex-direction:column;align-items:center;gap:4px;color:#d9cfe8;font-size:clamp(8px,1.5vh,12px)}
+.slot{width:clamp(28px,5vh,46px);height:clamp(36px,7vh,62px);background:#0c0a12;border:3px solid #6a5f7a;border-radius:4px;position:relative}
+.slot::after{content:"";position:absolute;left:50%;top:14%;width:5px;height:60%;background:#000;transform:translateX(-50%);box-shadow:0 0 6px #ffcf5a}
+.hint{position:fixed;left:0;right:0;bottom:2px;text-align:center;font-size:10px;color:#6f6580;pointer-events:none}
+body.nobezel .marquee,body.nobezel .panel,body.nobezel .hint{display:none}
+body.nobezel .cab{width:100vw;border:0;background:#000}
+body.nobezel .bezel{margin:0;padding:0;border-radius:0;background:#000;box-shadow:none}
+body.nobezel .glass{border-radius:0;box-shadow:none}
+@media (max-height:380px){.panel{display:none}.marquee{flex-basis:28px}}
+</style>
+</head>
+<body>
+<div class="cab">
+  <div class="marquee"><i></i><b>★ 동네 태권 대전 ★</b></div>
+  <div class="bezel"><div class="glass"><canvas id="screen" tabindex="0"></canvas></div></div>
+  <div class="panel">
+    <div class="player" id="p1">
+      <div class="stick"><div class="shaft" id="s1"><div class="ball"></div></div></div>
+      <div class="btns" id="b1"><div class="btn"><span></span>풋워크</div><div class="btn"><span></span>훼이크</div><div class="btn"><span></span>왼발</div><div class="btn"><span></span>오른발</div></div>
+    </div>
+    <div class="coin"><div class="slot"></div>투입구</div>
+    <div class="player" id="p2">
+      <div class="btns" id="b2"><div class="btn"><span></span>풋워크</div><div class="btn"><span></span>훼이크</div><div class="btn"><span></span>왼발</div><div class="btn"><span></span>오른발</div></div>
+      <div class="stick"><div class="shaft" id="s2"><div class="ball"></div></div></div>
+    </div>
+  </div>
+</div>
+<div class="hint">Esc 나가기 / 일시정지   M 소리   방향키 이동, Q 풋워크, A 훼이크, S 왼발, D 오른발</div>
+<script>
+(function(){
+  var q=new URLSearchParams(location.search);
+  if(q.get('bezel')==='0') document.body.classList.add('nobezel');
+  /* 조작판 불빛: 게임과 따로 키 입력만 보고 움직인다 */
+  var P1={l:['ArrowLeft'],r:['ArrowRight'],u:['ArrowUp'],d:['ArrowDown'],b:[['KeyQ'],['KeyA'],['KeyS'],['KeyD']]};
+  var P2={l:['KeyJ'],r:['KeyL'],u:['KeyI'],d:['KeyK'],b:[['KeyU'],['KeyO'],['KeyP'],['Semicolon']]};
+  var down=new Set();
+  function any(a){return a.some(function(k){return down.has(k)})}
+  function paint(map,stickEl,btnsEl){
+    var x=(any(map.r)?1:0)-(any(map.l)?1:0), y=(any(map.d)?1:0)-(any(map.u)?1:0);
+    var ang=x*22; var tilt=y*10;
+    stickEl.style.transform='translate(-50%,-100%) rotate('+ang+'deg) rotateX('+(-tilt)+'deg)';
+    var kids=btnsEl.children;
+    for(var i=0;i<4;i++) kids[i].classList.toggle('on',any(map.b[i]));
+  }
+  function refresh(){
+    paint(P1,document.getElementById('s1'),document.getElementById('b1'));
+    paint(P2,document.getElementById('s2'),document.getElementById('b2'));
+  }
+  addEventListener('keydown',function(e){down.add(e.code);refresh()});
+  addEventListener('keyup',function(e){down.delete(e.code);refresh()});
+  addEventListener('blur',function(){down.clear();refresh()});
+  addEventListener('load',function(){window.focus();document.getElementById('screen').focus()});
+  document.body.addEventListener('pointerdown',function(){window.focus()});
+})();
+</script>
+<script src="fighter.js"></script>
+</body>
+</html>

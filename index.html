@@ -81,6 +81,17 @@
 .char-variants button{min-height:48px}
 .char-variants canvas{flex-shrink:0}
 .char-card{max-width:760px}
+
+/* A67: existing shelf layout, larger high-detail product inspection; full cabinet game. */
+.shop-detail:has(.stationery-product) .selected-art{height:158px;min-height:158px}
+.shop-detail .selected-art .stationery-product{width:150px;height:150px}
+.shop-grid.shelf-board{grid-auto-rows:minmax(117px,1fr)}
+.fighter-intro{max-width:620px;margin:auto;padding:12px 6px;line-height:1.8}.fighter-intro h3{font-size:25px;color:#574338}.fighter-intro p{font-size:14px}.fighter-intro .primary{padding:13px 25px;font:700 16px inherit;background:#4c7165;color:#fff4da;border:2px solid #314c43;cursor:pointer}.fighter-intro .primary:disabled{opacity:.5;cursor:not-allowed}
+#playroom.fighter-playing{z-index:1000;padding:0;background:#08070c}
+.fighter-playing .playroom-panel{width:100%;height:100%;max-height:100%;border:0;background:#08070c;box-shadow:none}
+.fighter-playing .playroom-header{flex:0 0 40px;padding:3px 12px;border-bottom:0}.fighter-playing .playroom-header small{display:none}.fighter-playing .playroom-header strong{font-size:14px}.fighter-playing .playroom-header button{width:auto;font-size:14px;padding:0 12px}.fighter-playing .playroom-content{flex:1;min-height:0;padding:0;overflow:hidden;background:#08070c;display:block}.fighter-frame{width:100%;height:100%;border:0;display:block;background:#000}.fighter-playing .playroom-footer{flex:0 0 auto;min-height:0;padding:4px 12px;font-size:11px;border:0;background:#1c1827;color:#d9d1e6}
+@media(max-width:750px){.shop-detail:has(.stationery-product) .selected-art{height:110px;min-height:110px}.shop-detail .selected-art .stationery-product{width:104px;height:104px}.fighter-playing .playroom-footer{font-size:9px}.fighter-intro h3{font-size:20px}}
+
 </style><style>
 /* A2 shop: small hand-held catalog over actual pixel-interior, not a generic modern storefront. */
 .activity{position:absolute;inset:0;z-index:7;background:#182c35aa;display:grid;place-items:center;padding:12px}
@@ -339,6 +350,19 @@
 </style>
 <style>#a13Btn,#a13Panel{display:none!important}</style>
 <style>.menu-row .menu-food{width:42px;height:42px;image-rendering:pixelated}.activity.is-snackbar .shop-detail .outdoor-food{height:116px;min-height:116px;background:#e9dbc0}.activity.is-snackbar .shop-detail .outdoor-food .item-pixel{width:108px;height:108px}@media(max-width:750px){.menu-row{grid-template-columns:12px 32px 1fr auto;padding-right:5px}.menu-row .menu-food{width:32px;height:32px}.menu-name{font-size:11px}.menu-price{font-size:10px}}</style>
+<style>
+/* A68: final overrides must follow the original shelf CSS. Native art fills each picture well. */
+.shop-grid.shelf-board .shelf-item{display:grid;grid-template-rows:minmax(0,1fr) auto;justify-items:center;align-items:center;gap:5px;min-height:185px;padding:8px 6px}
+.shop-grid.shelf-board .shelf-item .stationery-product{width:94%;height:94%;min-height:0;object-fit:contain;filter:none;align-self:center}
+.shop-grid.shelf-board .shelf-item .item-card-copy{width:94%;min-width:0}
+.shop-grid.shelf-board{grid-template-rows:repeat(2,minmax(185px,1fr));grid-auto-rows:minmax(185px,1fr)}
+.shop-detail:has(.stationery-product) .selected-art{height:clamp(220px,36vh,390px);min-height:220px}
+.shop-detail .selected-art .stationery-product{width:94%;height:94%;min-height:0;object-fit:contain}
+@media(max-width:750px){.shop-grid.shelf-board{grid-template-rows:repeat(3,minmax(135px,1fr));grid-auto-rows:minmax(135px,1fr)}.shop-grid.shelf-board .shelf-item{min-height:135px}.shop-detail:has(.stationery-product) .selected-art{height:220px;min-height:220px}}
+.bgm-controls{display:flex;flex-wrap:wrap;align-items:center;gap:7px;padding:6px 10px;background:#243e48;color:#f4e8ce;font:12px sans-serif}.bgm-controls button{background:#e7dbc3;color:#28424a;border:1px solid #b7a987;padding:6px 9px;cursor:pointer}.bgm-controls input{width:110px}.bgm-controls label{display:flex;align-items:center;gap:5px}.bgm-controls button:disabled{opacity:.45;cursor:default}.bgm-controls span{font-size:11px}
+body.playing-a5 #bgmControls{position:fixed;z-index:1100;bottom:0;left:0;right:0;min-height:40px}body.playing-a5 #playroom{padding-bottom:45px}@media(max-width:750px){body.playing-a5 #playroom{padding-bottom:78px}body.playing-a5 #bgmControls{font-size:10px;gap:4px}}
+</style>
+<style>.xp-desktop .retro-top,.xp-desktop .retro-window-title{background:#235bd3;color:white}.xp-desktop .retro-taskbar{background:#2360da;color:white}.xp-desktop .retro-taskbar>span:first-child{background:#278c38;color:white;border-radius:0 8px 8px 0;padding:7px 15px}.xp-desktop .retro-screen{background:linear-gradient(#5b9ee9 0%,#9cc8f5 55%,#568e36 56%,#70a44b 100%)}</style>
 </head>
 <body>
   <div class="grain"></div>
@@ -1467,13 +1491,13 @@ window.NEIGHBOR={hotspots,renderWorld,renderWeather,requestBus,busAtStop,board,d
 const G=207;
 const p=(c,x,y,w,h,color)=>{c.fillStyle=color;c.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h))};
 const label=(c,s,x,y,size=9,color='#405451')=>{c.fillStyle=color;c.font=`bold ${size}px 'Malgun Gothic',sans-serif`;c.fillText(s,x,y)};
-const sizes={courtyard:980,lobby:820,hall:1050,rooftop:1140};
+const sizes={courtyard:480,lobby:820,hall:1050,rooftop:1140};
 const names={courtyard:'주택가의 작은 마당',lobby:'아파트 공동현관',hall:'2층 공동복도',rooftop:'공동주택 옥상'};
 const sceneLinks={
  courtyard:[{x:64,r:47,type:'resLink',to:'street',spawn:1756,title:'골목으로 나가는 대문',icon:'🚪',txt:'대문을 나서면 익숙한 주택가 골목이다.'}],
  lobby:[{x:62,r:40,type:'resLink',to:'street',spawn:4070,title:'공동현관 바깥',icon:'🚪',txt:'아파트 단지의 나무 사이 길이 보인다.'},{x:717,r:64,type:'resLink',to:'hall',spawn:115,title:'2층으로 올라가는 계단',icon:'↗',txt:'계단을 오르면 윗집의 복도가 이어진다.'}],
- hall:[{x:84,r:57,type:'resLink',to:'lobby',spawn:703,title:'1층으로 내려가는 계단',icon:'↙',txt:'아래층 공동현관으로 이어진다.'},{x:957,r:64,type:'resLink',to:'rooftop',spawn:105,title:'옥상으로 이어지는 계단',icon:'↗',txt:'낡은 철문을 지나 옥상으로 올라갈 수 있다.'}],
- rooftop:[{x:80,r:49,type:'resLink',to:'hall',spawn:912,title:'다시 내려가는 옥상문',icon:'🚪',txt:'아래층 복도로 내려가자.'}]
+ hall:[{x:84,r:57,type:'resLink',to:'lobby',spawn:703,title:'1층으로 내려가는 계단',icon:'↙',txt:'아래층 공동현관으로 이어진다.'},{x:957,r:64,type:'resLink',to:'rooftop',spawn:200,title:'옥상으로 이어지는 계단',icon:'↗',txt:'낡은 철문을 지나 옥상으로 올라갈 수 있다.'}],
+ rooftop:[{x:200,r:49,type:'resLink',to:'hall',spawn:912,title:'다시 내려가는 옥상문',icon:'🚪',txt:'아래층 복도로 내려가자.'}]
 };
 const streetEntries=[
  {x:1756,r:26,type:'resDoor',to:'courtyard',title:'열린 주택 대문',icon:'🏡',txt:'담장 너머로 작은 마당과 빨랫줄이 보인다.'},
@@ -1523,6 +1547,8 @@ function npcLine(key,phase,rain){
  return phase===2?'“아래층에서 TV 소리 들리니? 벌써 저녁이네.”':rain?'“비 오는 날 계단은 미끄러우니까 천천히 가.”':'“오늘은 날씨가 좋아서 창문을 열어 놨어.”';
 }
 function hotspots(scene,phase,rain){
+ if(['lobby','hall','rooftop'].includes(scene))return [...sceneLinks[scene],{x:scene==='lobby'?340:scene==='hall'?420:650,r:35,type:'routeNote',title:scene==='lobby'?'104동 우편함과 게시판':scene==='hall'?'복도식 아파트의 현관들':'옥상의 배수관과 방수 바닥',txt:'같은 동의 오래된 창호와 도장, 생활의 흔적이 이어진다.',icon:'·'}];
+ if(scene==='courtyard')return window.CourtyardMap?.hotspots()||[];
  if(scene==='street'){
   const routine=[
    {x:A16SCENE.x('laundrySpot')+10,r:36,type:'resNpc',key:'laundryOutside',title:rain?'빨래를 걷는 이웃':phase===0?'빨래를 너는 이웃':phase===1?'빨래를 걷는 이웃':'집 앞을 정리하는 이웃',icon:'💬'},
@@ -1639,6 +1665,8 @@ function roomCanvas(scene){
 }
 const backgrounds={};for(const id of Object.keys(sizes))backgrounds[id]=roomCanvas(id);
 function drawInterior(c,scene,cam,phase,rain,t){
+ if(['lobby','hall','rooftop'].includes(scene))return window.Block104.draw(c,scene,cam);
+ if(scene==='courtyard')return window.CourtyardMap?.draw(c,phase,rain,t);
  const bg=backgrounds[scene];if(!bg)return;
  const outside=scene==='courtyard'||scene==='rooftop';
  if(outside){
@@ -1705,7 +1733,6 @@ const actors=[
  {id:'neighborLaundry',scene:'street',x:1995,shirt:'#af9586',kind:'laundry',name:'빨래를 정리하는 이웃',speed:16,face:1},
  {id:'marketBag',scene:'street',x:3864,shirt:'#8e9e8e',kind:'shopping',name:'장을 보고 돌아오는 주민',speed:27,face:1},
  {id:'playChild',scene:'street',x:3320,shirt:'#c68b77',kind:'student',name:'놀이터 친구',speed:29,face:1},
- {id:'courtyardWorker',scene:'courtyard',x:795,shirt:'#b29a8f',kind:'laundry',name:'마당의 이웃',speed:20,face:0},
  {id:'hallResident',scene:'hall',x:793,shirt:'#b0a18b',kind:'hall',name:'복도의 이웃',speed:18,face:0},
  {id:'caretaker',scene:'street',x:2542,shirt:'#a0a992',kind:'guard',name:'경비실 아저씨',speed:13,face:0},
  {id:'roofNeighbor',scene:'rooftop',x:780,shirt:'#9d9a8c',kind:'laundry',name:'옥상에서 빨래를 정리하는 이웃',speed:17,face:1}
@@ -1761,7 +1788,7 @@ function actionText(a,phase,rain){
  default:return phase===2?'집집마다 불이 켜지는 저녁. 잠깐 멈춰 골목을 바라본다.':'주위를 둘러보며 누군가를 기다린다.';
  }
 }
-function hotspots(scene,phase,rain,t){return actors.filter(a=>a.scene===scene&&a.visible&&a.current!=='gone').map(a=>({type:'routineNpc',id:a.id,x:a.x,r:27,title:a.name,icon:'💬',txt:actionText(a,phase,rain)}))}
+function hotspots(scene,phase,rain,t){if(scene==='courtyard')return [];if(scene==='back_alley')return window.BackAlleyMap?.hotspots()||[];return actors.filter(a=>a.scene===scene&&a.visible&&a.current!=='gone').map(a=>({type:'routineNpc',id:a.id,x:a.x,r:27,title:a.name,icon:'💬',txt:actionText(a,phase,rain)}))}
 function reactWave(scene,x,t){
  const near=actors.filter(a=>a.scene===scene&&a.visible&&Math.abs(a.x-x)<100).sort((a,b)=>Math.abs(a.x-x)-Math.abs(b.x-x))[0];
  if(!near)return null;
@@ -1821,7 +1848,7 @@ function drawActor(c,a,t,rain){
  }
  c.restore();
 }
-function render(c,scene,t,rain){for(const a of actors)if(a.scene===scene&&a.visible&&a.current!=='gone')drawActor(c,a,t,rain)}
+function render(c,scene,t,rain){if(scene==='courtyard')return;for(const a of actors)if(a.scene===scene&&a.visible&&a.current!=='gone')drawActor(c,a,t,rain)}
 function clothCount(id,phase,rain){
  const a=actors.find(z=>z.id===id);
  if(rain||phase===2)return 0;
@@ -1861,21 +1888,14 @@ window.ROUTINES={update,render,hotspots,reactWave,clothCount,debug};
 
 
 /* END src/07_memo.js */
-</script><script src="assets/food/manifest.js"></script><script src="src/food-art.js"></script><script>
+</script><script src="assets/food/manifest.js"></script><script src="src/food-art.js"></script><script src="src/stationery-products.js"></script><script>
 /* BEGIN src/08_shops.js */
 
 /* ART A4 — street food from an outdoor counter, scrollable 2006 menu, multi-bite food, take-away, soup service. */
 (function(){
 'use strict';
 const stock={
- stationery:[
-  {id:'zzon',name:'쫀드기',price:100,kind:'zzon',detail:'손으로 찢어 먹는 길쭉한 과자. 주머니에 넣으면 봉지가 바스락거린다.',line:'조금 달고, 조금 질긴 맛.'},
-  {id:'fish',name:'어포',price:100,kind:'fish',detail:'얇고 납작한 어포. 구겨진 포장지에서 짭짤한 냄새가 난다.',line:'손가락에 짭짤한 맛이 남는다.'},
-  {id:'cola',name:'콜라맛 젤리',price:100,kind:'cola',detail:'검은색과 갈색이 섞인 작은 젤리. 포장 너머로 알갱이가 보인다.',line:'달고 시큼한 콜라향.'},
-  {id:'stars',name:'별사탕',price:100,kind:'stars',detail:'작은 봉지 속 알록달록한 별 모양 사탕.',line:'입 안에서 사각사각 부서진다.'},
-  {id:'ring',name:'반지사탕',price:200,kind:'ring',detail:'손가락에 끼워 먹는 플라스틱 반지 모양 사탕.',line:'잠깐 보석 반지를 낀 기분.'},
-  {id:'straw',name:'빨대형 사탕',price:200,kind:'straw',detail:'가느다란 빨대 속에 들어 있는 달콤한 가루.',line:'나도 모르게 한 봉지를 다 먹었다.'}
- ],
+ stationery:window.StationeryProducts.catalog,
  snackbar:[
   {id:'tteok',name:'컵떡볶이',price:500,bites:4,kind:'tteok',detail:'작은 종이컵에 담은 떡볶이. 소스가 묻은 나무꼬치로 하나씩 집어 먹는다.',line:'종이컵 바닥에 소스가 조금 남았다.'},
   {id:'odeng',name:'어묵 꼬치',price:300,bites:3,kind:'odeng',detail:'따뜻한 국물 속에서 꺼낸 어묵. 종이컵에 국물을 조금 받아도 좋다.',line:'손이 따뜻해진다.'},
@@ -1888,6 +1908,7 @@ const stock={
   {id:'hotdog',name:'설탕 핫도그',price:700,bites:3,kind:'hotdog',detail:'나무꼬치를 잡고 먹는 옛날식 핫도그. 바삭한 겉면에 설탕이 붙어 있다.',line:'핫도그 꼬치만 남았다.'}
  ]
 };
+const retiredStationery=[{id:'stars',name:'별사탕',price:100,kind:'stars',line:'별사탕을 먹었다.',detail:'전에 사 둔 별사탕.'},{id:'ring',name:'반지사탕',price:200,kind:'ring',line:'반지사탕을 먹었다.',detail:'전에 사 둔 반지사탕.'}];
 const broth={id:'broth',name:'어묵 국물',price:0,bites:2,kind:'broth',detail:'어묵을 사고 종이컵에 받아 마시는 따뜻한 국물.',line:'뜨거운 국물을 후후 불어 마셨다.'};
 const labels={stationery:'별빛 문방구',snackbar:'은하분식',pcroom:'동네 PC방'};
 const descriptions={stationery:'바스락거리는 봉지와 삐걱거리는 진열대. 한 개를 고르는 데에도 시간이 오래 걸린다.',snackbar:'어묵 국물이 피어오르고, 슬러시 기계가 느리게 돌아간다. 컵떡볶이 하나에도 오후가 담겨 있다.'};
@@ -1912,6 +1933,7 @@ function status(){
 }
 function pixel(c,x,y,w,h,color){c.fillStyle=color;c.fillRect(x|0,y|0,w|0,h|0)}
 function makePixel(kind){
+ if(window.StationeryProducts?.has(kind))return window.StationeryProducts.icon(kind);
  if(window.FoodArt?.has(kind))return window.FoodArt.icon(kind);
  const c=document.createElement('canvas');c.width=48;c.height=48;c.className='item-pixel';const g=c.getContext('2d');g.imageSmoothingEnabled=false;
  const p=(x,y,w,h,col)=>pixel(g,x,y,w,h,col);
@@ -2024,7 +2046,7 @@ function handleKey(k){
  return false;
 }
 function openBag(){mode='bag';selected=null;overlay.classList.remove('is-snackbar');grid.classList.remove('vintage-menu');openOverlay();header.textContent='책가방 속';sub.textContent='학교가 끝난 오후, 오늘 산 것들.';grid.innerHTML='';grid.classList.remove('shelf-board');detail.innerHTML='';footer.textContent=held?'손에 들고 있는 것: '+findItem(held)?.name+' · F로 먹기':'가방은 게임을 다시 열어도 남아 있어.';
- const found=Object.keys(inventory).filter(k=>inventory[k]>0).map(k=>[...stock.stationery,...stock.snackbar,broth].find(i=>i.id===k)).filter(Boolean);
+ const found=Object.keys(inventory).filter(k=>inventory[k]>0).map(k=>[...stock.stationery,...retiredStationery,...stock.snackbar,broth].find(i=>i.id===k)).filter(Boolean);
  if(!found.length){grid.innerHTML='<div class="empty-bag">아직 아무것도 없네. 문방구에 들러볼까?</div>';return}
  for(let item of found){let btn=makeCard(item,()=>renderBagSelected(item)),num=document.createElement('span');num.className='count-pill';num.textContent='×'+inventory[item.id];btn.append(num);grid.append(btn)}
  renderBagSelected(found[0]);
@@ -2046,7 +2068,7 @@ function openPc(){mode='pcroom';overlay.classList.remove('is-snackbar');openOver
 $('activityClose').addEventListener('click',close);overlay.addEventListener('pointerdown',e=>{if(e.target===overlay)close()});$('bagBtn').addEventListener('click',openBag);
 $('newAllowance').addEventListener('click',()=>{if(!confirm('체험 데이터를 초기화하고 3,000원을 다시 받을까?'))return;coins=3000;inventory={};held=null;heldBites=0;brothCredit=0;persist();status();if(open){if(mode==='bag')openBag();else if(stock[mode])renderStock()}window.PLAYROOM?.resetCollection();});
 function spendCoins(amount){if(!Number.isInteger(amount)||amount<0||coins<amount)return false;coins-=amount;persist();status();return true}
-function findItem(id){return [...stock.stationery,...stock.snackbar,broth].find(x=>x.id===id)}
+function findItem(id){return [...stock.stationery,...retiredStationery,...stock.snackbar,broth].find(x=>x.id===id)}
 function holdItem(id){if(!inventory[id])return false;if(held!==id||heldBites<=0)heldBites=findItem(id)?.bites||1;held=id;persist();status();return true}
 function consumeHeld(){
  const item=findItem(held);
@@ -2083,7 +2105,8 @@ const prizes=[
  {id:'pencil',name:'미니 연필 장식',color:'#e7ad76',detail:'연필보다 작고 지우개보다 가벼운 장난감.'}
 ];
 let collection={},best=0,pcMessage='',open=false,mode='',lastPrize=null,spinning=false,seat=12,pcActive=false,pcTimer=null,guestPass=null,requestedSeat=12;
-let arc=null,raf=0,lastFrame=0,gameCanvas=null,arcadeMessage='';
+let fighterFrame=null,fighterPaid=false,fighterLoading=false,fighterBest=0,fighterTimer=null;
+try{fighterBest=Number(localStorage.getItem('taekwon.best'))||0}catch(_){}
 try{const o=JSON.parse(localStorage.getItem('memory_2006_play_a5')||'null');if(o){collection=o.collection||{};best=Number(o.best)||0;pcMessage=typeof o.pcMessage==='string'?o.pcMessage.slice(0,220):''}}catch(e){}
 function save(){try{localStorage.setItem('memory_2006_play_a5',JSON.stringify({collection,best,pcMessage,guestPass}))}catch(e){}}
 try{const stored=JSON.parse(localStorage.getItem('memory_2006_play_a5')||'null');if(stored?.guestPass?.code&&Number(stored.guestPass.expiresAt)>Date.now())guestPass=stored.guestPass}catch(e){}
@@ -2094,39 +2117,35 @@ const h=(tag,cls,text)=>{const x=document.createElement(tag);if(cls)x.className=
 const b=(label,fn,cls='')=>{let e=h('button','pr-button '+cls,label);e.type='button';e.addEventListener('click',fn);return e};
 const price=n=>n.toLocaleString('ko-KR')+'원';
 function pay(n){if(!SHOPS.spendCoins(n)){foot.textContent='동전이 모자란다. 구경만 해도 괜찮아.';return false}return true}
-function show(type,ttl,sub){close();open=true;mode=type;backdrop.classList.remove('hidden');panel.dataset.mode=type;title.textContent=ttl;kicker.textContent=sub;document.body.classList.add('playing-a5');body.replaceChildren();foot.textContent='';$('playroomClose').focus({preventScroll:true});}
-function close(){if(!open)return;open=false;spinning=false;pcActive=false;if(raf){cancelAnimationFrame(raf);raf=0}if(pcTimer){clearInterval(pcTimer);pcTimer=null}backdrop.classList.add('hidden');document.body.classList.remove('playing-a5');}
-$('playroomClose').addEventListener('click',close);backdrop.addEventListener('pointerdown',e=>{if(e.target===backdrop)close()});
-function openArcade(){show('arcade','100원 오락기','문방구 앞 · 우주 우체부');arcadeMessage='';arc=null;drawArcadeIntro()}
+function show(type,ttl,sub){close();open=true;mode=type;backdrop.classList.remove('hidden');panel.dataset.mode=type;title.textContent=ttl;kicker.textContent=sub;document.body.classList.add('playing-a5');window.dispatchEvent(new CustomEvent('arcade-focus-change'));body.replaceChildren();foot.textContent='';$('playroomClose').focus({preventScroll:true});}
+function close(){if(!open)return;open=false;spinning=false;pcActive=false;if(fighterTimer){clearTimeout(fighterTimer);fighterTimer=null}if(fighterFrame){fighterFrame.remove();fighterFrame=null}fighterPaid=false;fighterLoading=false;backdrop.classList.remove('fighter-playing');$('playroomClose').textContent='×';window.dispatchEvent(new CustomEvent('arcade-focus-change'));if(pcTimer){clearInterval(pcTimer);pcTimer=null}backdrop.classList.add('hidden');document.body.classList.remove('playing-a5');window.focus?.();$('game')?.focus?.();}
+function requestPlayroomClose(){if(fighterFrame){if(!confirm('오락기 게임을 끝내고 나갈까?')){focusFighter();return}}close()}
+$('playroomClose').addEventListener('click',requestPlayroomClose);backdrop.addEventListener('pointerdown',e=>{if(e.target===backdrop&&!fighterFrame)close()});
+function openArcade(){show('arcade','동네 태권 대전','문구점 오락기 · 100원');drawArcadeIntro()}
 function drawArcadeIntro(){
- body.innerHTML=`<div class="arcade-station"><div class="arcade-machine"><div class="cabinet-header">★ 우주 우체부 ★</div><canvas id="arcadeCanvas" width="240" height="176" aria-label="별을 받는 오락 게임"></canvas><div class="cabinet-knobs"><i></i><i></i><i></i><span>100원 / 1 PLAY</span></div></div><div class="arcade-side"><div class="pr-section-title">방과 후의 한 판</div><p>종이 위에 그려 놓은 우주선 같은 작은 상자를 좌우로 움직여 별을 받아 봐. 검은 운석은 피해야 해.</p><div class="arcade-numbers"><div><small>최고 점수</small><b id="arcBest">${best.toString().padStart(4,'0')}</b></div><div><small>현재 점수</small><b id="arcScore">0000</b></div><div><small>남은 시간</small><b id="arcTime">20초</b></div></div><div id="arcMsg" class="arcade-message">방향키 ← → / A D · 20초 · 100원</div><div id="arcActions" class="arcade-actions"></div></div></div>`;
- gameCanvas=$('arcadeCanvas');gameCanvas.getContext('2d').imageSmoothingEnabled=false;
- const ctrl=$('arcActions');ctrl.append(b('동전 넣고 시작 · 100원',startArcade,'primary'));let pair=h('div','pr-move');pair.append(b('◀ 왼쪽',()=>moveBasket(-1),'tiny'),b('오른쪽 ▶',()=>moveBasket(1),'tiny'));ctrl.append(pair);
- foot.textContent='소박한 오리지널 미니게임이야. 실제 2006년 오락기 게임을 복제한 것은 아니야.';
- paintArcade();
+ body.replaceChildren();const info=h('div','fighter-intro');info.append(h('h3','','동네 태권 대전'),h('p','','도장과 아파트 옥상에서 펼치는 태권도 겨루기. 1인 도전 또는 한 키보드 2인 대전을 고를 수 있어.'),h('p','','방향키 이동 · S 왼발 · D 오른발 · Q 풋워크 · A 훼이크'),h('p','','↑ + 발차기: 얼굴 공격 · S + D: 강한 기술 · Esc: 일시정지'),h('p','',`최고 점수 ${fighterBest.toLocaleString('ko-KR')}점`));
+ const start=b('동전 넣고 시작 · 100원',startArcade,'primary');start.id='fighterStart';start.disabled=SHOPS.coins<100;info.append(start);body.append(info);foot.textContent=SHOPS.coins<100?'동전이 부족해. 100원이 필요해.':'게임 화면이 준비되면 100원을 넣습니다. 끝내려면 제목 화면의 나가기 또는 위쪽 나가기를 누르세요.';
 }
-function startArcade(){if(arc?.playing||!pay(100))return;arc={playing:true,score:0,time:20,lives:3,basket:4,objects:[],spawn:0.45,elapsed:0};lastFrame=0;arcadeMessage='동전이 딸깍. 화면이 켜졌다.';
- $('arcMsg').textContent=arcadeMessage;$('arcActions').querySelector('.primary').disabled=true;
- window.MEMO?.add('문방구 앞 오락기','동전 100원을 넣고 잠깐 게임을 시작했다.',0);raf=requestAnimationFrame(tickArcade);
+function focusFighter(){fighterFrame?.contentWindow?.focus()}
+function startArcade(){
+ if(!open||mode!=='arcade'||fighterFrame||fighterLoading||SHOPS.coins<100)return;
+ fighterLoading=true;fighterPaid=false;body.replaceChildren();backdrop.classList.add('fighter-playing');
+ const fr=fighterFrame=h('iframe','fighter-frame');fr.id='fighterGame';fr.title='동네 태권 대전';$('playroomClose').textContent='나가기';fr.setAttribute('allow','autoplay; gamepad');fr.src='assets/games/fighter/index.html';
+ fr.addEventListener('load',focusFighter);fr.addEventListener('error',failFighter);body.append(fr);foot.textContent='오락기 화면을 준비하는 중…';
+ fighterTimer=setTimeout(failFighter,15000);
 }
-function moveBasket(d){if(arc?.playing){arc.basket=Math.max(0,Math.min(8,arc.basket+d));paintArcade()}}
-function drawStar(c,x,y,col){const p=(xx,yy,w,hh,cl)=>{c.fillStyle=cl;c.fillRect(xx,yy,w,hh)};p(x+4,y,3,15,col);p(x,y+5,11,4,col);p(x+2,y+2,7,11,col);p(x+4,y+4,3,5,'#fff5c9');}
-function paintArcade(){if(!gameCanvas)return;const c=gameCanvas.getContext('2d');c.imageSmoothingEnabled=false;
- c.fillStyle='#14253d';c.fillRect(0,0,240,176);for(let y=0;y<176;y+=16){c.fillStyle=y%32===0?'#1b3050':'#1a2a40';c.fillRect(0,y,240,8)}
- for(let i=0;i<31;i++){let x=(i*83+43)%240,y=(i*47+19)%151;c.fillStyle=i%3?'#6485a1':'#d9d7b5';c.fillRect(x,y,1+(i%2),1+(i%2))}
- c.fillStyle='#53687a';c.fillRect(0,159,240,17);c.fillStyle='#8a8b7c';c.fillRect(0,159,240,2);
- if(arc){for(const item of arc.objects){const x=9+item.lane*26,yy=Math.floor(item.y);if(item.kind==='star')drawStar(c,x,yy,'#e9c56d');else{c.fillStyle='#715c7d';c.fillRect(x,yy,12,11);c.fillStyle='#b3a4ba';c.fillRect(x+3,yy+2,4,3);c.fillStyle='#42374f';c.fillRect(x+5,yy+7,4,3)}}
- const xx=6+arc.basket*26;c.fillStyle='#7fc6bd';c.fillRect(xx,145,26,10);c.fillStyle='#b5edcf';c.fillRect(xx+4,142,18,4);c.fillStyle='#305b69';c.fillRect(xx+8,138,10,4);c.fillStyle='#dfdcae';c.fillRect(xx+5,148,16,2);
- }else{for(let i=0;i<6;i++)drawStar(c,22+i*33,40+(i%3)*22,'#d6c47a');c.fillStyle='#f5e5bc';c.font='bold 12px monospace';c.fillText('PRESS START',66,116)}
- c.fillStyle='#e1d8ae';c.font='bold 8px monospace';c.fillText('★ 10 PT',9,12);c.fillText('METEOR - LIFE',139,12);
-}
-function tickArcade(now){if(!open||mode!=='arcade'||!arc?.playing)return;const dt=Math.min(.05,lastFrame?(now-lastFrame)/1000:0.016);lastFrame=now;arc.elapsed+=dt;arc.time=Math.max(0,20-arc.elapsed);arc.spawn-=dt;
- if(arc.spawn<=0){arc.objects.push({kind:Math.random()<.27?'stone':'star',lane:Math.floor(Math.random()*9),y:14,speed:42+Math.random()*28});arc.spawn=.34+Math.random()*.32}
- for(const obj of arc.objects){obj.y+=obj.speed*dt;if(obj.y>135&&!obj.scored){obj.scored=true;if(obj.lane===arc.basket){if(obj.kind==='star')arc.score+=10;else arc.lives--}}}
- arc.objects=arc.objects.filter(o=>o.y<176);$('arcScore').textContent=String(arc.score).padStart(4,'0');$('arcTime').textContent=Math.ceil(arc.time)+'초';$('arcMsg').textContent=`별을 받아!   생명 ${Math.max(0,arc.lives)}개`;
- paintArcade();if(arc.time<=0||arc.lives<=0){finishArcade();return}raf=requestAnimationFrame(tickArcade)
-}
-function finishArcade(){if(!arc||!arc.playing)return;arc.playing=false;if(raf){cancelAnimationFrame(raf);raf=0}best=Math.max(best,arc.score);save();$('arcBest').textContent=String(best).padStart(4,'0');$('arcMsg').textContent=`게임 끝! ${arc.score}점 · 최고 ${best}점`;$('arcActions').querySelector('.primary').disabled=false;window.MEMO?.add('100원짜리 오락기','오락기에서 '+arc.score+'점을 얻었다. 누군가 뒤에서 구경하고 있었다.',0);foot.textContent='딸깍거리는 버튼 소리가 멎었다. 동전을 더 넣어 한 판 더 해도 돼.';}
+function failFighter(){if(!fighterFrame||fighterPaid)return;if(fighterTimer){clearTimeout(fighterTimer);fighterTimer=null}fighterFrame.remove();fighterFrame=null;fighterLoading=false;backdrop.classList.remove('fighter-playing');drawArcadeIntro();foot.textContent='게임 화면을 불러오지 못했어. 동전은 사용하지 않았어. 다시 눌러 봐.'}
+window.addEventListener('message',e=>{
+ const d=e.data;if(!fighterFrame||e.source!==fighterFrame.contentWindow||e.origin!==location.origin||!d||d.source!=='arcade-game'||d.game!=='fighter')return;
+ if(d.type==='ready'&&!fighterPaid){
+  if(fighterTimer){clearTimeout(fighterTimer);fighterTimer=null}
+  if(!SHOPS.spendCoins(100)){close();return}
+  fighterPaid=true;fighterLoading=false;fighterFrame.contentWindow.postMessage({source:'arcade-host',type:'external-music'},location.origin);foot.textContent='Esc · 일시정지 / 제목에서 나가기 · M 소리 · 선택 Enter · 2P 선택 H · 1P 방향키 Q A S D · 2P I J K L U O P ;';
+  window.MEMO?.add('문구점 오락기','100원을 넣고 동네 태권 대전을 시작했다.',0);focusFighter();
+ }
+ if(d.type==='score'&&fighterPaid&&Number.isFinite(d.score)&&d.score>=0){fighterBest=Math.max(fighterBest,Math.min(999999999,Math.floor(d.score)));try{localStorage.setItem('taekwon.best',String(fighterBest))}catch(_){}window.MEMO?.add('동네 태권 대전',Math.floor(d.score)+'점을 기록했다.'+(d.cleared?' 모든 상대를 이겼다.':''),0)}
+ if(d.type==='exit'){requestPlayroomClose();}
+});
 function prizePixel(canvas,item){const c=canvas.getContext('2d');c.imageSmoothingEnabled=false;const p=(x,y,w,h,col)=>{c.fillStyle=col;c.fillRect(x,y,w,h)};c.clearRect(0,0,64,64);p(14,45,36,3,'#8b726244');p(17,14,30,34,'#654d5c');p(19,12,26,34,item.color);p(19,12,26,4,'#ffffff66');p(19,28,26,2,'#eee3cf');p(25,20,14,13,'#fbeaca');p(27,22,10,9,item.color);p(30,18,4,18,'#fff6db99');p(27,25,10,2,'#fff6df99')}
 function openCapsule(){show('capsule','100원 뽑기','문방구 앞 · 작은 장난감들');drawCapsule()}
 function drawCapsule(){body.innerHTML=`<div class="capsule-station"><div class="capsule-stand"><div class="capsule-top">뽑 기</div><div class="capsule-glass" id="capsuleGlass"></div><div class="capsule-knob">↻</div><div class="capsule-base">동전　100원</div></div><div class="capsule-info"><h3>무엇이 나올까?</h3><p>가게 앞 플라스틱 뽑기통. 동전을 넣고 빨간 손잡이를 한 바퀴 돌린다.</p><div class="capsule-result" id="capsuleResult"></div><div class="capsule-actions" id="capsuleActions"></div><div class="capsule-collection" id="capsuleCollection"></div></div></div>`;
@@ -2148,7 +2167,7 @@ function cardArt(){
 function openPcCounter(){pcActive=false;requestedSeat=usableCard()?guestPass.seat:12;show('pc','PC방 선불 카운터','계산대 · 비회원 카드');drawPcCounter()}
 function drawPcCounter(){
  body.replaceChildren();
- const root=h('div','pc-counter-layout');const counter=h('section','pc-counter-scene');counter.innerHTML='<div class="counter-sign">○○ 동네 PC방</div><div class="counter-window"><div class="counter-person"><i></i><span></span></div><div class="counter-cashbox">선불 계산</div></div><div class="counter-shelves"><span>컵라면</span><span>캔음료</span><span>과자</span></div><div class="counter-note">비회원은 번호표를 받아 이용해 주세요.</div>';
+ const root=h('div','pc-counter-layout');const counter=h('section','pc-counter-scene');counter.innerHTML='<div class="counter-sign">동네 PC방 · 선불 카운터</div><div class="counter-window"><div class="counter-person"><i></i><span></span></div><div class="counter-cashbox">선불 계산</div></div><div class="counter-shelves"><span>컵라면</span><span>캔음료</span><span>과자</span></div><div class="counter-note">비회원은 번호표를 받아 이용해 주세요.</div>';
  const info=h('section','pc-counter-info');info.append(h('h3','', '“회원이세요? 비회원이세요?”'),h('p','','비회원이라고 하자 카운터 직원이 번호가 적힌 작은 카드를 꺼낸다. 계산을 마치면 지정된 자리에서 번호를 입력하면 된다.'));
  if(usableCard()){
   info.append(h('div','counter-stamp','발급된 비회원 카드 · 남은 시간 '+clockLabel(remainingTime())),cardArt(),h('p','counter-help','카드에 적힌 번호를 기억하고 '+guestPass.seat+'번 자리로 가 보자.'));
@@ -2189,7 +2208,7 @@ function drawPcSeat(){
  foot.textContent='이것은 게임 속 가상 비회원 카드야. 실제 계정이나 개인정보를 입력하지 마.';
 }
 function drawDesktop(){
- body.innerHTML=`<div class="retro-computer"><div class="retro-top"><b>06 DESKTOP</b><span id="pcElapsed">남은 시간 01:00:00</span></div><div class="retro-screen"><div class="retro-icons" id="retroIcons"></div><section class="retro-window" id="retroWindow"><div class="retro-window-title">내 컴퓨터 <span>▢ ×</span></div><div class="retro-window-body" id="retroWindowBody">오늘도 방과 후.<br/>무얼 할까?</div></section></div><div class="retro-taskbar"><span>▣ 시작</span><span>2006 · 방과 후</span></div></div><div class="pc-sidebar"><h3>${seat}번 자리</h3><p>작은 종이 번호표를 키보드 옆에 놓았다. 형광등이 살짝 윙윙거린다.</p><p>옛날 컴퓨터처럼 아이콘을 눌러 봐.</p><button type="button" class="pr-button" id="pcLeave">로그아웃하고 일어나기</button></div>`;
+ body.innerHTML=`<div class="retro-computer xp-desktop"><div class="retro-top"><b>Microsoft Windows XP</b><span id="pcElapsed">남은 시간 01:00:00</span></div><div class="retro-screen"><div class="retro-icons" id="retroIcons"></div><section class="retro-window" id="retroWindow"><div class="retro-window-title">내 컴퓨터 <span>▢ ×</span></div><div class="retro-window-body" id="retroWindowBody">오늘도 방과 후.<br/>무얼 할까?</div></section></div><div class="retro-taskbar"><span>▣ 시작</span><span>2006 · 방과 후</span></div></div><div class="pc-sidebar"><h3>${seat}번 자리</h3><p>작은 종이 번호표를 키보드 옆에 놓았다. 형광등이 살짝 윙윙거린다.</p><p>옛날 컴퓨터처럼 아이콘을 눌러 봐.</p><button type="button" class="pr-button" id="pcLeave">로그아웃하고 일어나기</button></div>`;
  const iconHolder=$('retroIcons');[['✉','쪽지함','message'],['▣','게임목록','games'],['▦','미니홈','home'],['✎','낙서장','notepad']].forEach(([ico,label,app])=>{const bt=b(ico+'\n'+label,()=>openPcApp(app),'desktop-icon');iconHolder.append(bt)});
  $('pcLeave').addEventListener('click',close);openPcApp('message');
  if(pcTimer)clearInterval(pcTimer);const updateClock=()=>{if(!open||mode!=='pc'||!pcActive)return;const secs=remainingTime();const el=$('pcElapsed');if(el)el.textContent='남은 시간 '+clockLabel(secs);if(secs<=0){pcActive=false;save();drawPcSeat();foot.textContent='이용 시간이 끝났다. 카운터에서 다시 계산할 수 있어.'}};updateClock();pcTimer=setInterval(updateClock,1000);
@@ -2200,7 +2219,7 @@ function openPcApp(app){const dest=$('retroWindowBody'),ttl=document.querySelect
   dest.append(h('p','win-muted','오후 4:46 · 받은 쪽지 3개'));
   [['반 친구','“너 오늘 학원 가? 나 10분만 하다가 갈 거야.”'],['옆반 친구','“문방구 앞에서 기다려!”'],['나에게','“계속 접속해 있을 줄 알았던 그 이름들.”']].forEach(([name,msg])=>{const x=h('div','win-message');x.append(h('b','',name),h('span','',msg));dest.append(x)});
  }else if(app==='games'){
-  dest.append(h('p','win-muted','설치된 게임 아이콘 · 체험용 가상 목록'));[['우주 우체부','문방구 밖 오락기에서도 할 수 있다.'],['동네 낙서판','오늘의 낙서를 남길 수 있다.'],['느긋한 오후','그냥 컴퓨터 화면을 켜 두는 시간.']].forEach(([name,desc])=>{const x=h('div','win-message');x.append(h('b','',name),h('span','',desc));dest.append(x)});
+  dest.append(h('p','win-muted','설치된 게임 아이콘 · 체험용 가상 목록'));[['동네 태권 대전','문구점 오락기에서 할 수 있다.'],['동네 낙서판','오늘의 낙서를 남길 수 있다.'],['느긋한 오후','그냥 컴퓨터 화면을 켜 두는 시간.']].forEach(([name,desc])=>{const x=h('div','win-message');x.append(h('b','',name),h('span','',desc));dest.append(x)});
  }else if(app==='home'){
   dest.append(h('div','home-banner','오늘의 날씨 · 맑음'));dest.append(h('p','', '“오늘 학교 끝나고 문방구 들렀다가 집에 가야지.”'));dest.append(h('p','win-muted','방문자 000006 · 게임 속 가상 미니홈페이지'));
  }else{
@@ -2210,21 +2229,17 @@ function openPcApp(app){const dest=$('retroWindowBody'),ttl=document.querySelect
 function handleKey(k,e){
  if(!open)return false;
  const typing=['INPUT','TEXTAREA'].includes(e?.target?.tagName||'');
+ if(mode==='arcade'&&fighterFrame){e?.preventDefault();e?.stopPropagation?.();focusFighter();return true}
  if(k==='Escape'||(k==='KeyE'&&!typing)){e?.preventDefault();close();return true}
  // Number entry on a guest card and typing into the 2006-era notepad must not
  // trigger an arcade shortcut. Enter submits the card number normally.
  if(typing)return false;
- if(mode==='arcade'&&arc?.playing&&['ArrowLeft','KeyA','ArrowRight','KeyD'].includes(k)){
-  e?.preventDefault();moveBasket(['ArrowLeft','KeyA'].includes(k)?-1:1);return true
- }
- if(mode==='arcade'&&!arc?.playing&&(k==='Enter'||k==='Space')){
-  e?.preventDefault();startArcade();return true
- }
+ if(mode==='arcade'&&(k==='Enter'||k==='Space')){e?.preventDefault();if(!e?.repeat)startArcade();return true}
  if(mode==='capsule'&&!spinning&&k==='Enter'){e?.preventDefault();spinCapsule();return true}
  return false;
 }
 function resetCollection(){collection={};best=0;pcMessage='';guestPass=null;save()}
-function debug(){return{open,mode,spinning,best,score:arc?.score||0,playing:!!arc?.playing,collection:{...collection},pcActive,seat,guestPass:guestPass?{...guestPass,remainingSeconds:remainingTime()}:null}}
+function debug(){return{open,mode,spinning,best,score:fighterBest,playing:fighterPaid,loading:fighterLoading,collection:{...collection},pcActive,seat,guestPass:guestPass?{...guestPass,remainingSeconds:remainingTime()}:null}}
 window.PLAYROOM={get isOpen(){return open},close,handleKey,openArcade,openCapsule,openPc,openPcCounter,resetCollection,debug};
 })();
 
@@ -2238,8 +2253,8 @@ window.PLAYROOM={get isOpen(){return open},close,handleKey,openArcade,openCapsul
  * All drawings are original code-painted pixel elements, with no external files. */
 (function(){
 'use strict';
-const G=207;const names={main_road:'상가와 학원이 있는 큰길',side_alley:'주택가 샛길',apartment_path:'아파트 안쪽 길'};
-const widths={main_road:4572,side_alley:1182,apartment_path:1182};
+const G=207;const names={back_alley:'문구점 뒤 주택 골목',main_road:'상가와 학원이 있는 큰길',side_alley:'주택가 샛길',apartment_path:'아파트 안쪽 길'};
+const widths={back_alley:720,main_road:2743,side_alley:1182,apartment_path:1182};
 const p=(c,x,y,w,h,color)=>{c.fillStyle=color;c.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h))};
 const txt=(c,s,x,y,size=8,color='#38484c')=>{c.fillStyle=color;c.font=`bold ${size}px "Malgun Gothic",sans-serif`;c.fillText(s,x,y)};
 function line(c,x,y,X,Y,col='#657d7b'){c.strokeStyle=col;c.lineWidth=1;c.beginPath();c.moveTo(x,y);c.lineTo(X,Y);c.stroke()}
@@ -2311,7 +2326,7 @@ function complex(c){const w=widths.apartment_path;
 }
 const bg={};for(const [key,width] of Object.entries(widths)){
  const cv=document.createElement('canvas');cv.width=width;cv.height=270;const c=cv.getContext('2d');c.imageSmoothingEnabled=false;
- if(key!=='main_road')(key==='side_alley'?side:complex)(c);bg[key]=cv;
+ if(key!=='main_road'&&key!=='back_alley')(key==='side_alley'?side:complex)(c);bg[key]=cv;
 }
 function markStreet(c){
  // A junction should read as a recessed lane, not a freestanding teleport portal.
@@ -2320,11 +2335,12 @@ function markStreet(c){
  p(c,3051,163,37,39,'#74877d');p(c,3054,166,31,31,'#9bae9a');p(c,3049,155,46,12,'#637f72');txt(c,'단지 안쪽',3052,163,7,'#fff0cb');c.restore();
 }
 function streetHotspots(){return [
- {type:'routeGate',x:920,r:23,to:'main_road',spawn:128,title:'상가 큰길로 나가기',txt:'문구점 왼쪽 골목을 지나 상가와 학원이 있는 큰길로 이어진다.',icon:'↗'},
+ {type:'routeGate',x:1197,r:20,to:'back_alley',spawn:52,spawnY:255,title:'문구점 뒤 주택 골목',txt:'은하분식과 문구점 사이의 좁은 골목으로 들어간다.',icon:'↗'},
+ {type:'routeGate',x:920,r:23,to:'main_road',spawn:77,title:'상가 큰길로 나가기',txt:'문구점 왼쪽 골목을 지나 상가와 학원이 있는 큰길로 이어진다.',icon:'↗'},
  {type:'routeGate',x:A16SCENE.portal('laneWest'),r:33,to:'side_alley',spawn:95,title:'조용한 주택가 샛길',txt:'주택가 뒤로 난 좁은 길. 조금 돌아서 가도 된다.',icon:'↗'},
  {type:'routeGate',x:A16SCENE.portal('laneEast'),r:44,to:'apartment_path',spawn:90,spawnY:190,title:'아파트 단지 안쪽 길',txt:'큰길을 지나지 않고 단지 안쪽으로 걸어갈 수 있다.',icon:'↗'}
 ]}
-function hotspots(scene,phase,rain,t){if(scene==='main_road')return window.CommercialRoad?.hotspots(t)||[];if(scene==='side_alley')return [
+function hotspots(scene,phase,rain,t){if(scene==='back_alley')return window.BackAlleyMap?.hotspots()||[];if(scene==='main_road')return window.CommercialRoad?.hotspots(t)||[];if(scene==='side_alley')return [
  {type:'routeGate',x:54,r:42,to:'street',spawn:A16SCENE.portal('laneWest'),title:'큰길로 돌아가기',txt:'아까 지나온 골목으로 돌아간다.',icon:'↶'},
  {type:'routeNote',x:354,r:27,title:'벽돌집 철제 대문',txt:'붉은 벽돌집의 도어록 대신 작은 열쇠 구멍과 도어벨이 보인다. 누군가의 평범한 집이다.',icon:'🚪'},
  {type:'routeNote',x:209,r:30,title:'주차된 파란 포터',txt:'좁은 주차 틈에 파란 포터가 들어가 있다. 적재함의 천막은 끈으로 단단히 묶여 있다.',icon:'🚚'},
@@ -2341,7 +2357,7 @@ function hotspots(scene,phase,rain,t){if(scene==='main_road')return window.Comme
  {type:'routeNpc',...window.ApartmentPathMap.neighbor(t),r:28,title:'장을 보고 돌아가는 이웃',txt:phase===2?'“어두워졌네. 차 나오는지 보고 다녀.”':'“동 사이로 가면 돼. 주차된 차 옆에서는 조심하고.”',icon:'🧺'},
  {type:'routeNote',x:1110,y:219,r:28,title:'수요일 분리수거 안내',txt:'단지 안쪽 수거장이다. 흰 현수막 아래 철망 수거함과 묶은 상자가 놓여 있고, 종류별로 나누어 담는다.',icon:'♻️'}
 ];return []}
-function dynamic(c,scene,phase,rain,t){if(scene==='main_road'){window.CommercialRoad?.dynamic(c,t);return;}if(scene==='apartment_path'&&window.ApartmentPathMap?.ready){return}if(scene==='side_alley'&&window.SideAlleyMap?.ready)return;
+function dynamic(c,scene,phase,rain,t){if(scene==='back_alley')return;if(scene==='main_road'){window.CommercialRoad?.dynamic(c,t);return;}if(scene==='apartment_path'&&window.ApartmentPathMap?.ready){return}if(scene==='side_alley'&&window.SideAlleyMap?.ready)return;
  // c translated into scene coordinates.
  if(scene==='side_alley'){
    // Laundry hanging quietly from a private upper window.
@@ -2353,7 +2369,7 @@ function dynamic(c,scene,phase,rain,t){if(scene==='main_road'){window.Commercial
  if(phase===2){for(const x of (scene==='side_alley'?[267,607,1040]:[138,411,1008])){p(c,x,113,14,16,'#edd49c');p(c,x-1,113,16,17,'#e0b16a30')}}
  if(rain){for(let i=0;i<25;i++){let x=(i*109+Math.floor(t*32))%widths[scene];p(c,x,224,12,1,'#bed4c8')}}
 }
-function drawMap(){const existing=document.getElementById('a10map');if(existing)existing.remove();const modal=document.createElement('div');modal.id='a10map';modal.className='a10map hidden';modal.innerHTML=`<div class="a10sheet" role="dialog" aria-modal="true" aria-label="동네 길 안내도"><button type="button" id="a10close" title="닫기">×</button><small>2006 · 길 안내</small><h2>동네와 상가 큰길</h2><p>직선으로만 이어진 스테이지가 아니야. 익숙한 골목을 돌아가도 같은 곳에 도착해.</p><svg viewBox="0 0 440 232" role="img" aria-label="큰길과 샛길이 다시 합쳐지는 동네 경로"><path d="M40 158 H400" stroke="#9a8f75" stroke-width="8" stroke-linecap="round" fill="none"/><path d="M166 158 L166 69 L284 69 L284 158" stroke="#698476" stroke-width="7" stroke-linecap="round" fill="none"/><g fill="#f4e8c9" stroke="#6f847c" stroke-width="3"><circle cx="40" cy="158" r="8"/><circle cx="166" cy="158" r="8"/><circle cx="284" cy="158" r="8"/><circle cx="400" cy="158" r="8"/><circle cx="166" cy="69" r="8"/><circle cx="284" cy="69" r="8"/></g><g fill="#3a4c4c" font-size="12" font-family="Malgun Gothic" font-weight="bold" text-anchor="middle"><text x="40" y="190">학교 쪽</text><text x="166" y="190">주택가</text><text x="284" y="190">단지 입구</text><text x="398" y="190">놀이터</text><text x="166" y="43">샛길</text><text x="284" y="43">단지 안쪽</text><text x="224" y="217">동네길</text></g></svg><p>별빛문구 왼쪽 골목 ↔ 상가·학원 큰길</p><p class="a10mapnote">E · 갈림길로 들어가기　 /　 M · 안내도 열기·닫기</p></div>`;document.querySelector('.game-frame').append(modal);modal.querySelector('#a10close').onclick=()=>toggleMap(false);modal.addEventListener('click',e=>{if(e.target===modal)toggleMap(false)});return modal}
+function drawMap(){const existing=document.getElementById('a10map');if(existing)existing.remove();const modal=document.createElement('div');modal.id='a10map';modal.className='a10map hidden';modal.innerHTML=`<div class="a10sheet" role="dialog" aria-modal="true" aria-label="동네 길 안내도"><button type="button" id="a10close" title="닫기">×</button><small>2006 · 길 안내</small><h2>동네와 상가 큰길</h2><p>직선으로만 이어진 스테이지가 아니야. 익숙한 골목을 돌아가도 같은 곳에 도착해.</p><svg viewBox="0 0 440 232" role="img" aria-label="큰길과 샛길이 다시 합쳐지는 동네 경로"><path d="M40 158 H400" stroke="#9a8f75" stroke-width="8" stroke-linecap="round" fill="none"/><path d="M166 158 L166 69 L284 69 L284 158" stroke="#698476" stroke-width="7" stroke-linecap="round" fill="none"/><g fill="#f4e8c9" stroke="#6f847c" stroke-width="3"><circle cx="40" cy="158" r="8"/><circle cx="166" cy="158" r="8"/><circle cx="284" cy="158" r="8"/><circle cx="400" cy="158" r="8"/><circle cx="166" cy="69" r="8"/><circle cx="284" cy="69" r="8"/></g><g fill="#3a4c4c" font-size="12" font-family="Malgun Gothic" font-weight="bold" text-anchor="middle"><text x="40" y="190">학교 쪽</text><text x="166" y="190">주택가</text><text x="284" y="190">단지 입구</text><text x="398" y="190">놀이터</text><text x="166" y="43">샛길</text><text x="284" y="43">단지 안쪽</text><text x="224" y="217">동네길</text></g></svg><p>별빛문구 왼쪽 골목 ↔ 상가·학원 큰길</p><p>별빛문구·은하분식 사이 ↔ 안쪽 주택 골목</p><p class="a10mapnote">E · 갈림길로 들어가기　 /　 M · 안내도 열기·닫기</p></div>`;document.querySelector('.game-frame').append(modal);modal.querySelector('#a10close').onclick=()=>toggleMap(false);modal.addEventListener('click',e=>{if(e.target===modal)toggleMap(false)});return modal}
 let modal=null;function toggleMap(next){modal=modal||drawMap();const open=typeof next==='boolean'?next:modal.classList.contains('hidden');modal.classList.toggle('hidden',!open);return open}
 window.ROUTES={names,widths,isRoute:s=>!!widths[s],background:s=>bg[s],markStreet,streetHotspots,hotspots,dynamic,toggleMap,get isMapOpen(){return !!modal&&!modal.classList.contains('hidden')}};
 })();
@@ -3232,7 +3248,7 @@ window.A12ART={retouch,retouchRoute,dynamic,get enabled(){return enabled},set en
 })();
 
 /* END src/16_pilot_art.js */
-</script><script src="assets/maps/after-school/manifest.js"></script><script src="src/after-school-map.js"></script><script src="src/playground-space.js"></script><script src="src/side-alley-map.js"></script><script src="src/apartment-path-map.js"></script><script src="src/commercial-road.js"></script><script>
+</script><script src="assets/maps/after-school/manifest.js"></script><script src="src/after-school-map.js"></script><script src="src/playground-space.js"></script><script src="src/side-alley-map.js"></script><script src="src/apartment-path-map.js"></script><script src="src/back-alley-map.js"></script><script src="src/stationery-interior.js"></script><script src="src/courtyard-map.js"></script><script src="src/pcroom-map.js"></script><script src="src/block104.js"></script><script src="src/commercial-road.js"></script><script>
 /* BEGIN src/13_game_core.js */
 
 /* 《2006년.. 90년대생의 회상》 ART STAGE 10 (everyday neighborhood detours + A8 routines)
@@ -3288,9 +3304,9 @@ const shirts=[{name:'아이보리 티셔츠',c:'#e4d9b8'},{name:'줄무늬 느�
 let last=performance.now(),running=false,t=0,cam=270,phase=0,weather=0,openDialog=false,busWasHere=false,toastTimer=0,highest=508,sceneReturnX=1090;
 const sound={ctx:null,noise:null,enabled:false,lastChirp:0};
 const areas=[{x:950,label:'동일초등학교 앞'},{x:1290,label:'담장길 · 은하분식'},{x:1690,label:'문방구가 있는 골목'},{x:2310,label:'주택가'},{x:3040,label:'큰길과 골목 경계'},{x:99999,label:'아파트 단지'}];
-function sceneWidth(){return player.scene==='street'?WORLD.WIDTH:(ROUTES.widths[player.scene]||RESIDENTIAL.width(player.scene)||840)}
+function sceneWidth(){if(player.scene==='pcroom')return window.PcRoomMap?.WIDTH||810;if(player.scene==='stationery')return window.StationeryInterior?.WIDTH||840;return player.scene==='street'?WORLD.WIDTH:(ROUTES.widths[player.scene]||RESIDENTIAL.width(player.scene)||840)}
 function uiClick(id,fn){el(id).addEventListener('click',fn)}
-function start(){running=true;D.intro.classList.add('hidden');D.start.blur();toast('← → 걷기 · E 가게 입장·오락기·길거리 주문 · I 가방',4)}
+function start(){window.BGM?.start();running=true;D.intro.classList.add('hidden');D.start.blur();toast('← → 걷기 · E 가게 입장·오락기·길거리 주문 · I 가방',4)}
 uiClick('startBtn',start);uiClick('dialogClose',closeDialog);uiClick('mapBtn',()=>ROUTES.toggleMap());
 uiClick('helpBtn',()=>showDialog('조작법','← → / A D 걷기 · SPACE 점프 · ↑ ↓ 사다리 · E 주변 살펴보기/가게/정류장/주택·아파트 계단 · C 앉기 · X 인사 · V 옷 바꾸기 · T 시간대 · R 비 내리기/그치기 · F 간식 먹기 · J 수첩. 정류장에선 E를 눌러 버스를 기다리고, 버스가 서면 다시 E를 눌러 탈 수 있어. M은 동네 길 안내도야. 주택가 샛길과 아파트 산책길은 큰길 대신 이어지는 우회로야.','✿'));
 uiClick('timeBtn',changeTime);uiClick('weatherBtn',changeWeather);uiClick('soundBtn',toggleSound);uiClick('outfitBtn',changeOutfit);
@@ -3313,6 +3329,10 @@ function setScene(next,spawn,spawnY){
   toast(next==='main_road'?'골목을 빠져나와 상가와 학원이 있는 큰길로 나왔다.':ROUTES.isRoute(next)?'건물 사이로 난 조용한 길을 따라 들어왔다.':RESIDENTIAL.isRoom(next)?'누군가 살고 있는 건물의 평범한 하루가 이어진다.':next==='stationery'?'문방구 문에 달린 방울이 딸랑 울린다.':'키보드 소리와 컴퓨터 팬 소음이 들린다.',3.3);
  }
  player.vy=0;player.onGround=true;player.pose='stand';player.sitAt=null;
+ if(next==='stationery'){if(typeof spawn!=='number')player.x=window.StationeryInterior.ENTRY.x;window.StationeryInterior.enter(player,spawnY)}
+ if(next==='pcroom'){if(typeof spawn!=='number')player.x=window.PcRoomMap.ENTRY.x;window.PcRoomMap.enter(player,spawnY)}
+ if(next==='courtyard'){if(typeof spawn!=='number')player.x=window.CourtyardMap.ENTRY.x;window.CourtyardMap.enter(player,spawnY)}
+ if(next==='back_alley')window.BackAlleyMap?.enter(player,spawnY);
  if(next==='apartment_path')window.ApartmentPathMap?.enter(player,spawnY);
  cam=Math.max(player.scene==='street'?359:0,Math.min(sceneWidth()-W,player.x-206));
  D.scene.textContent=player.scene==='street'?'거리':ROUTES.isRoute(player.scene)?'산책길':RESIDENTIAL.isRoom(player.scene)?'주거 공간':'실내';
@@ -3327,7 +3347,7 @@ function nearest(){
  if(player.scene==='street'&&player.playground){const d=PlaygroundSpace.near(player);if(d)return{x:d.x,r:39,type:'a20Device',device:d.id,title:d.id==='swing_pair'?'그네 타기':'뺑뺑이 타기'};return null;}
  if(player.scene==='street'&&player.x>3435&&player.x<4000)return null;
  let candidate=null,dist=Infinity;
- const hotspots=player.scene==='street' ? [
+ const hotspots=player.scene==='pcroom'?window.PcRoomMap.hotspots():player.scene==='stationery'?window.StationeryInterior.hotspots():player.scene==='street' ? [
   {x:2910,r:24,type:'note',title:'동네 철물',txt:'입구에 빗자루와 고무호스, 색색의 양동이가 놓여 있다. 가게 안에서 쇠붙이 부딪치는 소리가 난다.',icon:'🔧'},
   {x:3072,r:24,type:'note',title:'중앙 이발관',txt:'유리문 너머 의자와 흰 가운이 보인다. 텔레비전 소리가 작게 흘러나온다.',icon:'💈'},
   {x:2318,r:26,type:'routeSit',title:'담장 아래 벤치',txt:'나무 그늘이 내려앉은 벤치. 단지 안에서 누군가 이불을 터는 소리가 들린다.',icon:'🌿'},
@@ -3343,14 +3363,14 @@ function nearest(){
   ...(player.scene==='stationery' ? [
    {x:184,r:43,type:'shop',title:'학용품 진열대',txt:'스티커, 색연필, 공책과 샤프. 가게 진열대는 온통 작은 물건들로 가득하다.',icon:'✏️'},
    {x:435,r:47,type:'shop',title:'유리 진열장',txt:'색색의 지우개와 작은 장난감. 손때가 묻은 유리 위로 오후 햇빛이 비친다.',icon:'✿'},
-   {x:732,r:40,type:'arcade',title:'가게 구석 오락기',txt:'낡은 화면 속 별들을 모아 보자.',icon:'🕹️'}
+   {x:732,r:40,type:'arcade',title:'가게 구석 오락기',txt:'동네 태권 대전 한 판을 해 보자.',icon:'🕹️'}
   ] : [
    {x:700,r:49,type:'pcCounter',title:'비회원 카드 받는 카운터',txt:'카운터에서 선불로 계산하고 번호표를 받는다.',icon:'🎫'},
    {x:214,r:45,type:'pc',seat:12,title:'PC방 12번 자리',txt:'두툼한 CRT 모니터에서 게임 화면이 빛난다. 키보드가 달칵달칵 울린다.',icon:'🖥️'},
    {x:544,r:48,type:'pc',seat:17,title:'PC방 17번 자리',txt:'모니터 옆에는 종이컵이 놓여 있다. 누군가 친구를 기다리는 것 같다.',icon:'⌨️'}
   ])
  ]);
- for(const a of hotspots){if(player.scene==='street'&&a.x>=3316&&!['routineNpc','resDoor'].includes(a.type))continue;if(player.scene==='street'&&a.x>=2724&&a.x<3316&&!['routineNpc'].includes(a.type)&&!['동네 철물','중앙 이발관'].includes(a.title))continue;if(player.scene==='street'&&a.x>2133&&a.x<2724&&!['routeGate','letterbox','routeSit','routineNpc'].includes(a.type))continue;if(player.scene==='street'&&a.x>=1541&&a.x<=2133&&!['resDoor','routineNpc'].includes(a.type))continue;const d=player.scene==='apartment_path'?Math.hypot(a.x-player.x,((a.approachY??a.y??222)-(player.apartmentFloorY??player.y))*1.25):Math.abs(a.x-player.x);if(d<a.r&&d<dist){candidate=a;dist=d}}
+ for(const a of hotspots){if(player.scene==='street'&&a.x>=3316&&!['routineNpc','resDoor'].includes(a.type))continue;if(player.scene==='street'&&a.x>=2724&&a.x<3316&&!['routineNpc'].includes(a.type)&&!['동네 철물','중앙 이발관'].includes(a.title))continue;if(player.scene==='street'&&a.x>2133&&a.x<2724&&!['routeGate','letterbox','routeSit','routineNpc'].includes(a.type))continue;if(player.scene==='street'&&a.x>=1541&&a.x<=2133&&!['resDoor','routineNpc'].includes(a.type))continue;const d=player.scene==='pcroom'?Math.hypot(a.x-player.x,((a.y??250)-(player.pcFloorY??player.y))*1.25):player.scene==='courtyard'?Math.hypot(a.x-player.x,((a.y??250)-(player.yardFloorY??player.y))*1.25):player.scene==='stationery'?Math.hypot(a.x-player.x,((a.y??247)-(player.stationeryFloorY??player.y))*1.25):player.scene==='back_alley'?Math.hypot(a.x-player.x,((a.y??238)-(player.alleyFloorY??player.y))*1.25):player.scene==='apartment_path'?Math.hypot(a.x-player.x,((a.approachY??a.y??222)-(player.apartmentFloorY??player.y))*1.25):Math.abs(a.x-player.x);if(d<a.r&&d<dist){candidate=a;dist=d}}
  return candidate;
 }
 function interact(){
@@ -3418,6 +3438,10 @@ function keydown(e){const k=e.code;
  if(e.repeat)return;
 
  if(player.playground&&k==='Space')return;
+ if(running&&player.scene==='pcroom'&&k==='Space'){window.PcRoomMap.jump(player);closeDialog();return;}
+ if(running&&player.scene==='courtyard'&&k==='Space'){window.CourtyardMap?.jump(player);closeDialog();return;}
+ if(running&&player.scene==='stationery'&&k==='Space'){window.StationeryInterior?.jump(player);closeDialog();return;}
+ if(running&&player.scene==='back_alley'&&k==='Space'){window.BackAlleyMap?.jump(player);closeDialog();return;}
  if(running&&player.scene==='apartment_path'&&k==='Space'){window.ApartmentPathMap?.jump(player);closeDialog();return;}
  if(k==='Enter'&&!running){start();return}if(!running)return;
  if(k==='KeyM'){ROUTES.toggleMap();return}if(k==='KeyR'){changeWeather();return}if(k==='KeyI'){SHOPS.openBag();return}if(k==='KeyJ'){MEMO.show();return}if(k==='KeyF'){takeBite();return}if(k==='KeyE'){interact();return}if(k==='KeyC'){sit();return}if(k==='KeyT'){changeTime();return}if(k==='KeyX'){wave();return}if(k==='KeyV'){changeOutfit();return}
@@ -3435,7 +3459,7 @@ function takeBite(){
  closeDialog();toast(SHOPS.heldName+' · 한 입씩 천천히 먹는다. ('+SHOPS.heldBites+'입 남음)',1.6);
 }
 function keyup(e){input.delete(e.code)}
-window.addEventListener('keydown',keydown);window.addEventListener('keyup',keyup);window.addEventListener('blur',()=>input.clear());
+window.addEventListener('keydown',keydown);window.addEventListener('keyup',keyup);window.addEventListener('blur',()=>input.clear());window.addEventListener('arcade-focus-change',()=>input.clear());
 for(const btn of document.querySelectorAll('.touch button')){
  const k=btn.dataset.key;let held=false;
  btn.addEventListener('pointerdown',e=>{e.preventDefault();held=true;btn.setPointerCapture(e.pointerId);keydown({code:k,repeat:false,preventDefault(){}})});
@@ -3480,6 +3504,31 @@ function update(dt){
  if(player.playground){if(player.pose==='eat'&&t>=player.eatEnd){SHOPS.consumeHeld();player.pose='stand'}const h=player.pose==='eat'?0:inputH(),v=player.pose==='eat'?0:inputV();PlaygroundSpace.walk(player,h,v,dt);const target=Math.max(3340,Math.min(3540,player.x-240));cam+=(target-cam)*Math.min(1,dt*5);const a=nearest();D.area.textContent='아파트 모래 놀이터';D.action.textContent=a?'E · '+a.title:'↑↓←→ 걷기 · 놀이기구 가까이 E';return;}
  const busNow=NEIGHBOR.busAtStop(t);if(busNow&&!busWasHere&&player.scene==='street'&&Math.abs(player.x-2623)<100)toast('버스가 도착했다. 정류장에서 E를 누르면 탈 수 있어.',3.6);busWasHere=busNow;
  if(player.pose==='eat'&&t>=player.eatEnd){const msg=SHOPS.consumeHeld();player.pose=player.eatRestore||'stand';player.walking=0;toast(msg||'천천히 한 입 먹었다.',3.5)}
+ if(player.scene==='stationery'){
+  if(player.pose==='wave'&&t>player.waveEnd)player.pose='stand';
+  const h=player.pose==='eat'?0:inputH(),v=player.pose==='eat'?0:inputV();
+  if(h||v){if(openDialog)closeDialog();if(player.pose==='wave')player.pose='stand'}
+  window.StationeryInterior?.walk(player,h,v,dt);
+  const target=Math.max(0,Math.min(sceneWidth()-W,player.x-206));cam+=(target-cam)*Math.min(1,dt*6);
+  D.area.textContent='별빛문구완구 내부';const a=nearest();D.action.textContent=a?'E · '+a.title:'↑↓←→ 통로 걷기 · E 진열 구경';return;
+ }
+ if(player.scene==='pcroom'){
+  if(player.pose==='wave'&&t>player.waveEnd)player.pose='stand';const h=player.pose==='eat'?0:inputH(),v=player.pose==='eat'?0:inputV();if(h||v){if(openDialog)closeDialog();if(player.pose==='wave')player.pose='stand'}
+  window.PcRoomMap.walk(player,h,v,dt);const target=Math.max(0,Math.min(sceneWidth()-W,player.x-206));cam+=(target-cam)*Math.min(1,dt*6);D.area.textContent='동네 PC방 내부';const a=nearest();D.action.textContent=a?'E · '+a.title:'↑↓←→ 통로 걷기 · E 자리와 카운터';return;
+ }
+ if(player.scene==='courtyard'){
+  if(player.pose==='wave'&&t>player.waveEnd)player.pose='stand';
+  const h=player.pose==='eat'?0:inputH(),v=player.pose==='eat'?0:inputV();if(h||v){if(openDialog)closeDialog();if(player.pose==='wave')player.pose='stand'}
+  window.CourtyardMap.walk(player,h,v,dt);cam=0;D.area.textContent='주택가의 작은 마당';const a=nearest();D.action.textContent=a?'E · '+a.title:'↑↓←→ 마당 걷기 · Space 점프';return;
+ }
+ if(player.scene==='back_alley'){
+  if(player.pose==='wave'&&t>player.waveEnd)player.pose='stand';
+  const h=player.pose==='eat'?0:inputH(),v=player.pose==='eat'?0:inputV();
+  if(h||v){if(openDialog)closeDialog();if(player.pose==='wave')player.pose='stand'}
+  window.BackAlleyMap?.walk(player,h,v,dt);
+  const target=Math.max(0,Math.min(sceneWidth()-W,player.x-206));cam+=(target-cam)*Math.min(1,dt*6);
+  D.area.textContent='문구점 뒤 주택 골목';const a=nearest();D.action.textContent=a?'E · '+a.title:'↑↓←→ 골목 걷기 · Space 점프';return;
+ }
  if(player.scene==='apartment_path'){
   if(player.pose==='wave'&&t>player.waveEnd)player.pose='stand';
   const h=player.pose==='eat'?0:inputH(),v=player.pose==='eat'?0:inputV();
@@ -3534,15 +3583,19 @@ function update(dt){
 function render(){
  ctx.setTransform(RENDER_SCALE,0,0,RENDER_SCALE,0,0);
  ctx.imageSmoothingEnabled=false;
- if(player.scene==='main_road')ctx.translate(0,17);
+ if(player.scene==='main_road')ctx.translate(0,24);
  // A46: move the street camera up 40 world units; preserve all shared physics coordinates.
  if(player.scene==='street'||player.scene==='side_alley'){ctx.fillStyle=phase===2?'#273b57':phase===1?'#d5aba0':'#78b9eb';ctx.fillRect(0,0,W,H);ctx.translate(0,40);}
  if(player.scene==='street'){
   WORLD.sky(ctx,cam,phase,t);ctx.drawImage(A12ART.enabled?bg:bgA11,-Math.round(cam),0);window.A14ART?.draw(ctx,cam,phase,t);window.A21SPACE?.draw(ctx,cam,phase,weather,t);WORLD.drawAmbient(ctx,cam,t,phase);
   if(A12ART.enabled)A12ART.dynamic(ctx,cam,phase,weather,t);
  }else if(ROUTES.isRoute(player.scene)){
-  WORLD.sky(ctx,cam,phase,t);if(!(player.scene==='side_alley'&&window.SideAlleyMap?.draw(ctx,cam))&&!(player.scene==='apartment_path'&&window.ApartmentPathMap?.draw(ctx,cam))&&!(player.scene==='main_road'&&window.CommercialRoad?.draw(ctx,cam)))ctx.drawImage(ROUTES.background(player.scene),-Math.round(cam),0);
-  if(phase===2){ctx.fillStyle='#233c5230';ctx.fillRect(0,player.scene==='main_road'?-17:0,W,H)}
+  WORLD.sky(ctx,cam,phase,t);if(!(player.scene==='back_alley'&&window.BackAlleyMap?.draw(ctx,cam))&&!(player.scene==='side_alley'&&window.SideAlleyMap?.draw(ctx,cam))&&!(player.scene==='apartment_path'&&window.ApartmentPathMap?.draw(ctx,cam))&&!(player.scene==='main_road'&&window.CommercialRoad?.draw(ctx,cam)))ctx.drawImage(ROUTES.background(player.scene),-Math.round(cam),0);
+  if(phase===2){ctx.fillStyle='#233c5230';ctx.fillRect(0,player.scene==='main_road'?-24:0,W,H)}
+ }else if(player.scene==='pcroom'){
+  window.PcRoomMap.draw(ctx,cam);
+ }else if(player.scene==='stationery'){
+  window.StationeryInterior?.draw(ctx,cam);
  }else if(RESIDENTIAL.isRoom(player.scene)){
   RESIDENTIAL.drawInterior(ctx,player.scene,cam,phase,weather,t);
  }else{
@@ -3558,15 +3611,17 @@ function render(){
  if(player.scene==='street'){if(!window.AfterSchoolMap?.draw(ctx,t))window.FoodArt?.counter(ctx);PlaygroundSpace.ground(ctx);}
  if(player.scene!=='street')ROUTINES.render(ctx,player.scene,t,weather);
  window.CHARART?.drawAmbient?.(ctx,player.scene,t);
- if(player.scene!=='apartment_path')window.A25NET?.render(ctx,cam,player.scene);
+ if(player.scene!=='apartment_path'&&player.scene!=='stationery'&&player.scene!=='courtyard'&&player.scene!=='pcroom')window.A25NET?.render(ctx,cam,player.scene);
  if(ROUTES.isRoute(player.scene))ROUTES.dynamic(ctx,player.scene,phase,weather,t);
  if(player.scene==='apartment_path')window.ApartmentPathMap?.render(ctx,player,t);
- if(player.scene!=='apartment_path'&&!(player.scene==='street'&&PlaygroundSpace.contains(player.x))&&!window.A20WORLD?.hidesPlayer())WORLD.drawKid(ctx,player.x,player.y,player.dir,player.walking,player.shirt,false,(['sit','bench','swing'].includes(player.pose)||(player.pose==='eat'&&player.eatRestore!=='stand')),player.pose);
+ if(player.scene==='stationery')window.StationeryInterior?.render(ctx,player,t);if(player.scene==='pcroom')window.PcRoomMap.render(ctx,player,t);if(['lobby','hall','rooftop'].includes(player.scene))window.Block104.render(ctx,player);if(player.scene==='courtyard')window.CourtyardMap.render(ctx,player,t);
+ if(player.scene==='main_road'){ctx.save();ctx.translate(player.x,player.y);ctx.scale(.72,.72);WORLD.drawKid(ctx,0,0,player.dir,player.walking,player.shirt,false,['sit','bench','swing'].includes(player.pose),player.pose);SHOPS.renderHeld(ctx,0,0,player.dir,player.pose,t);ctx.restore();}
+ if(!['lobby','hall','rooftop'].includes(player.scene)&&player.scene!=='main_road'&&player.scene!=='apartment_path'&&player.scene!=='stationery'&&player.scene!=='courtyard'&&player.scene!=='pcroom'&&!(player.scene==='street'&&PlaygroundSpace.contains(player.x))&&!window.A20WORLD?.hidesPlayer())WORLD.drawKid(ctx,player.x,player.y,player.dir,player.walking,player.shirt,false,(['sit','bench','swing'].includes(player.pose)||(player.pose==='eat'&&player.eatRestore!=='stand')),player.pose);
  if(player.scene==='street'){PlaygroundSpace.render(ctx,player,t);ROUTINES.render(ctx,player.scene,t,weather);}
- if(player.scene!=='apartment_path'&&!(player.scene==='street'&&PlaygroundSpace.contains(player.x)))SHOPS.renderHeld(ctx,player.x,player.y,player.dir,player.pose,t);
+ if(!['lobby','hall','rooftop'].includes(player.scene)&&player.scene!=='main_road'&&player.scene!=='apartment_path'&&player.scene!=='stationery'&&player.scene!=='courtyard'&&player.scene!=='pcroom'&&!(player.scene==='street'&&PlaygroundSpace.contains(player.x)))SHOPS.renderHeld(ctx,player.x,player.y,player.dir,player.pose,t);
  if(player.scene==='main_road')window.CommercialRoad?.foreground(ctx,t);
  window.A25NET?.renderSelfBubble(ctx,player.scene);
- if(running&&!openDialog&&!window.A20WORLD?.hidesPlayer()){let h=nearest();if(h){const xx=h.x;let yy=player.scene==='street'?(h.type==='swing'?126:h.type==='counter'?126:['routineNpc','resNpc'].includes(h.type)?126:h.type==='door'?153:165):154;if(Math.abs(xx-player.x)<22)yy=Math.min(yy,player.y-74);
+ if(running&&!openDialog&&!window.A20WORLD?.hidesPlayer()){let h=nearest();if(h){const xx=h.x;let yy=player.scene==='street'?(h.type==='swing'?126:h.type==='counter'?126:['routineNpc','resNpc'].includes(h.type)?126:h.type==='door'?153:165):154;if(player.scene==='stationery')yy=(h.y??player.stationeryFloorY)-window.StationeryInterior.actorHeight-18;if(player.scene==='pcroom')yy=(h.y??player.pcFloorY)-window.PcRoomMap.actorHeight-18;if(player.scene==='courtyard')yy=(h.y??player.yardFloorY)-51*window.CourtyardMap.scale(player.yardFloorY)-20;if(player.scene==='back_alley')yy=(h.y??player.alleyFloorY)-65;if(Math.abs(xx-player.x)<22)yy=Math.min(yy,player.y-74);
   let bob=Math.round(Math.sin(t*3)*2);ctx.fillStyle='#f4e3af';ctx.fillRect(Math.round(xx-5),yy+bob,11,11);
   ctx.fillStyle='#3c5159';ctx.font='bold 8px monospace';ctx.fillText('E',Math.round(xx-2),yy+8+bob);
  }}
@@ -3585,7 +3640,7 @@ function render(){
 }
 function frame(now){const dt=Math.min(.033,(now-last)/1000||.016);last=now;update(dt);render();requestAnimationFrame(frame)}
 requestAnimationFrame(frame);
-window.__GAME_DEBUG__={nearest:()=>nearest(),playground:()=>window.A20WORLD?.snapshot(),environment:()=>A16SCENE.snapshot(),terrain:()=>A17TERRAIN.snapshot(),changeTerrain:(id,patch)=>A17TERRAIN.change(id,patch),moveEnvironment:(id,x)=>A16SCENE.move(id,x),layout:()=>A13LAYOUT.snapshot(),audit:()=>A13LAYOUT.validate(Object.fromEntries(A13LAYOUT.list().map(d=>[d.id,{x:d.x,w:d.w,h:d.h}]))),movePrefab:(id,x)=>A13LAYOUT.move(id,x),get art(){return A12ART.enabled?'A12':'A11'},player,residential:()=>RESIDENTIAL.debug(phase,weather),routines:()=>ROUTINES.debug(),shops:()=>({coins:SHOPS.coins,bag:SHOPS.inventory,open:SHOPS.isOpen}),playroom:()=>PLAYROOM.debug(),neighborhood:()=>NEIGHBOR.debug(t),routes:()=>({current:player.scene,branch:ROUTES.isRoute(player.scene),width:sceneWidth(),mapOpen:ROUTES.isMapOpen}),setWeather(x){weather=x?1:0;el('weatherLabel').textContent=weather?'비 내림':'맑음'},moveTo(x){player.x=x;player.pose='stand';player.y=GROUND;player.onGround=true;if(player.scene==='apartment_path')window.ApartmentPathMap?.enter(player);cam=Math.max(player.scene==='street'?359:0,Math.min(sceneWidth()-W,x-206))},setScene,get status(){return{running,phase,weather,camera:cam,scene:player.scene,area:D.area.textContent,pose:player.pose,footY:player.y,held:SHOPS.held,notes:MEMO.entries.length}}};
+window.__GAME_DEBUG__={nearest:()=>nearest(),playground:()=>window.A20WORLD?.snapshot(),environment:()=>A16SCENE.snapshot(),terrain:()=>A17TERRAIN.snapshot(),changeTerrain:(id,patch)=>A17TERRAIN.change(id,patch),moveEnvironment:(id,x)=>A16SCENE.move(id,x),layout:()=>A13LAYOUT.snapshot(),audit:()=>A13LAYOUT.validate(Object.fromEntries(A13LAYOUT.list().map(d=>[d.id,{x:d.x,w:d.w,h:d.h}]))),movePrefab:(id,x)=>A13LAYOUT.move(id,x),get art(){return A12ART.enabled?'A12':'A11'},player,residential:()=>RESIDENTIAL.debug(phase,weather),routines:()=>ROUTINES.debug(),shops:()=>({coins:SHOPS.coins,bag:SHOPS.inventory,open:SHOPS.isOpen}),playroom:()=>PLAYROOM.debug(),neighborhood:()=>NEIGHBOR.debug(t),routes:()=>({current:player.scene,branch:ROUTES.isRoute(player.scene),width:sceneWidth(),mapOpen:ROUTES.isMapOpen}),setWeather(x){weather=x?1:0;el('weatherLabel').textContent=weather?'비 내림':'맑음'},moveTo(x){player.x=x;player.pose='stand';player.y=GROUND;player.onGround=true;if(player.scene==='stationery')window.StationeryInterior?.enter(player);if(player.scene==='pcroom')window.PcRoomMap?.enter(player);if(player.scene==='courtyard')window.CourtyardMap?.enter(player);if(player.scene==='back_alley')window.BackAlleyMap?.enter(player);if(player.scene==='apartment_path')window.ApartmentPathMap?.enter(player);cam=Math.max(player.scene==='street'?359:0,Math.min(sceneWidth()-W,x-206))},setScene,get status(){return{running,phase,weather,camera:cam,scene:player.scene,area:D.area.textContent,pose:player.pose,footY:player.y,held:SHOPS.held,notes:MEMO.entries.length}}};
 })();
 
 
@@ -3875,7 +3930,7 @@ function drawBubble(c,x,top,body){
 function renderSelfBubble(c,scene){
  if(!ready||player.scene!==scene||!selfBubble||performance.now()>=selfBubbleUntil)return;
  c.save();c.textAlign='center';c.textBaseline='bottom';
- drawBubble(c,player.x,player.y-97,selfBubble);c.restore();
+ drawBubble(c,player.x,player.y-(scene==='main_road'?72:scene==='pcroom'?(window.PcRoomMap.actorHeight+30):scene==='courtyard'?(51*window.CourtyardMap.scale(player.yardFloorY)+30):scene==='stationery'?(window.StationeryInterior.actorHeight+30):97),selfBubble);c.restore();
 }
 function render(c,cam,scene){
  if(!ready)return;
@@ -3884,16 +3939,17 @@ function render(c,cam,scene){
   if(f.scene==='street'&&window.PlaygroundSpace?.contains(f.renderX))continue;
   if(f.scene!==scene || window.A26NET?.skipAvatar?.(f.id) || !Number.isFinite(f.renderX)||!Number.isFinite(f.renderY))continue;
   const rx=f.renderX-cam;if(rx< -45||rx>525)continue;
-  let ok=window.CHARART?.drawRemote?.(c,f.look,f.renderX,f.renderY,f.dir,f.pose,f.id,f.held);
+  if(scene==='main_road'){c.save();c.translate(f.renderX,f.renderY);c.scale(.72,.72)}
+  let ok=window.CHARART?.drawRemote?.(c,f.look,scene==='main_road'?0:f.renderX,scene==='main_road'?0:f.renderY,f.dir,f.pose,f.id,f.held);if(scene==='main_road')c.restore();
   if(!ok){c.fillStyle='#36516e';c.fillRect(Math.round(f.renderX-7),Math.round(f.renderY-26),14,26);c.fillStyle='#f0bba0';c.fillRect(Math.round(f.renderX-6),Math.round(f.renderY-36),12,11)}
-  const w=Math.min(95,Math.max(28,f.name.length*8+12)),ny=f.renderY-66;
+  const w=Math.min(95,Math.max(28,f.name.length*8+12)),ny=f.renderY-(scene==='main_road'?49:66);
   c.fillStyle='#20374bcc';c.fillRect(Math.round(f.renderX-w/2),Math.round(ny-12),w,13);
   c.fillStyle='#fff2d5';c.font='bold 9px sans-serif';c.fillText(f.name,Math.round(f.renderX),Math.round(ny-1));
   if(f.bubble && performance.now()<f.bubbleUntil)drawBubble(c,f.renderX,ny-39,f.bubble);
  }
  c.restore();
 }
-window.A25NET={connect,close,tick,render,renderSelfBubble,send,subscribe(fn){subscribers.add(fn);return()=>subscribers.delete(fn)},get state(){return{ready,room:currentRoom,id:myId,peers:friends.size}},get peers(){return [...friends.values()].map(f=>({id:f.id,name:f.name,scene:f.scene,x:f.x,y:f.y,pose:f.pose,look:f.look,dir:f.dir,held:f.held,playground:f.playground}))}};
+window.A25NET={connect,close,tick,render,renderSelfBubble,send,subscribe(fn){subscribers.add(fn);return()=>subscribers.delete(fn)},get state(){return{ready,room:currentRoom,id:myId,peers:friends.size}},get drawPeers(){return [...friends.values()].map(f=>({id:f.id,name:f.name,scene:f.scene,x:f.renderX,y:f.renderY,pose:f.pose,look:f.look,dir:f.dir,held:f.held,bubble:f.bubble,bubbleUntil:f.bubbleUntil}))},get peers(){return [...friends.values()].map(f=>({id:f.id,name:f.name,scene:f.scene,x:f.x,y:f.y,pose:f.pose,look:f.look,dir:f.dir,held:f.held,playground:f.playground}))}};
 updateCount();
 })();
 
@@ -4032,5 +4088,6 @@ window.A26NET={get snapshot(){return snapshot},get ready(){return connected()},p
 
 
 </script>
+<script src="src/background-music.js"></script>
 </body>
 </html>
