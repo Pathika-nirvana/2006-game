@@ -3,7 +3,7 @@
  * 부모 게임과는 postMessage로만 대화한다. (INTEGRATION.md 참고) */
 (function () {
 'use strict';
-const BUILD = 'v7.2 2026-11-07 20:09';
+const BUILD = 'v7 2026-11-07 18:50';
 const W = 320, H = 224, GY = 192, SC = 2, WL = 18, WR = 302, GRAV = 0.34;
 const FONT = '"Malgun Gothic","Apple SD Gothic Neo","Noto Sans CJK KR","Noto Sans KR","Nanum Gothic",sans-serif';
 const cv = document.getElementById('screen');
@@ -1030,7 +1030,7 @@ function drawTitle() {
 }
 function tickSelect(ME) {
   const n = G.mode === 2 ? 2 : 1;
-  if (G.mode === 3 && G.t % 20 === 0) netSend({ k: 'pick', ch: G.sel[0], dn: G.done[0] ? 1 : 0 });
+  if (G.mode === 3 && G.done[0] && !G.net.sent) { G.net.sent = true; netSend({ k: 'pick', ch: G.sel[0] }); }
   for (let i = 0; i < n; i++) {
     const m = ME[i];
     if (G.done[i]) continue;
@@ -1040,15 +1040,6 @@ function tickSelect(ME) {
   }
   if (G.done.slice(0, n).every(Boolean) && !G.starting && (G.mode !== 3 || G.net.rp >= 0)) { G.starting = 30; }
   if (G.starting) { G.starting--; if (G.starting <= 0) { G.starting = 0; startRun(); } }
-}
-function drawNetWait() {
-  drawStage(0); R(0, 0, W, H, 'rgba(10,6,20,.7)');
-  txt('온라인 대전', 160, 70, 18, '#ffe45a', 'center', '#16121c', 900);
-  const dots = '.'.repeat(1 + Math.floor(G.t / 20) % 3);
-  txt('같은 방의 상대를 기다리는 중' + dots, 160, 120, 11, '#fff', 'center', '#16121c');
-  txt('친구도 오락기에서 온라인 대전을 누르면 바로 시작합니다', 160, 146, 8, '#c8c0d8', 'center');
-  txt('Esc 나가기', 160, 210, 8, '#c8c0d8', 'center');
-  txt(BUILD, 316, 221, 6, '#8b7fa0', 'right');
 }
 function drawSelect() {
   drawStage(0); R(0, 0, W, H, 'rgba(10,6,20,.7)');
@@ -1077,7 +1068,7 @@ function drawSelect() {
     if (blink) { for (let t = 0; t < 3; t++) { c.strokeStyle = col; c.lineWidth = 2; c.strokeRect(x - 47 + (i ? 3 : 0), 41 + (i ? 3 : 0), 94 - (i ? 6 : 0), 132 - (i ? 6 : 0)); break; } }
     R(x - 46 + (i ? 52 : 0), 33, 40, 9, col); txt((i + 1) + 'P' + (G.done[i] ? ' 결정' : ''), x - 26 + (i ? 52 : 0), 41, 8, '#fff', 'center');
   }
-  if (G.net) txt(!G.net.hear ? '상대 연결 확인 중...' : (G.net.rp >= 0 ? '상대 선택 완료' : '상대가 고르는 중'), 160, 206, 9, G.net.hear ? '#7CFC9A' : '#ffe45a', 'center', '#16121c');
+  if (G.net && G.done[0] && G.net.rp < 0) txt('상대를 기다리는 중...', 160, 206, 9, '#ffe45a', 'center', '#16121c');
   txt('← → 고르기   아무 공격 버튼으로 결정   Esc 뒤로', 160, 218, 8, '#c8c0d8', 'center');
 }
 function drawFigureAt(x, y, pose, ch, pal, sc) {
@@ -1097,13 +1088,11 @@ function hashState() {
 }
 function netStart(d) {
   G.mode = 3; G.paused = false;
-  G.net = { side: d.side ? 1 : 0, seed: d.seed | 0, delay: Math.max(1, Math.min(12, d.delay || 4)), mid: 0, loc: {}, remM: {}, nf: 0, rp: -1, hear: 0, sent: false, again: false, againR: false, waiting: false, cur: [emptyRaw(), emptyRaw()], myh: {}, remh: {} };
+  G.net = { side: d.side ? 1 : 0, seed: d.seed | 0, delay: Math.max(1, Math.min(12, d.delay || 4)), mid: 0, loc: {}, remM: {}, nf: 0, rp: -1, sent: false, again: false, againR: false, waiting: false, cur: [emptyRaw(), emptyRaw()], myh: {}, remh: {} };
   G.sel = [0, 1]; G.done = [false, false]; G.starting = 0; G.mprev = [null, null];
   go('select'); bgmPlay('menu');
-  const q = netPending.splice(0); q.forEach(netRecv);
 }
 function netLeave(notify) {
-  netPending.length = 0;
   if (G.net && notify) netSend({ k: 'leave' });
   G.net = null; G.mode = 1; G.starting = 0; bgmStop(); go('title'); G.menu = 0;
   post('net-end', {});
@@ -1119,12 +1108,9 @@ function startNetMatch() {
   for (let f = 0; f < N.delay; f++) { N.loc[f] = 0; rem[f] = 0; }
   go('intro'); sfx.coin(); bgmPlay('menu');
 }
-const netPending = [];
 function netRecv(msg) {
-  const N = G.net; if (!msg) return;
-  if (!N) { if ((msg.k === 'pick' || msg.k === 'in') && netPending.length < 400) netPending.push(msg); return; }
-  N.hear = 1;
-  if (msg.k === 'pick') { if (msg.dn !== 0) N.rp = msg.ch | 0; }
+  const N = G.net; if (!N || !msg) return;
+  if (msg.k === 'pick') N.rp = msg.ch | 0;
   else if (msg.k === 'in') { (N.remM[msg.m] || (N.remM[msg.m] = {}))[msg.f] = msg.b; }
   else if (msg.k === 'hash') {
     const key = msg.m + ':' + msg.f;
@@ -1380,14 +1366,12 @@ function tick() {
   if (G.net && (pressedKeys.has('Escape') || pressedKeys.has('Backspace')) && (G.scene === 'select' || G.scene === 'intro' || G.scene === 'result2')) { netLeave(true); post('exit', { score: G.best }); pressedKeys.clear(); return; }
   if (pressedKeys.has('Escape') || pressedKeys.has('Backspace')) {
     if (G.net) { /* 온라인 싸움 중에는 무시 */ }
-    else if (G.scene === 'netwait') { post('exit', { score: G.best }); }
     else if (G.scene === 'title') { if (G.menu === 10) { G.menu = 2; sfx.back(); } else post('exit', { score: G.best }); }
     else if (G.scene === 'select') { go('title'); G.menu = G.mode - 1; G.starting = 0; sfx.back(); }
     else if (G.scene === 'intro' || G.scene === 'continue' || G.scene === 'over' || G.scene === 'ending' || G.scene === 'result2') { bgmStop(); go('title'); G.menu = 0; sfx.back(); }
   }
   switch (G.scene) {
     case 'title': if (G.t === 1 || !bgm.kind) bgmPlay('menu'); tickTitle(ME); break;
-    case 'netwait': if (G.t === 1 || !bgm.kind) bgmPlay('menu'); break;
     case 'select': tickSelect(ME); break;
     case 'intro': tickIntro(); break;
     case 'fight': tickFight(); break;
@@ -1403,7 +1387,6 @@ function render() {
   c.imageSmoothingEnabled = false;
   switch (G.scene) {
     case 'title': drawTitle(); break;
-    case 'netwait': drawNetWait(); break;
     case 'select': drawSelect(); break;
     case 'intro': drawIntro(); break;
     case 'fight': drawFight(); break;
@@ -1437,7 +1420,7 @@ addEventListener('message', e => {
   else if (d.type === 'mute') { muted = true; bgmStop(); }
   else if (d.type === 'unmute') { muted = false; }
   else if (d.type === 'focus') window.focus();
-  else if (d.type === 'reset') { netPending.length = 0; bgmStop(); G.net = null; G.mode = 1; go('title'); G.menu = 0; running = true; }
+  else if (d.type === 'reset') { bgmStop(); G.net = null; G.mode = 1; go('title'); G.menu = 0; running = true; }
   else if (d.type === 'net-start') { running = true; netStart(d); window.focus(); }
   else if (d.type === 'net-msg') netRecv(d.msg);
   else if (d.type === 'net-leave') { if (G.net) { toast('상대가 나갔습니다'); netLeave(false); post('exit', { score: G.best }); } }
@@ -1450,6 +1433,5 @@ window.TaekwonFighter = {
 };
 window.__fighter = { G, get fighters() { return G.f; }, get projs() { return projs; }, MAP, down, pressedKeys, startMove, mkFighter, tick, CHARS, POSE, MOVES, drawFigure, ctx: c, hitbox, hurtbox, render, hashState, get net() { return G.net; } };
 requestAnimationFrame(loop);
-if (new URLSearchParams(location.search).get('online') === '1') go('netwait');
 post('ready', { best: G.best, version: BUILD });
 })();
