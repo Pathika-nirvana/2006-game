@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>온라인 대전 시험 (한 화면에 두 명)</title>
+<style>
+body{margin:0;background:#111;color:#ddd;font-family:"Malgun Gothic",sans-serif}
+.bar{padding:8px 12px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;font-size:14px}
+.wrap{display:flex;gap:6px;padding:0 6px}
+iframe{flex:1;min-width:0;height:calc(100vh - 90px);border:2px solid #444;background:#000}
+button,input{font-size:14px}
+</style>
+</head>
+<body>
+<div class="bar">
+  <button id="go">온라인 대전 시작</button>
+  <label>가짜 지연(밀리초, 한쪽 방향) <input id="lat" type="number" value="40" min="0" max="500" style="width:70px"></label>
+  <span id="log">대기 중</span>
+</div>
+<div class="wrap">
+  <iframe id="A" src="index.html?bezel=0"></iframe>
+  <iframe id="B" src="index.html?bezel=0"></iframe>
+</div>
+<script>
+/* 실제 게임에서는 이 "전달" 부분을 서버(소켓)가 대신합니다.
+   게임 화면(iframe)이 내보내는 net-send 메시지를 상대 화면에 net-msg 로 그대로 넘겨주면 됩니다. */
+var A=document.getElementById('A'), B=document.getElementById('B'), log=document.getElementById('log');
+function lat(){return +document.getElementById('lat').value||0}
+window.addEventListener('message',function(e){
+  var d=e.data; if(!d||d.source!=='arcade-game'||d.game!=='fighter') return;
+  var from=e.source===A.contentWindow?A:e.source===B.contentWindow?B:null; if(!from) return;
+  var to=from===A?B:A;
+  if(d.type==='net-send'){
+    setTimeout(function(){to.contentWindow.postMessage({source:'arcade-host',type:'net-msg',msg:d.msg},'*')},lat());
+  } else if(d.type==='net-desync'){ window.__ds=(window.__ds||0)+1; log.textContent='동기가 어긋남: 프레임 '+d.frame; }
+  else if(d.type==='net-result'){ window.__res=(window.__res||0)+1; log.textContent='결과: '+(d.winnerSide===0?'왼쪽':'오른쪽')+' 승리'; }
+});
+document.getElementById('go').onclick=function(){
+  var seed=Math.floor(Math.random()*1e6);
+  A.contentWindow.postMessage({source:'arcade-host',type:'net-start',side:0,seed:seed,delay:4},'*');
+  B.contentWindow.postMessage({source:'arcade-host',type:'net-start',side:1,seed:seed,delay:4},'*');
+  log.textContent='시작됨. 각 화면을 클릭한 뒤 방향키와 Q A S D 로 조작 (두 화면 모두 같은 키라서 한 번에 한 화면만 조작할 수 있습니다)';
+};
+</script>
+</body>
+</html>
