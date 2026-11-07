@@ -3,7 +3,7 @@
  * 부모 게임과는 postMessage로만 대화한다. (INTEGRATION.md 참고) */
 (function () {
 'use strict';
-const BUILD = 'v7.2 2026-11-07 20:09';
+const BUILD = 'v7.3 2026-11-08 01:14';
 const W = 320, H = 224, GY = 192, SC = 2, WL = 18, WR = 302, GRAV = 0.34;
 const FONT = '"Malgun Gothic","Apple SD Gothic Neo","Noto Sans CJK KR","Noto Sans KR","Nanum Gothic",sans-serif';
 const cv = document.getElementById('screen');
@@ -164,11 +164,11 @@ function bgmStop() { if (bgm.timer) clearInterval(bgm.timer); bgm.timer = 0; bgm
 /* ---------- 자세 ---------- */
 function P(hip, neck, head, fe, fh, be, bh, fk, ff, bk, bf) { return [].concat(hip, neck, head, fe, fh, be, bh, fk, ff, bk, bf); }
 function mk(hip, neck, head, fe, fh, be, bh, legs) { return P(hip, neck, head, fe, fh, be, bh, legs[0], legs[1], legs[2], legs[3]); }
-const GA = [[8, -33], [14, -40], [4, -35], [9, -45]];   /* 겨루기 자세의 손: 앞손은 낮게, 뒷손은 턱 앞 */
+const GA = [[9, -31], [16, -37], [5, -33], [10, -42]];   /* 겨루기 자세의 손: 앞손은 낮게, 뒷손은 턱 앞 */
 const mg = (hip, neck, head, legs) => mk(hip, neck, head, GA[0], GA[1], GA[2], GA[3], legs);
 const POSE = {
-  idle0: mg([0, -23], [3, -40], [5, -47], [[9, -12], [14, 0], [-5, -12], [-10, 0]]),
-  idle1: mg([0, -29], [2, -46], [4, -53], [[8, -17], [13, -5], [-4, -16], [-9, -4]]),
+  idle0: mg([0, -21], [4, -37], [6, -44], [[11, -11], [17, 0], [-6, -11], [-12, 0]]),
+  idle1: mg([1, -23], [5, -39], [7, -46], [[11, -12], [18, -1], [-6, -12], [-12, -1]]),
   crouch: mk([-1, -14], [3, -29], [5, -36], [9, -23], [15, -29], [4, -26], [10, -34], [[10, -10], [10, 0], [-7, -8], [-7, 0]]),
   /* 몸통 차기 */
   frontK_s: mk([-1, -26], [1, -43], [3, -50], [7, -33], [13, -40], [3, -35], [8, -45], [[10, -32], [9, -20], [-4, -13], [-8, 0]]),
@@ -211,10 +211,10 @@ const POSE = {
 function lerpPose(a, b, t) { const o = new Array(a.length); for (let i = 0; i < a.length; i++) o[i] = a[i] + (b[i] - a[i]) * t; return o; }
 /* 겨루기 스텝: 발을 끌며 통통 튀듯 움직인다 */
 function walkPose(ph) {
-  const s = Math.sin(ph), s2 = Math.sin(ph - 1.6), l1 = Math.max(0, Math.cos(ph)) * 4, l2 = Math.max(0, Math.cos(ph - 1.6)) * 4;
-  const bob = Math.abs(Math.sin(ph)) * 3.2, ffx = 11 + 5 * s, bfx = -9 + 5 * s2;
-  return mk([0, -24 - bob], [3, -41 - bob], [5, -48 - bob], [8, -32 - bob], [14, -39 - bob], [4, -34 - bob], [9, -44 - bob],
-    [[ffx * 0.6 + 2, (-24 - bob - l1) / 2 - 3], [ffx, -l1], [bfx * 0.6 + 1, (-24 - bob - l2) / 2 - 3], [bfx, -l2]]);
+  const s = Math.sin(ph), s2 = Math.sin(ph - 1.6), l1 = Math.max(0, Math.cos(ph)) * 2.4, l2 = Math.max(0, Math.cos(ph - 1.6)) * 2.4;
+  const bob = Math.abs(Math.sin(ph)) * 1.4, ffx = 15 + 4 * s, bfx = -11 + 4 * s2;
+  return mk([0, -21 - bob], [4, -37 - bob], [6, -44 - bob], [9, -31 - bob], [16, -37 - bob], [5, -33 - bob], [10, -42 - bob],
+    [[ffx * 0.6 + 2, (-21 - bob - l1) / 2 - 2], [ffx, -l1], [bfx * 0.6 + 1, (-21 - bob - l2) / 2 - 2], [bfx, -l2]]);
 }
 
 /* ---------- 캐릭터 ---------- */
@@ -724,7 +724,7 @@ function drawFigure(px, py, face, pose, ch, pal, sc, flash, anim) {
   const J = i => [px + face * pose[i] * sc, py + pose[i + 1] * sc];
   const hip = J(0), neck = J(2), head = J(4), fe = J(6), fh = J(8), be = J(10), bh = J(12), fk = J(14), ff = J(16), bk = J(18), bf = J(20);
   const sh = [neck[0], neck[1] + 3 * sc];
-  const lw = ch.limb * sc, tw = ch.tors * sc, hs = Math.round(ch.head * sc);
+  const lw = ch.limb * sc, tw = Math.round(ch.tors * 0.7 * sc), hs = Math.round(ch.head * sc);
   const OUT = '#16121c', white = '#ffffff';
   const gd = pal.guard || '#2f62d6', gdd = pal.guardDk || '#1d3f94';
   const col = k => flash ? white : pal[k], G1 = flash ? white : gd, G2 = flash ? white : gdd;
@@ -752,8 +752,8 @@ function drawFigure(px, py, face, pose, ch, pal, sc, flash, anim) {
   leg(bk, bf); shoe(bf);
   seg(hip, neck, tw, col('gi'));
   const bw = Math.round(tw + 2), bx = Math.round(hip[0] - bw / 2), by = Math.round(hip[1] - 2 * sc);
-  c.fillStyle = col('belt1'); c.fillRect(bx, by, Math.round(bw / 2), Math.round(3 * sc));
-  c.fillStyle = col('belt2'); c.fillRect(bx + Math.round(bw / 2), by, bw - Math.round(bw / 2), Math.round(3 * sc));
+  c.fillStyle = col('belt1'); c.fillRect(bx, by, bw, Math.round(3 * sc));
+  c.fillStyle = col('belt2'); c.fillRect(face > 0 ? bx - 3 : bx + bw, by + 1, 3, Math.round(5 * sc));
   const g0 = mix(hip, neck, 0.2), g1 = mix(hip, neck, 0.93);
   seg(g0, g1, tw + 2, G1); seg(g0, g1, 1, G2);
   leg(fk, ff); shoe(ff);
@@ -823,7 +823,7 @@ function renderFighter(f) {
     c.globalAlpha = 1;
   }
   const bn = f.state === 'idle' ? Math.abs(Math.sin(f.anim * 0.16)) : 0;
-  const hop = f.state === 'idle' ? bn * 2.5 : f.state === 'dash' ? Math.sin(Math.min(1, f.t / (f.dir === 0 ? 10 : 13)) * Math.PI) * (f.dir === 0 ? 4 : 7) : 0;
+  const hop = f.state === 'idle' ? bn * 0.8 : f.state === 'dash' ? Math.sin(Math.min(1, f.t / (f.dir === 0 ? 10 : 13)) * Math.PI) * (f.dir === 0 ? 2 : 3) : 0;
   const wob = f.state === 'stagger' ? Math.sin(f.t * 0.9) * 1.6 : 0;
   drawFigure(f.x + wob, GY - f.y - hop, f.face, curPose(f), f.ch, f.pal, f.sc, f.flash > 0, f.anim);
   const tr = f.trail;
