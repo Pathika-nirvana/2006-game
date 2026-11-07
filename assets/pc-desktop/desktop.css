@@ -9,3 +9,6 @@
 .xp79-article-picture{display:block;width:min(100%,620px);height:190px;object-fit:cover;margin:12px auto;border:1px solid #ccc}
 
 .xp79-daum-focus{border:2px solid #7899ca}.xp79-daum-focus h3{background:#dce8f8;color:#264b7e}.xp79-yahoo-kids{display:flex;align-items:center;gap:16px;padding:9px 14px;margin-bottom:12px;background:#fff5bf;border:2px solid #efc768;color:#695e2a}.xp79-yahoo-kids b{font:700 22px Georgia,serif;color:#b52e63}.xp79-yahoo-kids .xp79-web-link{margin-left:auto}.xp79-yahoo-news h3{background:#f2e7e9;color:#872b3d}
+
+/* A81: authored 64px pixel sprites stay sharp in desktop, launcher and detail view. */
+.xp79-desktop img[src*="pc-desktop/icons/"]{image-rendering:pixelated;object-fit:contain}
