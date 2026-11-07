@@ -1,8 +1,8 @@
 {
   "name": "2006-reminiscence-a38-review",
-  "version": "0.81.0",
+  "version": "0.82.0",
   "private": true,
-  "description": "A81 PC 조작 중 주변 게임음 차단 및 18종 게임 도트 아이콘",
+  "description": "A82 풍성한 2006 포털과 PC방 GAME STATION 런처",
   "scripts": {
     "start": "node server.js",
     "test:coop": "node tests/test_a26_coop.js",

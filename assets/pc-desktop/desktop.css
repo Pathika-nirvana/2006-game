@@ -12,3 +12,60 @@
 
 /* A81: authored 64px pixel sprites stay sharp in desktop, launcher and detail view. */
 .xp79-desktop img[src*="pc-desktop/icons/"]{image-rendering:pixelated;object-fit:contain}
+
+/* A82: brushed metal launcher, compact portal modules; scoped to the virtual PC. */
+.xp82-launcher{min-height:100%;background:#e8e9eb;color:#232936;font-family:Tahoma,'Gulim',sans-serif}
+.xp82-launcher-head{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:4px solid #c9442b;background:linear-gradient(#fafbfc 0%,#d5d8dd 48%,#a6acb5 49%,#d3d7dc 100%);box-shadow:inset 0 1px #fff}
+.xp82-launcher-brand{display:grid;gap:2px;line-height:1.15}
+.xp82-launcher-brand small{font:bold 9px Tahoma;letter-spacing:3px;color:#5a626c}
+.xp82-launcher-brand strong{font:900 italic 30px Arial;color:#303a48;text-shadow:1px 2px #f9fafb;letter-spacing:-1px}
+.xp82-launcher-brand span{font:10px Tahoma;letter-spacing:2px;color:#913b31}
+.xp82-seat{display:grid;grid-template-columns:auto auto;align-items:center;gap:2px 12px;border:1px inset #fff;background:#dfe3e8;padding:6px 12px;font-size:10px;color:#535c69}
+.xp82-seat b{grid-column:2;grid-row:1/3;font:bold 30px Tahoma;color:#cf4f29;text-shadow:1px 1px white}
+.xp82-seat span{grid-row:2;font-size:9px}
+.xp82-quickbar{display:flex;align-items:center;padding:4px 12px;background:linear-gradient(#4b5769,#2a3546);border-top:1px solid white;border-bottom:1px solid #1b2534;gap:4px}
+.xp82-quickbar button{border:0;border-right:1px solid #647082;background:transparent;color:#fff;padding:6px 12px;font-size:11px}
+.xp82-quickbar button:hover{background:#65768b}
+.xp82-quickbar>span{margin-left:auto;font-size:10px;color:#ced5dd}
+.xp82-launcher-body{display:grid;grid-template-columns:145px minmax(0,1fr);min-height:340px}
+.xp82-launcher-side{background:#d8dce1;border-right:1px solid #9da5b0;padding:13px 9px}
+.xp82-launcher-side h3{margin:0 4px 11px;color:#616b77;font:bold 10px Tahoma;letter-spacing:1px}
+.xp82-launcher .xp79-launcher-tabs{display:grid;gap:4px;padding:0;background:transparent}
+.xp82-launcher .xp79-launcher-tabs button{text-align:left;padding:9px 12px;border:1px solid #a4aab1;background:linear-gradient(#f9fafb,#d9dce0);color:#3e4854;font-weight:bold;box-shadow:inset 1px 1px white}
+.xp82-launcher .xp79-launcher-tabs button.active{background:linear-gradient(#f09a51,#bc4825);border-color:#9f3f29;color:white;text-shadow:1px 1px #8a3e26}
+.xp82-launcher-notice{margin-top:20px;padding:8px;border:1px solid #b3bac4;background:#e9ecf0;color:#616976;font-size:10px;line-height:1.7}
+.xp82-launcher-notice p{white-space:pre-line;margin:5px 0}.xp82-launcher-notice small{font-size:9px}
+.xp82-launcher-main{min-width:0;background:#f8f9fb;padding:12px 15px}
+.xp82-recommend{display:flex;align-items:center;gap:9px;padding:8px 10px;background:#edf0f4;border:1px solid #c9d0da;border-left:4px solid #bf5034}
+.xp82-recommend>strong{width:68px;font-size:11px;line-height:1.7;color:#8d3e2c}
+.xp82-recommend button{display:flex;align-items:center;gap:6px;flex:1;border:0;background:transparent;color:#364660;padding:2px;font-size:10px;text-align:left}
+.xp82-recommend button:hover{text-decoration:underline}.xp82-recommend img{flex-shrink:0}
+.xp82-game-heading{display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #59677a;padding:14px 2px 7px;font-size:13px;color:#39475c}
+.xp82-game-count{font:9px Tahoma;letter-spacing:1px;color:#7d8796}
+.xp82-launcher-tools{display:flex;align-items:center;justify-content:flex-end;gap:4px;padding:7px 0}
+.xp82-launcher .xp79-game-search{width:180px;padding:5px 7px;margin:0;font-size:11px;border:1px solid #a5acb7;background:white;color:#27354a}
+.xp82-launcher-tools button{border:1px solid #a5acb7;background:linear-gradient(white,#dde1e6);padding:5px 8px;font-size:10px;color:#4c5869}
+.xp82-launcher .xp79-game-grid{padding:5px 0 12px;background:transparent;grid-template-columns:repeat(5,minmax(75px,1fr));gap:5px}
+.xp82-launcher .xp79-game-grid button{min-height:88px;padding:7px 3px;border:1px solid #d6dce4;background:linear-gradient(#fff,#f1f3f6);color:#334359;align-content:start}
+.xp82-launcher .xp79-game-grid button span{font-size:10px;line-height:1.4;overflow-wrap:anywhere}
+.xp82-launcher .xp79-game-grid button:hover{border-color:#d07848;background:#fff2de;box-shadow:inset 0 0 0 1px #fff}
+.xp82-launcher-status{display:flex;justify-content:space-between;gap:10px;padding:7px 13px;border-top:1px solid #b4bbc4;background:#d9dee5;color:#626d7d;font-size:9px}
+.xp82-launcher-status span:first-child{color:#3b6d59}
+.xp82-portal-strip{display:flex;align-items:center;gap:14px;padding:5px 8px;margin:-5px 0 12px;background:#f7f8f4;border-bottom:1px solid #e1e4db;font-size:10px;color:#7b8173}
+.xp82-portal-strip b{color:var(--portal)}.xp82-portal-strip .xp79-web-link{margin-left:auto;font-size:10px!important}
+.xp82-news-tabs{display:flex;border-bottom:1px solid #ccd4c7;margin:0 0 7px;gap:2px}
+.xp82-news-tabs button{border:1px solid #cbd3c7;border-bottom:0;background:#f5f6f2;padding:3px 13px;color:#666;font-size:11px}
+.xp82-news-tabs button.active{background:var(--portal);color:white;border-color:var(--portal)}
+.xp82-photo-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.xp82-photo-row>h3{grid-column:1/-1;margin-bottom:0}
+.xp82-photo-card{min-width:0}.xp82-photo-card img{display:block;width:100%;height:72px;object-fit:cover;border:1px solid #d0d4ce}.xp82-photo-card .xp79-web-link{font-size:11px!important;line-height:1.5;padding:4px 1px}
+.xp82-photo-gallery{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;padding:10px}.xp82-photo-gallery img{height:145px}
+.xp82-web-games{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.xp82-web-games>h3{grid-column:1/-1}.xp82-web-games .xp79-web-link{display:flex;align-items:center;gap:6px;font-size:11px!important}.xp82-web-games .xp79-web-link:last-child{grid-column:1/-1;justify-content:flex-end;border-top:1px dotted #ccc;padding-top:7px}
+.xp82-vote-options{display:grid;gap:4px}.xp82-vote-options button{padding:4px 3px;background:#fafbf6;border:1px solid #c8cfbc;color:#5a6845;font-size:11px}.xp82-vote-options button:disabled{color:#8c8f80;background:#eee;cursor:default}.xp82-vote-options small{font-size:10px;color:#888;margin-top:4px}
+.xp82-vote-bar{height:13px;position:relative;background:#eef0e9}.xp82-vote-bar i{height:100%;display:block;background:var(--portal);opacity:.5}.xp82-vote-bar span{position:absolute;left:4px;top:0;font:9px/13px Tahoma;color:#303c2a}
+.xp82-directory{display:flex;flex-wrap:wrap;gap:4px 20px;margin-top:10px;background:#f5f6f3}.xp82-directory h3{flex-basis:calc(100% + 16px);width:calc(100% + 16px)}.xp82-directory .xp79-web-link{font-size:11px!important}
+.xp82-web-game-directory{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding:5px}
+.xp82-web-game-directory section{padding:10px;border:1px solid #d4d9ce;background:#fafbf7;font-size:11px}.xp82-web-game-directory img{float:left;margin:0 8px 8px 0}.xp82-web-game-directory small{color:#929883;font-size:10px}.xp82-web-game-directory p{clear:both;line-height:1.7;margin:7px 0 0;color:#69705e}
+@media(max-width:760px){.xp82-launcher-head{padding:12px}.xp82-launcher-brand strong{font-size:23px}.xp82-launcher-brand small{letter-spacing:1px}.xp82-launcher-body{grid-template-columns:110px minmax(0,1fr)}.xp82-launcher-main{padding:8px}.xp82-launcher .xp79-game-grid{grid-template-columns:repeat(3,minmax(62px,1fr))}.xp82-quickbar>span{display:none}.xp82-quickbar button{padding:5px 8px}.xp82-recommend{gap:3px;flex-wrap:wrap}.xp82-recommend>strong{width:100%}.xp82-recommend button{font-size:9px}.xp82-recommend img{width:24px;height:24px}.xp82-launcher-side{padding:10px 5px}.xp82-seat{padding:4px 7px}.xp82-seat b{font-size:24px}.xp82-launcher-status{flex-wrap:wrap}.xp82-launcher-notice{padding:5px}.xp82-launcher .xp79-launcher-tabs button{padding:8px;font-size:10px}}
+
+.xp79-article{white-space:pre-line}.xp82-vote-options button:not(:disabled):hover{background:#e9efd9;border-color:#91a66b}
