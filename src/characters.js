@@ -137,6 +137,7 @@ document.getElementById('charBtn').addEventListener('click',open);
 document.getElementById('charClose').addEventListener('click',close);
 panel.addEventListener('pointerdown',e=>{if(e.target===panel)close()});
 window.addEventListener('keydown',e=>{
+ const target=e.target||document.activeElement;if(window.PLAYROOM?.isOpen||e.isComposing||['INPUT','TEXTAREA','SELECT'].includes(target?.tagName)||target?.isContentEditable)return;
  if(editorOpen){if(e.code==='Escape'||e.code==='KeyV'){e.stopImmediatePropagation();e.preventDefault();close()}
  else if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space','KeyE','KeyC','KeyR'].includes(e.code)){e.stopImmediatePropagation();e.preventDefault()}}
  else if(e.code==='KeyB'||e.code==='KeyV'){e.stopImmediatePropagation();e.preventDefault();open()}

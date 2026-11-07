@@ -1,8 +1,8 @@
 {
   "name": "2006-reminiscence-a38-review",
-  "version": "0.72.0",
+  "version": "0.80.0",
   "private": true,
-  "description": "A70 PC방1번 시안 횡스크롤 재구성·청회색/먹색·웰치스 캔",
+  "description": "A80 XP 부팅 애니메이션·부팅음·PC방 카스/서든 위치 음향·걷기 교체",
   "scripts": {
     "start": "node server.js",
     "test:coop": "node tests/test_a26_coop.js",
@@ -41,7 +41,16 @@
     "art:courtyard": "node tools/build-courtyard.cjs",
     "test:courtyard": "node tests/test_courtyard.cjs",
     "art:pcroom": "node tools/build-pcroom.cjs",
-    "test:pcroom": "node tests/test_pcroom.cjs"
+    "test:pcroom": "node tests/test_pcroom.cjs",
+    "test:stationery-a74": "node tests/test_a74.cjs",
+    "test:narrow-alley": "node tests/test_narrow_alley.cjs",
+    "art:narrow-alley": "node tools/build-narrow-alley.cjs",
+    "test:supermarket-pc": "node tests/test_a76.cjs",
+    "art:supermarket": "node tools/build-supermarket.cjs",
+    "test:interface": "node tests/test_a77.cjs",
+    "test:world-audio": "node tests/test_world_audio.cjs",
+    "test:xp-desktop": "node tests/test_xp_desktop.cjs",
+    "test:xp-boot": "node tests/test_xp_boot.cjs"
   },
   "engines": {
     "node": ">=22"

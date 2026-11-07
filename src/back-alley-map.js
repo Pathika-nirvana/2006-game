@@ -10,6 +10,7 @@ function walk(p,h,v,dt){if(!Number.isFinite(p.alleyFloorY))enter(p);const n=Math
 function jump(p){if(!p.onGround||p.pose==='eat')return;p.alleyVelocity=188;p.alleyJump=.01;p.onGround=false;p.pose='jump'}
 function draw(c,cam){c.save();c.fillStyle='#4d5558';c.fillRect(0,0,480,270);if(ready){c.imageSmoothingEnabled=false;c.drawImage(im,-Math.round(cam),-18,WIDTH,288)}c.restore();return true}
 function hotspots(){return[
+ {type:'routeGate',x:312,y:196,r:19,to:'hidden_alley',spawn:66,spawnY:244,title:'담장 사이 좁은 틈으로',txt:'벽 사이로 들어서면 가게 소리가 멀어지고 비좁은 뒷골목이 이어진다.',icon:'↗'},
  {type:'routeGate',x:38,y:256,r:24,to:'street',spawn:1197,title:'문구점과 은하분식 사이로 나가기',txt:'골목 입구 너머에서 가게 소리가 들린다.',icon:'↶'},
  {type:'routeNote',x:394,y:232,r:22,title:'벽돌담의 낙서',txt:'락카가 뭉치고 흘러내린 자국. 휘갈긴 선이 벽돌 틈을 가로지른다.',icon:'·'},
  {type:'routeNote',x:366,y:232,r:22,title:'담장 아래 묶은 봉투',txt:'목을 묶은 비닐봉투 옆에 납작한 상자가 놓여 있다. 벽 가장자리에는 담배꽁초와 빈 봉지가 흩어져 있다.',icon:'·'},
