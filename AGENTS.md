@@ -8,3 +8,7 @@
 - Holding food must cover standing, walking, jumping and sitting. Do not deform individual leg joints to invent a gait; retain authored walking frames.
 - Do not automatically generate videos, GIFs or long frame-by-frame demonstrations. Use still PNG review sheets and focused tests unless the user explicitly asks for motion media.
 - Do not add experimental buttons, rollback/comparison UI, or a physics lab. Do not deploy over the live GitHub/Render service without user approval.
+
+- Keep scale grounded in actual rendered actors, not nominal atlas-cell size: the current child is about51 logical pixels high. Same-plane doors must clear the child substantially; passing foreground sedans must have credible full-size proportions. Do not shrink characters to fix scenery.
+- Main-road signs should carry believable named business identities with relevant services/floor information, not repeated industry-only placeholders. Vary building massing, roofline, window systems and setbacks as well as materials.
+- Main-road paving and curb must share one height plane across facade revisions. Preserve intentional side-road openings and rounded curb ends in their entirety.

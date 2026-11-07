@@ -2238,8 +2238,8 @@ window.PLAYROOM={get isOpen(){return open},close,handleKey,openArcade,openCapsul
  * All drawings are original code-painted pixel elements, with no external files. */
 (function(){
 'use strict';
-const G=207;const names={side_alley:'주택가 샛길',apartment_path:'아파트 안쪽 길'};
-const widths={side_alley:1182,apartment_path:1182};
+const G=207;const names={main_road:'상가와 학원이 있는 큰길',side_alley:'주택가 샛길',apartment_path:'아파트 안쪽 길'};
+const widths={main_road:4572,side_alley:1182,apartment_path:1182};
 const p=(c,x,y,w,h,color)=>{c.fillStyle=color;c.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h))};
 const txt=(c,s,x,y,size=8,color='#38484c')=>{c.fillStyle=color;c.font=`bold ${size}px "Malgun Gothic",sans-serif`;c.fillText(s,x,y)};
 function line(c,x,y,X,Y,col='#657d7b'){c.strokeStyle=col;c.lineWidth=1;c.beginPath();c.moveTo(x,y);c.lineTo(X,Y);c.stroke()}
@@ -2311,7 +2311,7 @@ function complex(c){const w=widths.apartment_path;
 }
 const bg={};for(const [key,width] of Object.entries(widths)){
  const cv=document.createElement('canvas');cv.width=width;cv.height=270;const c=cv.getContext('2d');c.imageSmoothingEnabled=false;
- (key==='side_alley'?side:complex)(c);bg[key]=cv;
+ if(key!=='main_road')(key==='side_alley'?side:complex)(c);bg[key]=cv;
 }
 function markStreet(c){
  // A junction should read as a recessed lane, not a freestanding teleport portal.
@@ -2320,10 +2320,11 @@ function markStreet(c){
  p(c,3051,163,37,39,'#74877d');p(c,3054,166,31,31,'#9bae9a');p(c,3049,155,46,12,'#637f72');txt(c,'단지 안쪽',3052,163,7,'#fff0cb');c.restore();
 }
 function streetHotspots(){return [
+ {type:'routeGate',x:920,r:23,to:'main_road',spawn:128,title:'상가 큰길로 나가기',txt:'문구점 왼쪽 골목을 지나 상가와 학원이 있는 큰길로 이어진다.',icon:'↗'},
  {type:'routeGate',x:A16SCENE.portal('laneWest'),r:33,to:'side_alley',spawn:95,title:'조용한 주택가 샛길',txt:'주택가 뒤로 난 좁은 길. 조금 돌아서 가도 된다.',icon:'↗'},
  {type:'routeGate',x:A16SCENE.portal('laneEast'),r:44,to:'apartment_path',spawn:90,spawnY:190,title:'아파트 단지 안쪽 길',txt:'큰길을 지나지 않고 단지 안쪽으로 걸어갈 수 있다.',icon:'↗'}
 ]}
-function hotspots(scene,phase,rain,t){if(scene==='side_alley')return [
+function hotspots(scene,phase,rain,t){if(scene==='main_road')return window.CommercialRoad?.hotspots(t)||[];if(scene==='side_alley')return [
  {type:'routeGate',x:54,r:42,to:'street',spawn:A16SCENE.portal('laneWest'),title:'큰길로 돌아가기',txt:'아까 지나온 골목으로 돌아간다.',icon:'↶'},
  {type:'routeNote',x:354,r:27,title:'벽돌집 철제 대문',txt:'붉은 벽돌집의 도어록 대신 작은 열쇠 구멍과 도어벨이 보인다. 누군가의 평범한 집이다.',icon:'🚪'},
  {type:'routeNote',x:209,r:30,title:'주차된 파란 포터',txt:'좁은 주차 틈에 파란 포터가 들어가 있다. 적재함의 천막은 끈으로 단단히 묶여 있다.',icon:'🚚'},
@@ -2340,7 +2341,7 @@ function hotspots(scene,phase,rain,t){if(scene==='side_alley')return [
  {type:'routeNpc',...window.ApartmentPathMap.neighbor(t),r:28,title:'장을 보고 돌아가는 이웃',txt:phase===2?'“어두워졌네. 차 나오는지 보고 다녀.”':'“동 사이로 가면 돼. 주차된 차 옆에서는 조심하고.”',icon:'🧺'},
  {type:'routeNote',x:1110,y:219,r:28,title:'수요일 분리수거 안내',txt:'단지 안쪽 수거장이다. 흰 현수막 아래 철망 수거함과 묶은 상자가 놓여 있고, 종류별로 나누어 담는다.',icon:'♻️'}
 ];return []}
-function dynamic(c,scene,phase,rain,t){if(scene==='apartment_path'&&window.ApartmentPathMap?.ready){return}if(scene==='side_alley'&&window.SideAlleyMap?.ready)return;
+function dynamic(c,scene,phase,rain,t){if(scene==='main_road'){window.CommercialRoad?.dynamic(c,t);return;}if(scene==='apartment_path'&&window.ApartmentPathMap?.ready){return}if(scene==='side_alley'&&window.SideAlleyMap?.ready)return;
  // c translated into scene coordinates.
  if(scene==='side_alley'){
    // Laundry hanging quietly from a private upper window.
@@ -2352,7 +2353,7 @@ function dynamic(c,scene,phase,rain,t){if(scene==='apartment_path'&&window.Apart
  if(phase===2){for(const x of (scene==='side_alley'?[267,607,1040]:[138,411,1008])){p(c,x,113,14,16,'#edd49c');p(c,x-1,113,16,17,'#e0b16a30')}}
  if(rain){for(let i=0;i<25;i++){let x=(i*109+Math.floor(t*32))%widths[scene];p(c,x,224,12,1,'#bed4c8')}}
 }
-function drawMap(){const existing=document.getElementById('a10map');if(existing)existing.remove();const modal=document.createElement('div');modal.id='a10map';modal.className='a10map hidden';modal.innerHTML=`<div class="a10sheet" role="dialog" aria-modal="true" aria-label="동네 길 안내도"><button type="button" id="a10close" title="닫기">×</button><small>2006 · 길 안내</small><h2>동네의 두 갈래 길</h2><p>직선으로만 이어진 스테이지가 아니야. 익숙한 골목을 돌아가도 같은 곳에 도착해.</p><svg viewBox="0 0 440 232" role="img" aria-label="큰길과 샛길이 다시 합쳐지는 동네 경로"><path d="M40 158 H400" stroke="#9a8f75" stroke-width="8" stroke-linecap="round" fill="none"/><path d="M166 158 L166 69 L284 69 L284 158" stroke="#698476" stroke-width="7" stroke-linecap="round" fill="none"/><g fill="#f4e8c9" stroke="#6f847c" stroke-width="3"><circle cx="40" cy="158" r="8"/><circle cx="166" cy="158" r="8"/><circle cx="284" cy="158" r="8"/><circle cx="400" cy="158" r="8"/><circle cx="166" cy="69" r="8"/><circle cx="284" cy="69" r="8"/></g><g fill="#3a4c4c" font-size="12" font-family="Malgun Gothic" font-weight="bold" text-anchor="middle"><text x="40" y="190">학교 쪽</text><text x="166" y="190">주택가</text><text x="284" y="190">단지 입구</text><text x="398" y="190">놀이터</text><text x="166" y="43">샛길</text><text x="284" y="43">단지 안쪽</text><text x="224" y="217">큰길</text></g></svg><p class="a10mapnote">E · 갈림길로 들어가기　 /　 M · 안내도 열기·닫기</p></div>`;document.querySelector('.game-frame').append(modal);modal.querySelector('#a10close').onclick=()=>toggleMap(false);modal.addEventListener('click',e=>{if(e.target===modal)toggleMap(false)});return modal}
+function drawMap(){const existing=document.getElementById('a10map');if(existing)existing.remove();const modal=document.createElement('div');modal.id='a10map';modal.className='a10map hidden';modal.innerHTML=`<div class="a10sheet" role="dialog" aria-modal="true" aria-label="동네 길 안내도"><button type="button" id="a10close" title="닫기">×</button><small>2006 · 길 안내</small><h2>동네와 상가 큰길</h2><p>직선으로만 이어진 스테이지가 아니야. 익숙한 골목을 돌아가도 같은 곳에 도착해.</p><svg viewBox="0 0 440 232" role="img" aria-label="큰길과 샛길이 다시 합쳐지는 동네 경로"><path d="M40 158 H400" stroke="#9a8f75" stroke-width="8" stroke-linecap="round" fill="none"/><path d="M166 158 L166 69 L284 69 L284 158" stroke="#698476" stroke-width="7" stroke-linecap="round" fill="none"/><g fill="#f4e8c9" stroke="#6f847c" stroke-width="3"><circle cx="40" cy="158" r="8"/><circle cx="166" cy="158" r="8"/><circle cx="284" cy="158" r="8"/><circle cx="400" cy="158" r="8"/><circle cx="166" cy="69" r="8"/><circle cx="284" cy="69" r="8"/></g><g fill="#3a4c4c" font-size="12" font-family="Malgun Gothic" font-weight="bold" text-anchor="middle"><text x="40" y="190">학교 쪽</text><text x="166" y="190">주택가</text><text x="284" y="190">단지 입구</text><text x="398" y="190">놀이터</text><text x="166" y="43">샛길</text><text x="284" y="43">단지 안쪽</text><text x="224" y="217">동네길</text></g></svg><p>별빛문구 왼쪽 골목 ↔ 상가·학원 큰길</p><p class="a10mapnote">E · 갈림길로 들어가기　 /　 M · 안내도 열기·닫기</p></div>`;document.querySelector('.game-frame').append(modal);modal.querySelector('#a10close').onclick=()=>toggleMap(false);modal.addEventListener('click',e=>{if(e.target===modal)toggleMap(false)});return modal}
 let modal=null;function toggleMap(next){modal=modal||drawMap();const open=typeof next==='boolean'?next:modal.classList.contains('hidden');modal.classList.toggle('hidden',!open);return open}
 window.ROUTES={names,widths,isRoute:s=>!!widths[s],background:s=>bg[s],markStreet,streetHotspots,hotspots,dynamic,toggleMap,get isMapOpen(){return !!modal&&!modal.classList.contains('hidden')}};
 })();
@@ -3231,7 +3232,7 @@ window.A12ART={retouch,retouchRoute,dynamic,get enabled(){return enabled},set en
 })();
 
 /* END src/16_pilot_art.js */
-</script><script src="assets/maps/after-school/manifest.js"></script><script src="src/after-school-map.js"></script><script src="src/playground-space.js"></script><script src="src/side-alley-map.js"></script><script src="src/apartment-path-map.js"></script><script>
+</script><script src="assets/maps/after-school/manifest.js"></script><script src="src/after-school-map.js"></script><script src="src/playground-space.js"></script><script src="src/side-alley-map.js"></script><script src="src/apartment-path-map.js"></script><script src="src/commercial-road.js"></script><script>
 /* BEGIN src/13_game_core.js */
 
 /* 《2006년.. 90년대생의 회상》 ART STAGE 10 (everyday neighborhood detours + A8 routines)
@@ -3309,7 +3310,7 @@ function setScene(next,spawn,spawnY){
  }else{
   if(previous==='street')sceneReturnX=player.x;
   player.scene=next;player.x=typeof spawn==='number'?spawn:95;player.y=GROUND;
-  toast(ROUTES.isRoute(next)?'건물 사이로 난 조용한 길을 따라 들어왔다.':RESIDENTIAL.isRoom(next)?'누군가 살고 있는 건물의 평범한 하루가 이어진다.':next==='stationery'?'문방구 문에 달린 방울이 딸랑 울린다.':'키보드 소리와 컴퓨터 팬 소음이 들린다.',3.3);
+  toast(next==='main_road'?'골목을 빠져나와 상가와 학원이 있는 큰길로 나왔다.':ROUTES.isRoute(next)?'건물 사이로 난 조용한 길을 따라 들어왔다.':RESIDENTIAL.isRoom(next)?'누군가 살고 있는 건물의 평범한 하루가 이어진다.':next==='stationery'?'문방구 문에 달린 방울이 딸랑 울린다.':'키보드 소리와 컴퓨터 팬 소음이 들린다.',3.3);
  }
  player.vy=0;player.onGround=true;player.pose='stand';player.sitAt=null;
  if(next==='apartment_path')window.ApartmentPathMap?.enter(player,spawnY);
@@ -3317,7 +3318,7 @@ function setScene(next,spawn,spawnY){
  D.scene.textContent=player.scene==='street'?'거리':ROUTES.isRoute(player.scene)?'산책길':RESIDENTIAL.isRoom(player.scene)?'주거 공간':'실내';
  if(next!=='street'){
   const title=ROUTES.names[next]||RESIDENTIAL.names[next]||(next==='stationery'?'별빛 문방구':'동네 PC방');
-  const description=ROUTES.isRoute(next)?'특별한 가게가 없는 길도, 누군가의 하루를 이어 준다.':RESIDENTIAL.isRoom(next)?'낡은 공동주택에도 누군가의 일상과 작은 생활 흔적이 남아 있다.':next==='stationery'?'진열대 앞에 서서 작은 과자 봉지들을 구경했다.':'모니터와 키보드 소리로 가득한 오후.';
+  const description=next==='main_road'?'층마다 다른 간판과 학원 창문, 서점과 정류장이 긴 보도를 따라 이어진다.':ROUTES.isRoute(next)?'특별한 가게가 없는 길도, 누군가의 하루를 이어 준다.':RESIDENTIAL.isRoom(next)?'낡은 공동주택에도 누군가의 일상과 작은 생활 흔적이 남아 있다.':next==='stationery'?'진열대 앞에 서서 작은 과자 봉지들을 구경했다.':'모니터와 키보드 소리로 가득한 오후.';
   MEMO.add(title,description,phase);
  }
 }
@@ -3533,14 +3534,15 @@ function update(dt){
 function render(){
  ctx.setTransform(RENDER_SCALE,0,0,RENDER_SCALE,0,0);
  ctx.imageSmoothingEnabled=false;
+ if(player.scene==='main_road')ctx.translate(0,17);
  // A46: move the street camera up 40 world units; preserve all shared physics coordinates.
  if(player.scene==='street'||player.scene==='side_alley'){ctx.fillStyle=phase===2?'#273b57':phase===1?'#d5aba0':'#78b9eb';ctx.fillRect(0,0,W,H);ctx.translate(0,40);}
  if(player.scene==='street'){
   WORLD.sky(ctx,cam,phase,t);ctx.drawImage(A12ART.enabled?bg:bgA11,-Math.round(cam),0);window.A14ART?.draw(ctx,cam,phase,t);window.A21SPACE?.draw(ctx,cam,phase,weather,t);WORLD.drawAmbient(ctx,cam,t,phase);
   if(A12ART.enabled)A12ART.dynamic(ctx,cam,phase,weather,t);
  }else if(ROUTES.isRoute(player.scene)){
-  WORLD.sky(ctx,cam,phase,t);if(!(player.scene==='side_alley'&&window.SideAlleyMap?.draw(ctx,cam))&&!(player.scene==='apartment_path'&&window.ApartmentPathMap?.draw(ctx,cam)))ctx.drawImage(ROUTES.background(player.scene),-Math.round(cam),0);
-  if(phase===2){ctx.fillStyle='#233c5230';ctx.fillRect(0,0,W,H)}
+  WORLD.sky(ctx,cam,phase,t);if(!(player.scene==='side_alley'&&window.SideAlleyMap?.draw(ctx,cam))&&!(player.scene==='apartment_path'&&window.ApartmentPathMap?.draw(ctx,cam))&&!(player.scene==='main_road'&&window.CommercialRoad?.draw(ctx,cam)))ctx.drawImage(ROUTES.background(player.scene),-Math.round(cam),0);
+  if(phase===2){ctx.fillStyle='#233c5230';ctx.fillRect(0,player.scene==='main_road'?-17:0,W,H)}
  }else if(RESIDENTIAL.isRoom(player.scene)){
   RESIDENTIAL.drawInterior(ctx,player.scene,cam,phase,weather,t);
  }else{
@@ -3562,6 +3564,7 @@ function render(){
  if(player.scene!=='apartment_path'&&!(player.scene==='street'&&PlaygroundSpace.contains(player.x))&&!window.A20WORLD?.hidesPlayer())WORLD.drawKid(ctx,player.x,player.y,player.dir,player.walking,player.shirt,false,(['sit','bench','swing'].includes(player.pose)||(player.pose==='eat'&&player.eatRestore!=='stand')),player.pose);
  if(player.scene==='street'){PlaygroundSpace.render(ctx,player,t);ROUTINES.render(ctx,player.scene,t,weather);}
  if(player.scene!=='apartment_path'&&!(player.scene==='street'&&PlaygroundSpace.contains(player.x)))SHOPS.renderHeld(ctx,player.x,player.y,player.dir,player.pose,t);
+ if(player.scene==='main_road')window.CommercialRoad?.foreground(ctx,t);
  window.A25NET?.renderSelfBubble(ctx,player.scene);
  if(running&&!openDialog&&!window.A20WORLD?.hidesPlayer()){let h=nearest();if(h){const xx=h.x;let yy=player.scene==='street'?(h.type==='swing'?126:h.type==='counter'?126:['routineNpc','resNpc'].includes(h.type)?126:h.type==='door'?153:165):154;if(Math.abs(xx-player.x)<22)yy=Math.min(yy,player.y-74);
   let bob=Math.round(Math.sin(t*3)*2);ctx.fillStyle='#f4e3af';ctx.fillRect(Math.round(xx-5),yy+bob,11,11);
