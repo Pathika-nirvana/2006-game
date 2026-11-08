@@ -22,7 +22,7 @@ const rooms = new Map();
 const physicsRooms=new Map();
 const musicRooms=new Map();const MUSIC_DURATION=95.6865+205.035083;
 function musicSnapshot(room){const m=musicRooms.get(room);return m?{enabled:m.enabled,position:m.position,updatedAt:m.updatedAt,serverTime:Date.now()}:null}
-const types = {'.mp3':'audio/mpeg','.html':'text/html; charset=utf-8','.js':'application/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.otf':'font/otf','.webp':'image/webp','.png':'image/png','.json':'application/json; charset=utf-8','.ico':'image/x-icon'};
+const types = {'.mp3':'audio/mpeg','.html':'text/html; charset=utf-8','.js':'application/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.otf':'font/otf','.woff':'font/woff','.webp':'image/webp','.png':'image/png','.json':'application/json; charset=utf-8','.ico':'image/x-icon'};
 const publicPaths = new Set(['/', '/index.html', '/src/', '/assets/']);
 const app = http.createServer((req,res)=>{
   if(req.method!=='GET'){res.writeHead(405);res.end('GET only');return}
@@ -63,8 +63,12 @@ function frame(payload,opcode=1){
 function send(session,obj){if(!session.socket.writable)return;try{const data=frame(JSON.stringify(obj));if(data)session.socket.write(data)}catch{end(session)}}
 function cast(room,msg,except=null){for(const session of rooms.get(room)||[])if(session!==except)send(session,msg)}
 function publicState(s){return {id:s.id,name:s.name,scene:s.state.scene,x:s.state.x,y:s.state.y,pose:s.state.pose,dir:s.state.dir,look:s.state.look,held:s.state.held||null,playground:!!s.state.playground}}
+function duelBreak(s,notify){
+  s.duelWait=false;const p=s.peer;s.peer=null;
+  if(p&&p.peer===s){p.peer=null;if(notify)send(p,{type:'duel_left'})}
+}
 function end(s){
-  if(s.closed)return;s.closed=true;sessions.delete(s);
+  if(s.closed)return;s.closed=true;sessions.delete(s);duelBreak(s,true);
   if(s.room)PLAY.clearUser(physicsRooms.get(s.room),s.id);
   if(s.room){const group=rooms.get(s.room);group?.delete(s);if(group?.size===0){rooms.delete(s.room);physicsRooms.delete(s.room);musicRooms.delete(s.room)}else cast(s.room,{type:'left',id:s.id})}
   try{s.socket.destroy()}catch{}
@@ -91,6 +95,24 @@ function onMessage(s,obj){
    return;
  }
  if(!s.room)return;
+ if(obj.type==='duel_queue'){
+   duelBreak(s,true);
+   let other=null;for(const p of rooms.get(s.room)||[])if(p!==s&&p.duelWait&&!p.peer&&!p.closed){other=p;break}
+   if(other){
+     s.duelWait=false;other.duelWait=false;s.peer=other;other.peer=s;
+     const seed=crypto.randomInt(1,1<<30);
+     send(other,{type:'duel_start',side:0,seed,delay:4,opp:s.name});
+     send(s,{type:'duel_start',side:1,seed,delay:4,opp:other.name});
+   }else{s.duelWait=true;send(s,{type:'duel_wait'})}
+   return;
+ }
+ if(obj.type==='duel_cancel'){duelBreak(s,true);return}
+ if(obj.type==='duel_relay'){
+   if(!s.peer||!obj.msg||typeof obj.msg!=='object'||Array.isArray(obj.msg))return;
+   const now=Date.now();if(now-(s.duelT||0)>1000){s.duelT=now;s.duelN=0}
+   if(++s.duelN>300)return;
+   send(s.peer,{type:'duel_msg',msg:obj.msg});return;
+ }
  if(obj.type==='music'){
    if(typeof obj.enabled!=='boolean'&&!['restart','next'].includes(obj.action))return;
    const now=Date.now();if(now-(s.lastMusic||0)<300)return;s.lastMusic=now;

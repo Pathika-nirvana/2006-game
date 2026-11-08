@@ -3,7 +3,7 @@
  * 부모 게임과는 postMessage로만 대화한다. (INTEGRATION.md 참고) */
 (function () {
 'use strict';
-const BUILD = 'v7 2026-11-07 18:50';
+const BUILD = 'v7.6 2026-11-08 01:53';
 const W = 320, H = 224, GY = 192, SC = 2, WL = 18, WR = 302, GRAV = 0.34;
 const FONT = '"Malgun Gothic","Apple SD Gothic Neo","Noto Sans CJK KR","Noto Sans KR","Nanum Gothic",sans-serif';
 const cv = document.getElementById('screen');
@@ -164,11 +164,11 @@ function bgmStop() { if (bgm.timer) clearInterval(bgm.timer); bgm.timer = 0; bgm
 /* ---------- 자세 ---------- */
 function P(hip, neck, head, fe, fh, be, bh, fk, ff, bk, bf) { return [].concat(hip, neck, head, fe, fh, be, bh, fk, ff, bk, bf); }
 function mk(hip, neck, head, fe, fh, be, bh, legs) { return P(hip, neck, head, fe, fh, be, bh, legs[0], legs[1], legs[2], legs[3]); }
-const GA = [[8, -33], [14, -40], [4, -35], [9, -45]];   /* 겨루기 자세의 손: 앞손은 낮게, 뒷손은 턱 앞 */
+const GA = [[8, -27], [13, -26], [-1, -27], [4, -33]];   /* 겨루기 자세의 손: 앞손은 낮게, 뒷손은 턱 앞 */
 const mg = (hip, neck, head, legs) => mk(hip, neck, head, GA[0], GA[1], GA[2], GA[3], legs);
 const POSE = {
-  idle0: mg([0, -23], [3, -40], [5, -47], [[9, -12], [14, 0], [-5, -12], [-10, 0]]),
-  idle1: mg([0, -29], [2, -46], [4, -53], [[8, -17], [13, -5], [-4, -16], [-9, -4]]),
+  idle0: mg([0, -21], [2, -37], [5, -44], [[12, -11], [19, 0], [-7, -11], [-13, 0]]),
+  idle1: mg([1, -23], [3, -39], [6, -46], [[12, -12], [20, -1], [-7, -12], [-13, -1]]),
   crouch: mk([-1, -14], [3, -29], [5, -36], [9, -23], [15, -29], [4, -26], [10, -34], [[10, -10], [10, 0], [-7, -8], [-7, 0]]),
   /* 몸통 차기 */
   frontK_s: mk([-1, -26], [1, -43], [3, -50], [7, -33], [13, -40], [3, -35], [8, -45], [[10, -32], [9, -20], [-4, -13], [-8, 0]]),
@@ -206,15 +206,21 @@ const POSE = {
   roundFH_s: mk([0, -26], [1, -43], [3, -50], [6, -34], [11, -42], [2, -36], [7, -45], [[8, -34], [4, -24], [-3, -14], [-6, 0]]),
   roundFH_a: mk([-3, -28], [-9, -42], [-13, -48], [1, -35], [-5, -40], [-6, -38], [-12, -43], [[9, -41], [22, -50], [-2, -14], [-3, 0]]),
   axe_s: mk([-1, -27], [-1, -44], [0, -51], [7, -34], [13, -41], [3, -36], [8, -46], [[7, -44], [8, -68], [-4, -14], [-7, 0]]),
+  /* 나래차기: 뛰어들며 반대발로 이어 차는 공중 돌려차기 (다른 발은 접는다) */
+  narS: mk([0, -27], [0, -43], [2, -50], [6, -33], [11, -41], [2, -35], [7, -44], [[6, -24], [3, -12], [2, -26], [-3, -14]]),
+  narR_a: mk([-3, -26], [-8, -41], [-11, -47], [2, -33], [-4, -38], [-6, -38], [-12, -42], [[0, -22], [-2, -9], [8, -34], [23, -39]]),
+  narF_a: mk([-2, -26], [-6, -41], [-9, -47], [3, -33], [-2, -38], [-5, -38], [-10, -42], [[9, -36], [24, -40], [-4, -22], [-8, -10]]),
+  narRH_a: mk([-3, -29], [-10, -42], [-14, -48], [0, -36], [-6, -40], [-6, -38], [-13, -42], [[0, -22], [-2, -10], [8, -40], [21, -49]]),
+  narFH_a: mk([-3, -28], [-9, -42], [-13, -48], [1, -35], [-5, -40], [-6, -38], [-12, -43], [[9, -41], [22, -50], [-4, -24], [-8, -12]]),
   axe_a: mk([0, -26], [3, -43], [5, -50], [7, -33], [13, -40], [3, -35], [8, -45], [[10, -34], [17, -44], [-4, -13], [-7, 0]])
 };
 function lerpPose(a, b, t) { const o = new Array(a.length); for (let i = 0; i < a.length; i++) o[i] = a[i] + (b[i] - a[i]) * t; return o; }
 /* 겨루기 스텝: 발을 끌며 통통 튀듯 움직인다 */
 function walkPose(ph) {
-  const s = Math.sin(ph), s2 = Math.sin(ph - 1.6), l1 = Math.max(0, Math.cos(ph)) * 4, l2 = Math.max(0, Math.cos(ph - 1.6)) * 4;
-  const bob = Math.abs(Math.sin(ph)) * 3.2, ffx = 11 + 5 * s, bfx = -9 + 5 * s2;
-  return mk([0, -24 - bob], [3, -41 - bob], [5, -48 - bob], [8, -32 - bob], [14, -39 - bob], [4, -34 - bob], [9, -44 - bob],
-    [[ffx * 0.6 + 2, (-24 - bob - l1) / 2 - 3], [ffx, -l1], [bfx * 0.6 + 1, (-24 - bob - l2) / 2 - 3], [bfx, -l2]]);
+  const s = Math.sin(ph), s2 = Math.sin(ph - 1.6), l1 = Math.max(0, Math.cos(ph)) * 2.4, l2 = Math.max(0, Math.cos(ph - 1.6)) * 2.4;
+  const bob = Math.abs(Math.sin(ph)) * 1.4, ffx = 17 + 4 * s, bfx = -12 + 4 * s2;
+  return mk([0, -21 - bob], [4, -37 - bob], [6, -44 - bob], [8, -27 - bob], [13, -26 - bob], [-1, -27 - bob], [4, -33 - bob],
+    [[ffx * 0.6 + 2, (-21 - bob - l1) / 2 - 2], [ffx, -l1], [bfx * 0.6 + 1, (-21 - bob - l2) / 2 - 2], [bfx, -l2]]);
 }
 
 /* ---------- 캐릭터 ---------- */
@@ -246,11 +252,11 @@ const MOVES = {
   hS: mv({ name: '발붙여 얼굴 돌려차기', su: 12, ac: 3, rc: 17, dmg: 15, hs: 20, bs: 12, push: 3, lunge: 5, wr: 9, bal: 1, open: 'head', box: [8, -60, 30, 16], pose: ['roundH_s', 'roundH_a'], pts: 3, head: true, hstop: 10 }),
   hB: mv({ name: '뒷발 얼굴 돌려차기', su: 11, ac: 3, rc: 18, dmg: 16, hs: 20, bs: 12, push: 3, wr: 8, bal: 1, open: 'head', box: [8, -60, 32, 16], pose: ['roundH_s', 'roundH_a'], pts: 3, head: true, hstop: 10 }),
   hC: mv({ name: '얼굴 옆차기', su: 11, ac: 4, rc: 17, dmg: 14, hs: 20, bs: 12, push: 5, wr: 8, open: 'body', box: [10, -60, 36, 16], pose: ['sideH_s', 'sideH_a'], pts: 3, head: true, hstop: 10 }),
-  /* 나래차기: 돌려차기 직후 반대발로 이어 차는 연타 (최대 3번) */
-  nB: mv({ leg: 'r', name: '나래차기', su: 4, ac: 3, rc: 12, dmg: 6, hs: 12, bs: 8, push: 2, wr: 5, open: 'head', box: [8, -46, 32, 12], pose: ['roundR_s', 'roundR_a'], hstop: 6 }),
-  nF: mv({ leg: 'f', name: '나래차기', su: 4, ac: 3, rc: 12, dmg: 5, hs: 12, bs: 8, push: 2, wr: 5, open: 'head', box: [8, -44, 32, 12], pose: ['roundF_s', 'roundF_a'], hstop: 6 }),
-  nhB: mv({ leg: 'r', name: '나래 얼굴차기', su: 5, ac: 3, rc: 14, dmg: 9, hs: 16, bs: 10, push: 3, wr: 7, open: 'head', box: [8, -60, 32, 16], pose: ['roundH_s', 'roundH_a'], pts: 3, head: true, hstop: 8 }),
-  nhF: mv({ leg: 'f', name: '나래 얼굴차기', su: 5, ac: 3, rc: 14, dmg: 8, hs: 16, bs: 10, push: 3, wr: 7, open: 'head', box: [8, -60, 32, 16], pose: ['roundFH_s', 'roundFH_a'], pts: 3, head: true, hstop: 8 }),
+  /* 나래차기: 돌려차기(속임 발) 직후 반대발 버튼을 누르면 뛰어들며 이어 차는 공중 돌려차기. 헛치면 크게 휘청 */
+  nB: mv({ name: '나래차기', tag: '나래!', su: 4, ac: 5, rc: 13, dmg: 12, hs: 16, bs: 11, push: 5, lunge: 3.2, jump: 3.2, air: true, wr: 10, bal: 1, open: 'body', box: [10, -50, 44, 16], pose: ['narS', 'narR_a'], pts: 2, hstop: 9 }),
+  nF: mv({ name: '나래차기', tag: '나래!', su: 4, ac: 5, rc: 13, dmg: 12, hs: 16, bs: 11, push: 5, lunge: 3.2, jump: 3.2, air: true, wr: 10, bal: 1, open: 'body', box: [10, -50, 44, 16], pose: ['narS', 'narF_a'], pts: 2, hstop: 9 }),
+  nhB: mv({ name: '나래 얼굴차기', tag: '나래!', su: 5, ac: 5, rc: 14, dmg: 17, hs: 20, bs: 12, push: 5, lunge: 3.2, jump: 3.4, air: true, wr: 12, bal: 1, open: 'body', box: [10, -52, 44, 20], pose: ['narS', 'narRH_a'], pts: 3, head: true, hstop: 11 }),
+  nhF: mv({ name: '나래 얼굴차기', tag: '나래!', su: 5, ac: 5, rc: 14, dmg: 16, hs: 20, bs: 12, push: 5, lunge: 3.2, jump: 3.4, air: true, wr: 12, bal: 1, open: 'body', box: [10, -52, 44, 20], pose: ['narS', 'narFH_a'], pts: 3, head: true, hstop: 11 }),
   /* 풋워크(Q)로 힘을 받아 나가는 기술: 강하지만 헛치면 크게 휘청 */
   CB: mv({ name: '카운터 뒤차기', strong: true, tag: '카운터', su: 8, ac: 3, rc: 22, dmg: 18, hs: 24, bs: 14, push: 5, lunge: 7, wr: 16, bal: 1, open: 'back', knock: true, box: [8, -40, 40, 13], pose: ['backK_s', 'backK_a'], pts: 4, spin: true, hstop: 11 }),
   hCB: mv({ name: '카운터 얼굴 뒤차기', strong: true, tag: '카운터', su: 9, ac: 3, rc: 24, dmg: 24, hs: 26, bs: 15, push: 5, lunge: 7, wr: 18, bal: 1, open: 'back', box: [8, -60, 40, 16], pose: ['backK_s', 'backH_a'], pts: 5, head: true, spin: true, hstop: 12 }),
@@ -583,14 +589,15 @@ function stepFighter(f, o, raw) {
         const want = m.leg === 'f' ? (inp.pr[rb] || inp.mv === 'nB') : (inp.pr[fb] || inp.mv === 'nF');
         if (want) {
           const key = (inp.up ? 'nh' : 'n') + (m.leg === 'f' ? 'B' : 'F'), c2 = f.moves[key];
-          f.move = m = c2; f.t = 0; f.moveHit = false; f.contact = false; f.whiff = false; f.chain++; f.buf = null; f.vx = f.face * 1.5;
-          sfx.swing(); fx.push({ k: 'text', x: f.x, y: GY - 84, t: 0, max: 30, s: '나래' + (f.chain > 1 ? ' x' + (f.chain + 1) : '') });
+          f.move = m = c2; f.t = 0; f.moveHit = false; f.contact = false; f.whiff = false; f.chain++; f.buf = null;
+          f.vx = f.face * c2.lunge; f.vy = c2.jump; f.y = Math.max(f.y, 0.01); spark(f.x, GY, 'dust'); G.shake = Math.max(G.shake, 2);
+          sfx.swing(); fx.push({ k: 'text', x: f.x, y: GY - 84, t: 0, max: 36, s: c2.tag });
         }
       }
       /* 훼이크: 발이 나가기 전에 A를 누르면 차기를 접고, 뒤로 딛으면 빠진다 */
       if (f.t < m.su - 1 && wantFake) { f.move = null; startFake(f, 0); f.t = 3; break; }
       if (f.t < m.su - 1 && f.dashCd <= 0 && wantOut) { startDash(f, -1); break; }
-      f.vx *= 0.7;
+      f.vx *= (m.air && f.y > 0) ? 0.93 : 0.7;
       f.t++;
       if (f.t === m.su + m.ac && !f.moveHit && !f.contact) {
         f.whiff = true;
@@ -723,8 +730,8 @@ function seg(a, b, w, col) {
 function drawFigure(px, py, face, pose, ch, pal, sc, flash, anim) {
   const J = i => [px + face * pose[i] * sc, py + pose[i + 1] * sc];
   const hip = J(0), neck = J(2), head = J(4), fe = J(6), fh = J(8), be = J(10), bh = J(12), fk = J(14), ff = J(16), bk = J(18), bf = J(20);
-  const sh = [neck[0], neck[1] + 3 * sc];
-  const lw = ch.limb * sc, tw = ch.tors * sc, hs = Math.round(ch.head * sc);
+  const shF = [neck[0] + face * 5 * sc, neck[1] + 3 * sc], shB = [neck[0] - face * 5 * sc, neck[1] + 3 * sc];
+  const lw = ch.limb * sc, tw = Math.round(ch.tors * 1.5 * sc), hs = Math.round(ch.head * sc);
   const OUT = '#16121c', white = '#ffffff';
   const gd = pal.guard || '#2f62d6', gdd = pal.guardDk || '#1d3f94';
   const col = k => flash ? white : pal[k], G1 = flash ? white : gd, G2 = flash ? white : gdd;
@@ -732,30 +739,30 @@ function drawFigure(px, py, face, pose, ch, pal, sc, flash, anim) {
   /* 그림자 */
   const ga0 = c.globalAlpha; c.globalAlpha = ga0 * 0.28; R(px - 14 * sc, GY - 1, 28 * sc, 3, '#000'); c.globalAlpha = ga0;
   /* 윤곽 */
-  seg(sh, be, lw + 2, OUT); seg(be, bh, lw + 1, OUT);
+  seg(shB, be, lw + 2, OUT); seg(be, bh, lw + 1, OUT);
   seg(hip, bk, lw + 3, OUT); seg(bk, bf, lw + 2, OUT);
   seg(hip, neck, tw + 4, OUT);
   seg(hip, fk, lw + 3, OUT); seg(fk, ff, lw + 2, OUT);
   c.fillStyle = OUT; c.fillRect(Math.round(head[0] - hs / 2 - 1), Math.round(head[1] - hs / 2 - 1), hs + 2, hs + 2);
-  seg(sh, fe, lw + 2, OUT); seg(fe, fh, lw + 1, OUT);
+  seg(shF, fe, lw + 2, OUT); seg(fe, fh, lw + 1, OUT);
   c.fillStyle = OUT;
   const footRect = p => { const x0 = face > 0 ? p[0] - 2 * sc : p[0] - 5 * sc; c.fillRect(Math.round(x0 - 1), Math.round(p[1] - 3 * sc - 1), Math.round(7 * sc + 2), Math.round(4 * sc + 2)); };
   footRect(bf); footRect(ff);
   /* 채우기: 도복 위에 보호대(호구, 팔, 정강이, 발등, 헤드기어) */
-  const arm = (e, h) => {
+  const arm = (e, h, sh) => {
     seg(sh, e, lw, col('gi')); seg(e, h, lw - 1, col('skin')); seg(mix(e, h, 0.3), h, lw, G1);
-    c.fillStyle = G2; c.fillRect(Math.round(h[0] - lw / 2 - 1), Math.round(h[1] - lw / 2 - 1), Math.round(lw + 1), Math.round(lw + 1));
+    c.fillStyle = flash ? white : '#f4f4fa'; c.fillRect(Math.round(h[0] - lw / 2 - 1), Math.round(h[1] - lw / 2 - 1), Math.round(lw + 1), Math.round(lw + 1)); c.fillStyle = OUT; c.fillRect(Math.round(h[0] - lw / 2 - 1), Math.round(h[1] + lw / 2), Math.round(lw + 1), 1);
   };
   const leg = (k, f2) => { seg(hip, k, lw + 1, col('pants')); seg(k, f2, lw, col('pants')); seg(mix(k, f2, 0.3), mix(k, f2, 0.88), lw, G1); };
   const shoe = p => { c.fillStyle = G2; const x0 = face > 0 ? p[0] - 2 * sc : p[0] - 5 * sc; c.fillRect(Math.round(x0), Math.round(p[1] - 3 * sc), Math.round(7 * sc), Math.round(3 * sc)); };
-  arm(be, bh);
+  arm(be, bh, shB);
   leg(bk, bf); shoe(bf);
   seg(hip, neck, tw, col('gi'));
   const bw = Math.round(tw + 2), bx = Math.round(hip[0] - bw / 2), by = Math.round(hip[1] - 2 * sc);
-  c.fillStyle = col('belt1'); c.fillRect(bx, by, Math.round(bw / 2), Math.round(3 * sc));
-  c.fillStyle = col('belt2'); c.fillRect(bx + Math.round(bw / 2), by, bw - Math.round(bw / 2), Math.round(3 * sc));
+  c.fillStyle = col('belt1'); c.fillRect(bx, by, bw, Math.round(3 * sc));
+  c.fillStyle = col('belt1'); c.fillRect(bx + Math.round(bw / 2) - 3, by + 2, 2, Math.round(7 * sc)); c.fillStyle = col('belt2'); c.fillRect(bx + Math.round(bw / 2) + 1, by + 2, 2, Math.round(7 * sc));
   const g0 = mix(hip, neck, 0.2), g1 = mix(hip, neck, 0.93);
-  seg(g0, g1, tw + 2, G1); seg(g0, g1, 1, G2);
+  seg(g0, g1, Math.max(4, tw - 3), G1); seg(g0, g1, 1, G2);
   leg(fk, ff); shoe(ff);
   /* 머리와 헤드기어 */
   const hx = Math.round(head[0] - hs / 2), hy = Math.round(head[1] - hs / 2), gh = Math.round(hs * 0.45);
@@ -770,7 +777,7 @@ function drawFigure(px, py, face, pose, ch, pal, sc, flash, anim) {
     c.fillRect(Math.round(head[0] + face * hs * 0.22 - (face < 0 ? 1 : 0)), Math.round(head[1] + 0.5), 2, 2);
     c.fillStyle = '#b8665a'; c.fillRect(Math.round(head[0] + face * hs * 0.25 - (face < 0 ? 1 : 0)), Math.round(head[1] + hs * 0.3), 3, 1);
   }
-  arm(fe, fh);
+  arm(fe, fh, shF);
 }
 function curPose(f) {
   switch (f.state) {
@@ -823,7 +830,7 @@ function renderFighter(f) {
     c.globalAlpha = 1;
   }
   const bn = f.state === 'idle' ? Math.abs(Math.sin(f.anim * 0.16)) : 0;
-  const hop = f.state === 'idle' ? bn * 2.5 : f.state === 'dash' ? Math.sin(Math.min(1, f.t / (f.dir === 0 ? 10 : 13)) * Math.PI) * (f.dir === 0 ? 4 : 7) : 0;
+  const hop = f.state === 'idle' ? bn * 0.8 : f.state === 'dash' ? Math.sin(Math.min(1, f.t / (f.dir === 0 ? 10 : 13)) * Math.PI) * (f.dir === 0 ? 2 : 3) : 0;
   const wob = f.state === 'stagger' ? Math.sin(f.t * 0.9) * 1.6 : 0;
   drawFigure(f.x + wob, GY - f.y - hop, f.face, curPose(f), f.ch, f.pal, f.sc, f.flash > 0, f.anim);
   const tr = f.trail;
@@ -1015,7 +1022,7 @@ function drawTitle() {
   txt('도장 겨루기 한판!', 160, 108, 10, '#fff', 'center', '#16121c');
   if (G.menu === 10) {
     R(14, 116, 292, 98, 'rgba(10,6,20,.9)');
-    const L1 = [['이동', '←→ 이동   뒤로 누르면 막기   ↓ 숙이기'], ['발차기', 'S 왼발  D 오른발 (거리별 기술)  ↑ 얼굴'], ['풋워크', 'Q+← 백스텝  Q+→ 스텝 인  Q 스위치'], ['반격', '백스텝 뒤 뒷발 카운터 뒤차기, 앞발 회축'], ['돌진', '스텝 인 뒤 뒷발 턴차기, 앞발 옆차기'], ['연타', '앞발 돌려차기 뒤 반대발 = 나래차기'], ['훼이크', 'A 훼이크, 공격 직전에 누르면 흘리기'], ['강타', 'S 와 D 를 같이 누르면 강한 기술']];
+    const L1 = [['이동', '←→ 이동   뒤로 누르면 막기   ↓ 숙이기'], ['발차기', 'S 왼발  D 오른발 (거리별 기술)  ↑ 얼굴'], ['풋워크', 'Q+← 백스텝  Q+→ 스텝 인  Q 스위치'], ['반격', '백스텝 뒤 뒷발 카운터 뒤차기, 앞발 회축'], ['돌진', '스텝 인 뒤 뒷발 턴차기, 앞발 옆차기'], ['나래차기', '돌려차기 뒤 반대발 = 뛰어들며 이어 차기'], ['훼이크', 'A 훼이크, 공격 직전에 누르면 흘리기'], ['강타', 'S 와 D 를 같이 누르면 강한 기술']];
     L1.forEach((r, i) => { txt(r[0], 22, 127 + i * 11, 8, '#ffe45a', 'left'); txt(r[1], 62, 127 + i * 11, 8, '#fff', 'left'); });
   } else {
     TITLE_ITEMS.forEach((s, i) => {
@@ -1030,7 +1037,7 @@ function drawTitle() {
 }
 function tickSelect(ME) {
   const n = G.mode === 2 ? 2 : 1;
-  if (G.mode === 3 && G.done[0] && !G.net.sent) { G.net.sent = true; netSend({ k: 'pick', ch: G.sel[0] }); }
+  if (G.mode === 3 && G.t % 20 === 0) netSend({ k: 'pick', ch: G.sel[0], dn: G.done[0] ? 1 : 0 });
   for (let i = 0; i < n; i++) {
     const m = ME[i];
     if (G.done[i]) continue;
@@ -1040,6 +1047,15 @@ function tickSelect(ME) {
   }
   if (G.done.slice(0, n).every(Boolean) && !G.starting && (G.mode !== 3 || G.net.rp >= 0)) { G.starting = 30; }
   if (G.starting) { G.starting--; if (G.starting <= 0) { G.starting = 0; startRun(); } }
+}
+function drawNetWait() {
+  drawStage(0); R(0, 0, W, H, 'rgba(10,6,20,.7)');
+  txt('온라인 대전', 160, 70, 18, '#ffe45a', 'center', '#16121c', 900);
+  const dots = '.'.repeat(1 + Math.floor(G.t / 20) % 3);
+  txt('같은 방의 상대를 기다리는 중' + dots, 160, 120, 11, '#fff', 'center', '#16121c');
+  txt('친구도 오락기에서 온라인 대전을 누르면 바로 시작합니다', 160, 146, 8, '#c8c0d8', 'center');
+  txt('Esc 나가기', 160, 210, 8, '#c8c0d8', 'center');
+  txt(BUILD, 316, 221, 6, '#8b7fa0', 'right');
 }
 function drawSelect() {
   drawStage(0); R(0, 0, W, H, 'rgba(10,6,20,.7)');
@@ -1068,7 +1084,7 @@ function drawSelect() {
     if (blink) { for (let t = 0; t < 3; t++) { c.strokeStyle = col; c.lineWidth = 2; c.strokeRect(x - 47 + (i ? 3 : 0), 41 + (i ? 3 : 0), 94 - (i ? 6 : 0), 132 - (i ? 6 : 0)); break; } }
     R(x - 46 + (i ? 52 : 0), 33, 40, 9, col); txt((i + 1) + 'P' + (G.done[i] ? ' 결정' : ''), x - 26 + (i ? 52 : 0), 41, 8, '#fff', 'center');
   }
-  if (G.net && G.done[0] && G.net.rp < 0) txt('상대를 기다리는 중...', 160, 206, 9, '#ffe45a', 'center', '#16121c');
+  if (G.net) txt(!G.net.hear ? '상대 연결 확인 중...' : (G.net.rp >= 0 ? '상대 선택 완료' : '상대가 고르는 중'), 160, 206, 9, G.net.hear ? '#7CFC9A' : '#ffe45a', 'center', '#16121c');
   txt('← → 고르기   아무 공격 버튼으로 결정   Esc 뒤로', 160, 218, 8, '#c8c0d8', 'center');
 }
 function drawFigureAt(x, y, pose, ch, pal, sc) {
@@ -1088,11 +1104,13 @@ function hashState() {
 }
 function netStart(d) {
   G.mode = 3; G.paused = false;
-  G.net = { side: d.side ? 1 : 0, seed: d.seed | 0, delay: Math.max(1, Math.min(12, d.delay || 4)), mid: 0, loc: {}, remM: {}, nf: 0, rp: -1, sent: false, again: false, againR: false, waiting: false, cur: [emptyRaw(), emptyRaw()], myh: {}, remh: {} };
+  G.net = { side: d.side ? 1 : 0, seed: d.seed | 0, delay: Math.max(1, Math.min(12, d.delay || 4)), mid: 0, loc: {}, remM: {}, nf: 0, rp: -1, hear: 0, sent: false, again: false, againR: false, waiting: false, cur: [emptyRaw(), emptyRaw()], myh: {}, remh: {} };
   G.sel = [0, 1]; G.done = [false, false]; G.starting = 0; G.mprev = [null, null];
   go('select'); bgmPlay('menu');
+  const q = netPending.splice(0); q.forEach(netRecv);
 }
 function netLeave(notify) {
+  netPending.length = 0;
   if (G.net && notify) netSend({ k: 'leave' });
   G.net = null; G.mode = 1; G.starting = 0; bgmStop(); go('title'); G.menu = 0;
   post('net-end', {});
@@ -1108,9 +1126,12 @@ function startNetMatch() {
   for (let f = 0; f < N.delay; f++) { N.loc[f] = 0; rem[f] = 0; }
   go('intro'); sfx.coin(); bgmPlay('menu');
 }
+const netPending = [];
 function netRecv(msg) {
-  const N = G.net; if (!N || !msg) return;
-  if (msg.k === 'pick') N.rp = msg.ch | 0;
+  const N = G.net; if (!msg) return;
+  if (!N) { if ((msg.k === 'pick' || msg.k === 'in') && netPending.length < 400) netPending.push(msg); return; }
+  N.hear = 1;
+  if (msg.k === 'pick') { if (msg.dn !== 0) N.rp = msg.ch | 0; }
   else if (msg.k === 'in') { (N.remM[msg.m] || (N.remM[msg.m] = {}))[msg.f] = msg.b; }
   else if (msg.k === 'hash') {
     const key = msg.m + ':' + msg.f;
@@ -1366,12 +1387,14 @@ function tick() {
   if (G.net && (pressedKeys.has('Escape') || pressedKeys.has('Backspace')) && (G.scene === 'select' || G.scene === 'intro' || G.scene === 'result2')) { netLeave(true); post('exit', { score: G.best }); pressedKeys.clear(); return; }
   if (pressedKeys.has('Escape') || pressedKeys.has('Backspace')) {
     if (G.net) { /* 온라인 싸움 중에는 무시 */ }
+    else if (G.scene === 'netwait') { post('exit', { score: G.best }); }
     else if (G.scene === 'title') { if (G.menu === 10) { G.menu = 2; sfx.back(); } else post('exit', { score: G.best }); }
     else if (G.scene === 'select') { go('title'); G.menu = G.mode - 1; G.starting = 0; sfx.back(); }
     else if (G.scene === 'intro' || G.scene === 'continue' || G.scene === 'over' || G.scene === 'ending' || G.scene === 'result2') { bgmStop(); go('title'); G.menu = 0; sfx.back(); }
   }
   switch (G.scene) {
     case 'title': if (G.t === 1 || !bgm.kind) bgmPlay('menu'); tickTitle(ME); break;
+    case 'netwait': if (G.t === 1 || !bgm.kind) bgmPlay('menu'); break;
     case 'select': tickSelect(ME); break;
     case 'intro': tickIntro(); break;
     case 'fight': tickFight(); break;
@@ -1387,6 +1410,7 @@ function render() {
   c.imageSmoothingEnabled = false;
   switch (G.scene) {
     case 'title': drawTitle(); break;
+    case 'netwait': drawNetWait(); break;
     case 'select': drawSelect(); break;
     case 'intro': drawIntro(); break;
     case 'fight': drawFight(); break;
@@ -1420,7 +1444,7 @@ addEventListener('message', e => {
   else if (d.type === 'mute') { muted = true; bgmStop(); }
   else if (d.type === 'unmute') { muted = false; }
   else if (d.type === 'focus') window.focus();
-  else if (d.type === 'reset') { bgmStop(); G.net = null; G.mode = 1; go('title'); G.menu = 0; running = true; }
+  else if (d.type === 'reset') { netPending.length = 0; bgmStop(); G.net = null; G.mode = 1; go('title'); G.menu = 0; running = true; }
   else if (d.type === 'net-start') { running = true; netStart(d); window.focus(); }
   else if (d.type === 'net-msg') netRecv(d.msg);
   else if (d.type === 'net-leave') { if (G.net) { toast('상대가 나갔습니다'); netLeave(false); post('exit', { score: G.best }); } }
@@ -1433,5 +1457,6 @@ window.TaekwonFighter = {
 };
 window.__fighter = { G, get fighters() { return G.f; }, get projs() { return projs; }, MAP, down, pressedKeys, startMove, mkFighter, tick, CHARS, POSE, MOVES, drawFigure, ctx: c, hitbox, hurtbox, render, hashState, get net() { return G.net; } };
 requestAnimationFrame(loop);
+if (new URLSearchParams(location.search).get('online') === '1') go('netwait');
 post('ready', { best: G.best, version: BUILD });
 })();

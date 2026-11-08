@@ -1,8 +1,8 @@
 {
   "name": "2006-reminiscence-a38-review",
-  "version": "0.82.0",
+  "version": "0.85.0",
   "private": true,
-  "description": "A82 풍성한 2006 포털과 PC방 GAME STATION 런처",
+  "description": "A85 만화 대사 24px·내장 한글 글꼴·그림과 겹치지 않는 말풍선",
   "scripts": {
     "start": "node server.js",
     "test:coop": "node tests/test_a26_coop.js",
@@ -50,7 +50,8 @@
     "test:interface": "node tests/test_a77.cjs",
     "test:world-audio": "node tests/test_world_audio.cjs",
     "test:xp-desktop": "node tests/test_xp_desktop.cjs",
-    "test:xp-boot": "node tests/test_xp_boot.cjs"
+    "test:xp-boot": "node tests/test_xp_boot.cjs",
+    "test:comics": "node tests/test_portal_comics.cjs"
   },
   "engines": {
     "node": ">=22"
