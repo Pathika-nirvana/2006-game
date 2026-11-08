@@ -364,7 +364,7 @@ body.playing-a5 #bgmControls{position:fixed;z-index:1100;bottom:0;left:0;right:0
 </style>
 <style>.xp-desktop .retro-top,.xp-desktop .retro-window-title{background:#235bd3;color:white}.xp-desktop .retro-taskbar{background:#2360da;color:white}.xp-desktop .retro-taskbar>span:first-child{background:#278c38;color:white;border-radius:0 8px 8px 0;padding:7px 15px}.xp-desktop .retro-screen{background:linear-gradient(#5b9ee9 0%,#9cc8f5 55%,#568e36 56%,#70a44b 100%)}</style>
 <link rel="stylesheet" href="assets/interface.css">
-<link rel="stylesheet" href="assets/pc-desktop/desktop.css?v=A84">
+<link rel="stylesheet" href="assets/pc-desktop/desktop.css?v=A87">
 <link rel="stylesheet" href="assets/pc-desktop/comics.css?v=A85">
 <link rel="stylesheet" href="assets/pc-desktop/boot.css">
 </head>
@@ -2110,7 +2110,7 @@ const prizes=[
  {id:'pencil',name:'미니 연필 장식',color:'#e7ad76',detail:'연필보다 작고 지우개보다 가벼운 장난감.'}
 ];
 let collection={},best=0,pcMessage='',open=false,mode='',lastPrize=null,spinning=false,seat=12,pcActive=false,pcTimer=null,guestPass=null,requestedSeat=12;
-let fighterFrame=null,fighterPaid=false,fighterLoading=false,fighterBest=0,fighterTimer=null,fighterOnline=false,duelUnsub=null;
+let fighterFrame=null,fighterPaid=false,fighterLoading=false,fighterBest=0,fighterTimer=null;
 try{fighterBest=Number(localStorage.getItem('taekwon.best'))||0}catch(_){}
 try{const o=JSON.parse(localStorage.getItem('memory_2006_play_a5')||'null');if(o){collection=o.collection||{};best=Number(o.best)||0;pcMessage=typeof o.pcMessage==='string'?o.pcMessage.slice(0,220):''}}catch(e){}
 function save(){try{localStorage.setItem('memory_2006_play_a5',JSON.stringify({collection,best,pcMessage,guestPass}))}catch(e){}}
@@ -2123,38 +2123,23 @@ const b=(label,fn,cls='')=>{let e=h('button','pr-button '+cls,label);e.type='but
 const price=n=>n.toLocaleString('ko-KR')+'원';
 function pay(n){if(!SHOPS.spendCoins(n)){foot.textContent='동전이 모자란다. 구경만 해도 괜찮아.';return false}return true}
 function show(type,ttl,sub){close();open=true;mode=type;backdrop.classList.remove('hidden');panel.dataset.mode=type;title.textContent=ttl;kicker.textContent=sub;document.body.classList.add('playing-a5');window.dispatchEvent(new CustomEvent('arcade-focus-change'));body.replaceChildren();foot.textContent='';$('playroomClose').focus({preventScroll:true});}
-function close(){if(!open)return;window.XPDesktop?.current?.destroy();panel.classList.remove('xp-screen-panel');open=false;spinning=false;pcActive=false;if(fighterTimer){clearTimeout(fighterTimer);fighterTimer=null}if(fighterFrame){fighterFrame.remove();fighterFrame=null}if(fighterOnline){fighterOnline=false;try{window.A25NET?.send({type:'duel_cancel'})}catch(_){}}if(duelUnsub){duelUnsub();duelUnsub=null}fighterPaid=false;fighterLoading=false;backdrop.classList.remove('fighter-playing');$('playroomClose').textContent='×';window.dispatchEvent(new CustomEvent('arcade-focus-change'));if(pcTimer){clearInterval(pcTimer);pcTimer=null}backdrop.classList.add('hidden');document.body.classList.remove('playing-a5');window.focus?.();$('game')?.focus?.();}
+function close(){if(!open)return;window.XPDesktop?.current?.destroy();panel.classList.remove('xp-screen-panel');open=false;spinning=false;pcActive=false;if(fighterTimer){clearTimeout(fighterTimer);fighterTimer=null}if(fighterFrame){fighterFrame.remove();fighterFrame=null}fighterPaid=false;fighterLoading=false;backdrop.classList.remove('fighter-playing');$('playroomClose').textContent='×';window.dispatchEvent(new CustomEvent('arcade-focus-change'));if(pcTimer){clearInterval(pcTimer);pcTimer=null}backdrop.classList.add('hidden');document.body.classList.remove('playing-a5');window.focus?.();$('game')?.focus?.();}
 function requestPlayroomClose(){if(fighterFrame){if(!confirm('오락기 게임을 끝내고 나갈까?')){focusFighter();return}}close()}
 $('playroomClose').addEventListener('click',requestPlayroomClose);backdrop.addEventListener('pointerdown',e=>{if(e.target===backdrop&&!fighterFrame)close()});
 function openArcade(){show('arcade','동네 태권 대전','문구점 오락기 · 100원');drawArcadeIntro()}
 function drawArcadeIntro(){
  body.replaceChildren();const info=h('div','fighter-intro');info.append(h('h3','','동네 태권 대전'),h('p','','도장과 아파트 옥상에서 펼치는 태권도 겨루기. 1인 도전 또는 한 키보드 2인 대전을 고를 수 있어.'),h('p','','방향키 이동 · S 왼발 · D 오른발 · Q 풋워크 · A 훼이크'),h('p','','↑ + 발차기: 얼굴 공격 · S + D: 강한 기술 · Esc: 일시정지'),h('p','',`최고 점수 ${fighterBest.toLocaleString('ko-KR')}점`));
- const start=b('동전 넣고 시작 · 100원',()=>startArcade(false),'primary');start.id='fighterStart';start.disabled=SHOPS.coins<100;info.append(start);
- const inRoom=!!window.A25NET?.state?.ready;const peers=window.A25NET?.state?.peers||0;
- const online=b('온라인 대전 · 100원',()=>startArcade(true),'primary');online.id='fighterOnline';online.disabled=SHOPS.coins<100||!inRoom;online.style.marginLeft='8px';info.append(online);
- info.append(h('p','',inRoom?`온라인 대전: 지금 방에 친구가 ${peers}명 있어. 친구도 온라인 대전을 누르면 바로 붙어.`:'온라인 대전은 친구와 같은 방에 먼저 입장해야 해. (멀티 방 입장 후 이용)'));
- body.append(info);foot.textContent=SHOPS.coins<100?'동전이 부족해. 100원이 필요해.':'게임 화면이 준비되면 100원을 넣습니다. 끝내려면 제목 화면의 나가기 또는 위쪽 나가기를 누르세요.';
+ const start=b('동전 넣고 시작 · 100원',startArcade,'primary');start.id='fighterStart';start.disabled=SHOPS.coins<100;info.append(start);body.append(info);foot.textContent=SHOPS.coins<100?'동전이 부족해. 100원이 필요해.':'게임 화면이 준비되면 100원을 넣습니다. 끝내려면 제목 화면의 나가기 또는 위쪽 나가기를 누르세요.';
 }
 function focusFighter(){fighterFrame?.contentWindow?.focus()}
-function duelHandler(m){
- if(!fighterFrame||!fighterOnline||!m)return;
- const w=fighterFrame.contentWindow;if(!w)return;
- if(m.type==='duel_start'){w.postMessage({source:'arcade-host',type:'net-start',side:m.side?1:0,seed:m.seed|0,delay:m.delay|0},location.origin);foot.textContent=`${String(m.opp||'친구')} 님과 온라인 대전 · Esc 나가기`;focusFighter()}
- else if(m.type==='duel_msg')w.postMessage({source:'arcade-host',type:'net-msg',msg:m.msg},location.origin);
- else if(m.type==='duel_left'||m.type==='network_close')w.postMessage({source:'arcade-host',type:'net-leave'},location.origin);
- else if(m.type==='duel_wait')foot.textContent='같은 방의 친구가 온라인 대전을 누르길 기다리는 중…';
-}
-function startArcade(online){
- online=online===true;
+function startArcade(){
  if(!open||mode!=='arcade'||fighterFrame||fighterLoading||SHOPS.coins<100)return;
- if(online&&!window.A25NET?.state?.ready){foot.textContent='온라인 대전은 먼저 친구와 같은 방에 입장해야 해.';return}
- fighterOnline=online;if(online&&!duelUnsub)duelUnsub=window.A25NET.subscribe(duelHandler);
  fighterLoading=true;fighterPaid=false;body.replaceChildren();backdrop.classList.add('fighter-playing');
- const fr=fighterFrame=h('iframe','fighter-frame');fr.id='fighterGame';fr.title='동네 태권 대전';$('playroomClose').textContent='나가기';fr.setAttribute('allow','autoplay; gamepad');fr.src='assets/games/fighter/index.html'+(online?'?online=1':'');
+ const fr=fighterFrame=h('iframe','fighter-frame');fr.id='fighterGame';fr.title='동네 태권 대전';$('playroomClose').textContent='나가기';fr.setAttribute('allow','autoplay; gamepad');fr.src='assets/games/fighter/index.html';
  fr.addEventListener('load',focusFighter);fr.addEventListener('error',failFighter);body.append(fr);foot.textContent='오락기 화면을 준비하는 중…';
  fighterTimer=setTimeout(failFighter,15000);
 }
-function failFighter(){if(!fighterFrame||fighterPaid)return;fighterOnline=false;if(duelUnsub){duelUnsub();duelUnsub=null}if(fighterTimer){clearTimeout(fighterTimer);fighterTimer=null}fighterFrame.remove();fighterFrame=null;fighterLoading=false;backdrop.classList.remove('fighter-playing');drawArcadeIntro();foot.textContent='게임 화면을 불러오지 못했어. 동전은 사용하지 않았어. 다시 눌러 봐.'}
+function failFighter(){if(!fighterFrame||fighterPaid)return;if(fighterTimer){clearTimeout(fighterTimer);fighterTimer=null}fighterFrame.remove();fighterFrame=null;fighterLoading=false;backdrop.classList.remove('fighter-playing');drawArcadeIntro();foot.textContent='게임 화면을 불러오지 못했어. 동전은 사용하지 않았어. 다시 눌러 봐.'}
 window.addEventListener('message',e=>{
  const d=e.data;if(!fighterFrame||e.source!==fighterFrame.contentWindow||e.origin!==location.origin||!d||d.source!=='arcade-game'||d.game!=='fighter')return;
  if(d.type==='ready'&&!fighterPaid){
@@ -2162,11 +2147,8 @@ window.addEventListener('message',e=>{
   if(!SHOPS.spendCoins(100)){close();return}
   fighterPaid=true;fighterLoading=false;fighterFrame.contentWindow.postMessage({source:'arcade-host',type:'external-music'},location.origin);foot.textContent='Esc · 일시정지 / 제목에서 나가기 · M 소리 · 선택 Enter · 2P 선택 H · 1P 방향키 Q A S D · 2P I J K L U O P ;';
   window.MEMO?.add('문구점 오락기','100원을 넣고 동네 태권 대전을 시작했다.',0);focusFighter();
-  if(fighterOnline)window.A25NET?.send({type:'duel_queue'});
  }
  if(d.type==='score'&&fighterPaid&&Number.isFinite(d.score)&&d.score>=0){fighterBest=Math.max(fighterBest,Math.min(999999999,Math.floor(d.score)));try{localStorage.setItem('taekwon.best',String(fighterBest))}catch(_){}window.MEMO?.add('동네 태권 대전',Math.floor(d.score)+'점을 기록했다.'+(d.cleared?' 모든 상대를 이겼다.':''),0)}
- if(d.type==='net-send'&&fighterOnline&&d.msg&&typeof d.msg==='object'){window.A25NET?.send({type:'duel_relay',msg:d.msg})}
- if(d.type==='net-end'&&fighterOnline){window.A25NET?.send({type:'duel_cancel'})}
  if(d.type==='exit'){requestPlayroomClose();}
 });
 function prizePixel(canvas,item){const c=canvas.getContext('2d');c.imageSmoothingEnabled=false;const p=(x,y,w,h,col)=>{c.fillStyle=col;c.fillRect(x,y,w,h)};c.clearRect(0,0,64,64);p(14,45,36,3,'#8b726244');p(17,14,30,34,'#654d5c');p(19,12,26,34,item.color);p(19,12,26,4,'#ffffff66');p(19,28,26,2,'#eee3cf');p(25,20,14,13,'#fbeaca');p(27,22,10,9,item.color);p(30,18,4,18,'#fff6db99');p(27,25,10,2,'#fff6df99')}
@@ -3260,7 +3242,7 @@ window.A12ART={retouch,retouchRoute,dynamic,get enabled(){return enabled},set en
 })();
 
 /* END src/16_pilot_art.js */
-</script><script src="assets/maps/after-school/manifest.js"></script><script src="src/after-school-map.js"></script><script src="src/playground-space.js"></script><script src="src/side-alley-map.js"></script><script src="src/apartment-path-map.js"></script><script src="src/back-alley-map.js"></script><script src="src/narrow-alley-map.js"></script><script src="src/stationery-interior.js"></script><script src="src/supermarket-map.js"></script><script src="src/courtyard-map.js"></script><script src="src/pcroom-map.js"></script><script src="src/portal-comics.js"></script><script src="src/xp-desktop.js"></script><script src="src/block104.js"></script><script src="src/commercial-road.js"></script><script>
+</script><script src="assets/maps/after-school/manifest.js"></script><script src="src/after-school-map.js"></script><script src="src/playground-space.js"></script><script src="src/side-alley-map.js"></script><script src="src/apartment-path-map.js"></script><script src="src/back-alley-map.js"></script><script src="src/narrow-alley-map.js"></script><script src="src/stationery-interior.js"></script><script src="src/supermarket-map.js"></script><script src="src/courtyard-map.js"></script><script src="src/pcroom-map.js"></script><script src="src/portal-comics.js"></script><script src="src/portal-news.js?v=A88"></script><script src="src/portal-boards.js?v=A88"></script><script src="src/portal-pages.js?v=A88"></script><script src="src/pc-system.js?v=A88"></script><script src="src/club-seed.js?v=A88"></script><script src="src/club-core.js?v=A88"></script><script src="src/club.js?v=A88"></script><script src="src/xp-desktop.js"></script><script src="src/block104.js"></script><script src="src/commercial-road.js"></script><script>
 /* BEGIN src/13_game_core.js */
 
 /* 《2006년.. 90년대생의 회상》 ART STAGE 10 (everyday neighborhood detours + A8 routines)
