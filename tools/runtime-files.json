@@ -176,5 +176,7 @@
   "src/club.js",
   "assets/pc-desktop/incoming/README.txt",
   "assets/pc-desktop/incoming/crayon_cat.webp",
-  "assets/pc-desktop/incoming/crayon_kids.webp"
+  "assets/pc-desktop/incoming/crayon_kids.webp",
+  "그림목록갱신.bat",
+  "assets/pc-desktop/incoming/list.js"
 ]

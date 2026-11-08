@@ -327,6 +327,17 @@ function open(ctx){
  const incNode=t.mydocs.kids.find(k=>k.act==='incoming');
  const inc={status:'idle',nav:-1};
  const incList=()=>incNode.kids.filter(k=>k.act==='image');
+ /* 서버 없이 index.html을 직접 열었을 때: incoming/list.js (그림목록갱신.bat이 만든다)를 읽는다 */
+ function listFromFile(){
+  return new Promise((ok,no)=>{
+   const d=w.document;if(!d||!d.createElement||!d.head||!d.head.appendChild)return no(new Error('no document'));
+   const old=w.A88_INCOMING;w.A88_INCOMING=undefined;
+   const sc=d.createElement('script');sc.src='assets/pc-desktop/incoming/list.js?t='+Date.now();
+   sc.onload=()=>{const l=w.A88_INCOMING;if(sc.remove)sc.remove();if(!Array.isArray(l)){w.A88_INCOMING=old;return no(new Error('no list'))}ok({files:l.map(x=>({name:x.name,size:x.size||0,mtime:0,url:'assets/pc-desktop/incoming/'+encodeURIComponent(x.name)}))})};
+   sc.onerror=()=>{if(sc.remove)sc.remove();no(new Error('no list.js'))};
+   d.head.appendChild(sc);
+  });
+ }
  function loadIncoming(){
   if(inc.status==='loading')return;
   const f=ctx.fetch||w.fetch;
@@ -335,7 +346,7 @@ function open(ctx){
   let job;
   try{job=Promise.resolve(f(INCOMING_URL,{cache:'no-cache'})).then(r=>{if(!r||!r.ok)throw new Error('incoming '+(r&&r.status));return r.json()})}
   catch(err){job=Promise.reject(err)}
-  job=job.then(j=>{
+  job=job.catch(err=>listFromFile()).then(j=>{
    const keep=new Map(incNode.kids.map(k=>[k.url,k]));
    const fresh=imageNodes(j&&j.files,incNode);
    incNode.kids=fresh.map(k=>{const o=keep.get(k.url);return o&&o.bytes===k.bytes&&o.mtime===k.mtime?o:k});
