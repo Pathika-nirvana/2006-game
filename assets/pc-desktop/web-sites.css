@@ -1,0 +1,197 @@
+/* A91: 홈페이지 열 곳(.web-site), 귀신 화면(.ws-scare), 프로그램 받기와 설치 마법사(.xp-prog, .xp-fly, .xp-wiz).
+   그림 파일 없이 색, 선, 글자로만 그렸다. 움직임을 줄이는 설정에서는 흐르는 글과 번쩍임을 모두 끈다. */
+.xp79-portal.web-site{position:relative;min-height:100%;min-width:0;max-width:none;padding:0;background:#fff;color:#222;font:12px/1.6 'Gulim','굴림','Dotum','돋움',sans-serif;overflow-wrap:anywhere}
+.web-site h1,.web-site h2,.web-site h3,.web-site p{margin:0}
+.web-site button{font:inherit;cursor:pointer}
+.web-site input[type=text],.web-site select{font:inherit;padding:2px 4px;border:1px solid #888;background:#fff;min-width:0}
+.ws-btn{border:2px outset #ddd;background:#e6e6e6;padding:3px 12px;color:#111}
+.ws-marquee{overflow:hidden;white-space:nowrap}
+.ws-marquee span{display:inline-block;padding-left:100%;animation:ws-marq 24s linear infinite}
+@keyframes ws-marq{to{transform:translateX(-100%)}}
+.ws-digits{display:inline-block;vertical-align:middle}
+.ws-digits i{display:inline-block;min-width:12px;margin:0 1px;padding:0 2px;background:#111;color:#7dff7d;font:bold 13px/1.35 'Courier New',monospace;text-align:center;border:1px solid #555;font-style:normal}
+.ws-digits.sm i{min-width:10px;font-size:11px}
+.ws-bar{height:14px;border:1px solid #666;background:#fff;margin:6px 0}
+.ws-bar i{display:block;height:100%;width:0;background:repeating-linear-gradient(90deg,#2a7bd8 0 8px,#9cc4f0 8px 10px);transition:width .4s}
+.ws-form{display:flex;gap:4px;flex-wrap:wrap;margin:8px 0}
+.ws-form input[type=text]{flex:1 1 90px}.ws-form input[type=text]:first-child{flex:0 1 90px}
+.ws-cm{margin:2px 0;padding:2px 6px;border-bottom:1px dotted #bbb;white-space:pre-wrap}
+.ws-cm.mine{background:#fffbd8}
+.ws-spark{position:absolute;pointer-events:none;color:#ffcf3a;font-size:13px;font-style:normal;animation:ws-fade .65s forwards;z-index:5}
+@keyframes ws-fade{from{opacity:1;transform:translateY(0) scale(1)}to{opacity:0;transform:translateY(16px) scale(.4)}}
+@keyframes ws-blink{50%{opacity:0}}
+/* ---- 하늘이의 홈페이지 ---- */
+.xp79-portal.web-site.ws-hompy{background:#fdf0fa radial-gradient(#f6c6e6 1.5px,transparent 2px) 0 0/16px 16px;color:#4a2b5c;font-family:'Gulim','굴림',sans-serif}
+.hp-splash{min-height:420px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:30px 12px;text-align:center;background:linear-gradient(#2a1650,#6a2d8f 60%,#c04aa0);color:#fff}
+.hp-stars{letter-spacing:6px;color:#ffe27a;animation:ws-blink 1.4s steps(2) infinite}
+.hp-welcome{font:italic bold 34px Georgia,'Times New Roman',serif;text-shadow:2px 2px #a1257c,0 0 12px #ff9fe0}
+.hp-sub{font-size:13px}.hp-load{width:220px;height:10px;border:1px solid #fff;background:#3a1a62}.hp-load i{display:block;height:100%;background:linear-gradient(90deg,#ffd0f2,#fff)}
+.hp-enter{border:3px double #fff;background:#d4408f;color:#fff;padding:6px 26px;font:bold 16px/1.2 sans-serif;letter-spacing:2px}.hp-enter:hover{background:#ff5fb0}
+.hp-best{font-size:11px;color:#ffe9fa}
+.hp-frame{display:grid;grid-template-columns:150px 1fr;grid-template-areas:'h h' 's m';gap:6px;padding:6px}
+.hp-head{grid-area:h;padding:6px 8px;background:linear-gradient(90deg,#ffd0f2,#d0c6ff,#c4efff);border:2px dotted #b663a8;text-align:center}
+.hp-logo{font:bold 20px 'Batang','바탕',serif;color:#9a2a8b;text-shadow:1px 1px #fff,2px 2px #e6b3dd}
+.hp-marq{font-size:12px;color:#7a3aa8;margin-top:3px}
+.hp-side{grid-area:s;display:flex;flex-direction:column;gap:4px;padding:6px;background:#fff;border:2px dotted #c88cd8;align-self:start}
+.hp-menu{border:1px solid #d9b0e6;background:#fff0fb;color:#7a2a8c;padding:3px 6px;text-align:left}.hp-menu:hover,.hp-menu.on{background:#e9b8f2;color:#fff}
+.hp-bgm{margin-top:6px;padding:4px;background:#2a1650;color:#e8d0ff;font-size:11px;display:flex;flex-direction:column;gap:3px}
+.hp-eq{display:flex;align-items:flex-end;gap:2px;height:16px}.hp-eq i{width:5px;height:4px;background:#7dff7d}.hp-eq.on i{animation:hp-eq .6s ease-in-out infinite alternate}.hp-eq i:nth-child(2){animation-delay:.1s}.hp-eq i:nth-child(3){animation-delay:.2s}.hp-eq i:nth-child(4){animation-delay:.3s}.hp-eq i:nth-child(5){animation-delay:.15s}
+@keyframes hp-eq{to{height:16px}}
+.hp-bgm-btn{border:1px solid #a58ad6;background:#4a2b82;color:#fff;font-size:11px}
+.hp-count{margin-top:6px;font-size:11px;text-align:center}
+.hp-main{grid-area:m;min-height:300px;padding:10px;background:#fff;border:2px dotted #c88cd8}
+.hp-h{font:bold 17px 'Batang','바탕',serif;color:#b0309b;margin-bottom:8px;border-bottom:2px dotted #e3a8da}
+.hp-p{margin:6px 0}
+.hp-news{margin:10px 0;padding:8px;background:#fffbe3;border:1px dashed #d8b84a}.hp-news p{margin:3px 0}.hp-new{color:#e52b50;font-style:normal;font-weight:bold;animation:ws-blink 1s steps(2) infinite}
+.hp-tip{padding:8px;background:#e9f6ff;border:1px solid #9bc5e6;display:flex;gap:8px}
+.hp-photo{width:140px;height:170px;margin:6px 0;border:6px ridge #e3a8da;background:repeating-linear-gradient(45deg,#fff 0 8px,#fbe1f4 8px 16px);display:flex;align-items:center;justify-content:center;text-align:center;font-size:11px;color:#b0309b}
+.hp-table{border-collapse:collapse;width:100%}.hp-table th,.hp-table td{border:1px solid #e3b2dc;padding:3px 6px;text-align:left}.hp-table th{width:90px;background:#fde3f6;color:#9a2a8b}
+.hp-diary{margin:8px 0;padding:6px 8px;border:1px solid #dcc;background:#fffdf8}.hp-diary b{color:#7a3aa8}
+.hp-construct{margin:10px 0;padding:14px;text-align:center;border:4px solid #f2c200;background:repeating-linear-gradient(-45deg,#f2c200 0 14px,#222 14px 28px);color:#fff}.hp-construct b{display:block;font-size:22px;letter-spacing:8px;background:#222;padding:2px 8px;margin:0 auto 6px;width:max-content;max-width:100%}.hp-construct span{background:#222;padding:2px 6px}
+.hp-gb{margin:4px 0;padding:4px 8px;border:1px solid #efd3ec;background:#fff7fd}.hp-gb.mine{background:#fff4c8}
+.hp-link{margin:4px 0}.hp-a{border:0;background:none;color:#2a5bd8;text-decoration:underline;padding:0}
+.hp-trap{margin:14px 0;padding:6px 14px;background:#f00;color:#ff0;border:3px outset #f66;font-weight:bold;animation:ws-blink 1.1s steps(2) infinite}
+.hp-oops{color:#c00;font-weight:bold;margin-top:6px}
+.hp-foot{padding:8px;text-align:center;font-size:11px;color:#8b5a95}
+/* ---- 엽기천국 ---- */
+.xp79-portal.web-site.ws-yeopgi{background:#fff8c8;font-family:'Gulim','굴림',sans-serif}
+.yg-head{display:flex;align-items:baseline;gap:10px;padding:8px 12px;background:#e40000;color:#fff;border-bottom:4px solid #222}
+.yg-logo{border:0;background:none;color:#ffec00;font:900 30px/1 'Gulim','굴림',sans-serif;text-shadow:3px 3px #222;padding:0}
+.yg-slogan{font-weight:bold}
+.yg-nav{display:flex;flex-wrap:wrap;background:#222}.yg-tab{border:0;background:#222;color:#ff0;padding:6px 14px;font-weight:bold}.yg-tab:hover,.yg-tab.on{background:#ff0;color:#c00}
+.yg-marq{padding:3px 0;background:#ffec00;color:#c00;font-weight:bold}
+.yg-body{padding:10px;display:flex;flex-direction:column;gap:10px}
+.yg-box{border:3px solid #222;background:#fff;padding:8px 10px;box-shadow:4px 4px #c00}
+.yg-box h3{margin-bottom:6px;color:#c00;font-size:15px;border-bottom:2px solid #222}
+.yg-row{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px;padding:3px 0;border-bottom:1px dotted #aaa}.yg-row small{color:#666}
+.yg-no{display:inline-block;min-width:18px;color:#fff;background:#c00;text-align:center}
+.yg-link{border:0;background:none;color:#0a3fbf;text-align:left;padding:0;font-weight:bold}.yg-link:hover{color:#c00;text-decoration:underline}.yg-link.bait{display:block;margin:5px 0}.yg-box>.yg-link{display:block;margin:3px 0}
+.yg-meta{display:block;color:#666;margin-bottom:6px}.yg-text{white-space:pre-wrap;margin:8px 0;line-height:1.7}
+.yg-vote,.yg-choice{margin:6px 6px 6px 0;border:3px outset #f90;background:#ffd24a;color:#900;font-weight:bold;padding:4px 12px}
+.yg-choice{display:block;background:#fff;color:#222;border-color:#999;font-weight:normal}
+.yg-fish{margin:8px 0;padding:8px;background:#ffe3e3;border:2px dashed #c00;font-weight:bold}
+.yg-note{color:#555;font-size:11px}.yg-cm{margin-top:10px}.yg-free{padding:4px 0;border-bottom:1px dotted #999}.yg-free.mine{background:#fffbd8}
+/* ---- 플래시짱 ---- */
+.xp79-portal.web-site.ws-flash{background:#000;color:#cfe;font-family:'Gulim','굴림',sans-serif;padding-bottom:12px}
+.fl-head{display:flex;align-items:baseline;gap:10px;padding:8px 12px;background:linear-gradient(#222,#000);border-bottom:2px solid #ff2e9a}
+.fl-logo{border:0;background:none;color:#39ff7a;font:italic 900 24px Impact,'Arial Black',sans-serif;letter-spacing:2px;text-shadow:0 0 8px #39ff7a;padding:0}.fl-sub{color:#ff7ac6}
+.fl-intro{padding:50px 12px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px}
+.fl-title{font:italic 900 46px Impact,'Arial Black',sans-serif;color:#fff;text-shadow:0 0 14px #ff2e9a,0 0 28px #39ff7a}
+.fl-loading{font:bold 16px 'Courier New',monospace;color:#39ff7a}.fl-bar{width:260px;background:#111;border-color:#39ff7a}.fl-bar i{background:#39ff7a}
+.fl-skip,.fl-enter{border:2px solid #ff2e9a;background:#000;color:#ff2e9a;padding:4px 14px;font-weight:bold;letter-spacing:1px}.fl-skip:hover,.fl-enter:hover{background:#ff2e9a;color:#000}.fl-tip{color:#a9bccb}
+.fl-h{padding:10px 12px 4px;color:#ffe27a;font-size:15px}.fl-desc{padding:0 12px 6px;color:#9ab}
+.fl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;padding:10px 12px}
+.fl-card{display:flex;flex-direction:column;gap:3px;font-size:11px;color:#9ab}.fl-star{color:#ffb000}
+.fl-thumb{height:90px;border:2px solid #39ff7a;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:4px;background:linear-gradient(135deg,#3a0a5c,#0a3a5c)}.fl-thumb b{font:900 11px Impact,sans-serif;color:#39ff7a}.fl-thumb.late{background:linear-gradient(135deg,#0a3a5c,#2b7a4a)}.fl-thumb.duck{background:linear-gradient(135deg,#5c4a0a,#8a5a1a)}.fl-thumb.poop{background:linear-gradient(135deg,#5c2a0a,#2a1a0a)}
+.fl-note{padding:6px 12px;color:#a9bccb;font-size:11px}
+.fl-canvas{display:block;margin:6px auto;border:3px solid #39ff7a;background:#fff;max-width:100%;touch-action:none}
+.fl-sub-line{text-align:center;min-height:22px;font:bold 15px 'Gulim','굴림',sans-serif;color:#fff;background:#000}
+.fl-prog{margin:4px auto;max-width:480px;background:#222;border-color:#39ff7a}.fl-prog i{background:#ff2e9a;transition:none}
+.fl-ctl{display:flex;justify-content:center;gap:6px;margin:6px 0}.fl-btn{border:2px solid #39ff7a;background:#000;color:#39ff7a;padding:3px 10px}
+.fl-cm{margin:10px 12px;padding:6px;border:1px solid #345;color:#cde}.fl-cm .ws-cm{border-color:#345}.fl-cm .ws-cm.mine{background:#123}
+.fl-cm input[type=text]{background:#000;color:#cfe;border-color:#39ff7a}
+/* ---- 소름닷컴 ---- */
+.xp79-portal.web-site.ws-sorum{background:#0a0505;color:#ddd;font-family:'Batang','바탕',serif;min-height:420px}
+.sr-gate{min-height:420px;padding:40px 14px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px;background:radial-gradient(#2a0505,#050000)}
+.sr-title{font:900 54px 'Batang','바탕',serif;color:#b00;text-shadow:0 0 14px #600,0 4px #300;letter-spacing:6px;position:relative}
+.sr-title::after,.sr-logo::after{content:'';position:absolute;left:8%;right:8%;top:100%;height:18px;background:radial-gradient(ellipse 5px 14px at 8px 0,#800 98%,transparent) 0 0/26px 18px repeat-x}
+.sr-sub{color:#999;letter-spacing:4px}.sr-warn{color:#c33;font-size:12px;max-width:520px}
+.sr-enter,.sr-leave{border:2px solid #800;background:#000;color:#d22;padding:5px 16px;font:inherit;font-weight:bold}.sr-enter:hover,.sr-leave:hover{background:#800;color:#fff}.sr-leave{color:#a77;border-color:#522}
+.sr-count{color:#755;font-size:11px}
+.sr-head{display:flex;align-items:baseline;gap:10px;padding:10px 14px;background:#000;border-bottom:2px solid #500}
+.sr-logo{position:relative;border:0;background:none;color:#c00;font:900 28px 'Batang','바탕',serif;letter-spacing:3px;padding:0 0 6px;text-shadow:0 0 8px #500}.sr-logo small{font-size:12px;color:#888}.sr-tag{color:#966;font-size:11px}
+.sr-nav{display:flex;background:#150000}.sr-tab{border:0;background:#150000;color:#a55;padding:6px 16px}.sr-tab:hover,.sr-tab.on{background:#500;color:#fff}
+.sr-body{padding:14px 16px 24px;display:flex;flex-direction:column;gap:10px}
+.sr-h{color:#c22;font-size:17px;border-bottom:1px solid #500;padding-bottom:3px}
+.sr-row{display:flex;flex-wrap:wrap;gap:8px;align-items:baseline;padding:4px 0;border-bottom:1px dotted #411}.sr-row small{color:#777}
+.sr-link{border:0;background:none;color:#e88;text-align:left;padding:0}.sr-link:hover{color:#fff;text-decoration:underline}
+.sr-text{white-space:pre-wrap;line-height:1.9;color:#ccc}.sr-meta{color:#777}.sr-foot-note{color:#744;font-size:11px}
+.sr-last{margin-top:12px;border:1px dashed #800;background:#100;color:#f66;padding:6px 10px}.sr-oops{color:#e44;font-weight:bold}
+.sr-cm{margin-top:10px;color:#aaa}.sr-cm .ws-cm{border-color:#411}.sr-cm .ws-cm.mine{background:#200}.sr-cm input[type=text]{background:#000;color:#ccc;border-color:#522}
+.sr-room{display:block;margin:6px 0;border:3px solid #300;max-width:100%}
+.sr-count-down{color:#e44;font:bold 20px 'Courier New',monospace}
+.sr-dark{position:relative;height:280px;max-width:520px;background:#2b2118;border:3px solid #300;overflow:hidden;cursor:crosshair}
+.sr-item{position:absolute;border:1px solid #765;background:#4a3a2a;color:#d8c8a8;font-size:11px;padding:2px 6px;transform:translate(-50%,-50%);cursor:pointer}.sr-item.got{opacity:.3}
+.sr-shade{position:absolute;inset:0;pointer-events:none;--x:120px;--y:90px;background:radial-gradient(circle 70px at var(--x) var(--y),rgba(0,0,0,0) 0,rgba(0,0,0,.35) 55%,rgba(0,0,0,.97) 100%);transition:opacity .3s}.sr-shade.lit{opacity:.12}
+.sr-curse .sr-text{margin:8px 0;padding:6px 10px;border-left:3px solid #800;background:#120000}
+.ws-scare,.ws-pop-text{font-family:'Batang','바탕',serif}
+/* ---- 알짜배기 자료실 ---- */
+.xp79-portal.web-site.ws-jaryo{background:#eef2f7;font-family:'Dotum','돋움','Gulim',sans-serif}
+.jm-head{display:flex;align-items:baseline;gap:10px;padding:8px 12px;background:linear-gradient(#2d5da8,#17407f);color:#fff}
+.jm-logo{border:0;background:none;color:#fff;font:bold 22px 'Gulim','굴림',sans-serif;padding:0}.jm-sub{color:#cfe0ff}
+.jm-marq{padding:3px 0;background:#fff3b0;color:#a33;border-bottom:1px solid #d9b;font-size:11px}
+.jm-nav{display:flex;flex-wrap:wrap;background:#d7e1f0;border-bottom:1px solid #8aa}.jm-tab{border:0;border-right:1px solid #aab;background:#d7e1f0;color:#124;padding:5px 12px}.jm-tab:hover,.jm-tab.on{background:#fff;font-weight:bold}
+.jm-body{padding:10px;display:flex;flex-direction:column;gap:10px}
+.jm-box,.jm-hot{background:#fff;border:1px solid #9ab;padding:8px 10px}.jm-box h3{font-size:13px;color:#17407f;border-bottom:2px solid #17407f;margin-bottom:6px}
+.jm-hot{background:#fff9e0;border-color:#e0a000;display:flex;flex-direction:column;gap:4px}.jm-hot b{color:#c33}
+.jm-row{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px;padding:3px 0;border-bottom:1px dotted #bbc}.jm-row small{color:#667}.jm-cat{padding:0 5px;background:#e3ecf8;border:1px solid #9ab;font-size:11px;color:#17407f}.jm-no{color:#c33;min-width:14px}
+.jm-link{border:0;background:none;color:#0b3fb3;text-align:left;padding:0;text-decoration:underline}.jm-link.big{font-size:15px;font-weight:bold}
+.jm-meta{display:block;color:#667;margin-bottom:6px}.jm-text{white-space:pre-wrap;margin:6px 0;line-height:1.7}
+.jm-shot{position:relative;height:110px;max-width:260px;margin:8px 0;background:#5594ce;border:3px ridge #889;overflow:hidden;display:flex;align-items:center;justify-content:center;color:#fff}
+.jm-shot .crack{position:absolute;background:#111;opacity:.75}.jm-shot .c1{left:20%;top:-10%;width:3px;height:90%;transform:rotate(18deg)}.jm-shot .c2{left:48%;top:5%;width:3px;height:100%;transform:rotate(-24deg)}.jm-shot .c3{left:70%;top:-5%;width:3px;height:80%;transform:rotate(40deg)}
+.jm-state{margin:6px 0;color:#a33}
+.jm-down{margin:8px 0;border:2px outset #f90;background:#ff8c1a;color:#fff;font-weight:bold;padding:6px 20px;font-size:14px}.jm-down:hover{background:#ff6a00}
+.jm-cm{margin-top:8px}
+/* ---- 운세 ---- */
+.xp79-portal.web-site.ws-fate{background:#1d1040;color:#f3e8ff;font-family:'Batang','바탕',serif;min-height:380px}
+.ft-head{display:flex;align-items:baseline;gap:10px;padding:10px 14px;background:linear-gradient(#4b2a8f,#2a1660);border-bottom:2px solid #ffd54a}.ft-logo{border:0;background:none;color:#ffd54a;font:bold 22px 'Batang','바탕',serif;padding:0;text-shadow:0 0 8px #a56bff}
+.ft-body{padding:14px 16px;display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+.ft-h{color:#ffd54a;font-size:17px}.ft-grid{display:grid;grid-template-columns:repeat(2,minmax(120px,1fr));gap:6px 12px;width:100%;max-width:480px}.ft-card{border:2px solid #ffd54a;background:#3a1f78;color:#fff;padding:12px 8px;font-weight:bold}.ft-card:hover{background:#5a35b0}.ft-desc{color:#c8b4ee;margin:-2px 0 6px}
+.ft-btn,.ft-choice{border:2px outset #ffd54a;background:#ffd54a;color:#3a1f78;font-weight:bold;padding:3px 14px}.ft-choice{display:block;margin:4px 0;background:#3a1f78;color:#fff;border-color:#8a6cd8;font-weight:normal;width:100%;text-align:left}
+.ft-result{margin-top:10px;padding:10px 14px;background:#2d1a62;border:1px dashed #ffd54a;min-height:20px;width:100%;max-width:520px}.ft-result:empty{display:none}.ft-big{font-size:17px;color:#ffd54a;font-weight:bold;margin-bottom:6px}.ft-q{font-weight:bold;margin:4px 0}
+/* ---- 수다방 ---- */
+.xp79-portal.web-site.ws-chat{background:#dfeaf7;font-family:'Gulim','굴림',sans-serif;min-height:380px}
+.ch-head{display:flex;align-items:baseline;gap:10px;padding:8px 12px;background:linear-gradient(#5aa7e8,#2d7fcb);color:#fff}.ch-logo{border:0;background:none;color:#fff;font:bold 22px 'Gulim','굴림',sans-serif;padding:0}
+.ch-rooms{display:grid;grid-template-columns:44px 1fr 56px 90px;gap:0;margin:10px;border:1px solid #7aa;background:#fff}.ch-rooms>*{padding:4px 6px;border-bottom:1px solid #dde}.ch-hd{background:#bcd5ee;color:#124}
+.ch-link{border:0;background:none;color:#0b3fb3;text-align:left;text-decoration:underline}
+.ch-note{margin:6px 10px;color:#667;font-size:11px}.ch-title{margin:8px 10px 4px;color:#124;font-size:14px}
+.ch-log{height:240px;overflow:auto;margin:0 10px;padding:6px;background:#fff;border:2px inset #aab;font-size:12px}.ch-line{margin:1px 0}.ch-line.sys{color:#c33}.ch-line.me{color:#0b3fb3}
+.ch-form{display:flex;gap:4px;margin:6px 10px}.ch-form input[type=text]{flex:1}.ws-chat>.ws-btn{margin:0 10px 10px}
+/* ---- 별빛소녀 팬클럽 ---- */
+.xp79-portal.web-site.ws-fan{background:#fff0f8 linear-gradient(#ffe2f2,#fff0f8 120px);font-family:'Gulim','굴림',sans-serif;color:#5a2a55;min-height:380px}
+.fn-head{display:flex;align-items:baseline;gap:10px;padding:10px 14px;background:linear-gradient(90deg,#ff8fcf,#c18bff);color:#fff}.fn-logo{border:0;background:none;color:#fff;font:italic 900 26px Georgia,serif;text-shadow:2px 2px #b0399a;padding:0}
+.fn-nav{display:flex;background:#ffd0ec}.fn-tab{border:0;background:#ffd0ec;color:#a02a85;padding:5px 16px;font-weight:bold}.fn-tab:hover,.fn-tab.on{background:#fff;color:#d02a9a}
+.fn-body{padding:10px;display:flex;flex-direction:column;gap:10px}.fn-box{background:#fff;border:2px solid #ffaee0;border-radius:8px;padding:8px 12px}.fn-box h3{color:#d02a9a;font-size:13px;letter-spacing:2px;margin-bottom:6px}
+.fn-mem{display:inline-flex;align-items:center;gap:6px;margin:3px 10px 3px 0}.fn-face{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#ff8fcf,#c18bff);color:#fff;display:inline-flex;align-items:center;justify-content:center}
+.fn-btn{margin-top:6px;border:2px outset #ffaee0;background:#ff8fcf;color:#fff;font-weight:bold;padding:3px 14px;border-radius:12px}
+.fn-post{padding:5px 0;border-bottom:1px dotted #ecb}.fn-post.mine{background:#fff7c8}.fn-post small{color:#a77}
+/* ---- 링크천국 ---- */
+.xp79-portal.web-site.ws-links{background:#fff;font-family:'Dotum','돋움','Gulim',sans-serif}
+.lk-head{display:flex;align-items:baseline;gap:10px;padding:10px 14px;background:#f4f4ee;border-bottom:3px double #888}.lk-logo{border:0;background:none;color:#0b3fb3;font:bold 24px 'Gulim','굴림',sans-serif;padding:0;text-decoration:underline}
+.lk-marq{padding:3px 0;background:#ff0;color:#f00;font-weight:bold;border-bottom:1px solid #aa0}
+.lk-body{padding:10px;display:flex;flex-direction:column;gap:10px}.lk-box{border:1px solid #99a;padding:6px 10px}.lk-box h3{background:#e4e8f6;color:#124;padding:2px 8px;margin:-6px -10px 6px;font-size:13px}
+.lk-row{display:flex;flex-wrap:wrap;gap:6px;align-items:baseline;padding:2px 0}.lk-link{border:0;background:none;color:#0b3fb3;text-decoration:underline;padding:0;font-weight:bold}.lk-link.dead{color:#888;font-weight:normal}.lk-star{color:#f90;font-style:normal}.lk-url{color:#6a6}
+.lk-random{align-self:flex-start;border:3px outset #f6a;background:#ff4fa0;color:#fff;font-weight:bold;padding:6px 18px}
+/* ---- 귀여운 동물 사진방 ---- */
+.xp79-portal.web-site.ws-cute{background:#fff4f8;text-align:center;font-family:'Gulim','굴림',sans-serif;min-height:380px}
+.ct-head{display:flex;align-items:baseline;justify-content:center;gap:10px;padding:10px 14px;background:#ffd6e6}.ct-logo{border:0;background:none;color:#d03a80;font:bold 22px 'Gulim','굴림',sans-serif;padding:0}
+.ct-photo{display:block;margin:14px auto 6px;border:8px solid #fff;box-shadow:0 0 0 2px #f0b0c8,4px 4px 8px #0003;max-width:calc(100% - 24px);height:auto}.ct-cap{color:#a04a6a;font-weight:bold}.ct-no{color:#a88;font-size:11px}
+.ct-next{margin:10px;border:2px outset #f0a;background:#ff8fbf;color:#fff;font-weight:bold;padding:4px 18px;border-radius:12px}.ct-end{color:#a33;font-weight:bold}
+/* ---- 귀신 화면 ---- */
+.ws-scare{position:absolute;inset:0;z-index:2200;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden;outline:none;cursor:pointer;animation:ws-in .28s cubic-bezier(.2,1.5,.4,1) both}
+.ws-scare-cv{width:100%;height:100%;object-fit:cover;filter:contrast(1.2) brightness(.95);animation:ws-shake .7s linear 2}
+.ws-scare-msg{position:absolute;left:0;right:0;bottom:14%;text-align:center;color:#d11;font:900 30px 'Batang','바탕',serif;text-shadow:0 0 8px #000,2px 2px #000}
+.ws-scare-x{position:absolute;right:14px;bottom:14px;opacity:0;pointer-events:none;border:1px solid #666;background:#111;color:#bbb;padding:4px 14px;transition:opacity .5s}.ws-scare.ready .ws-scare-x{opacity:1;pointer-events:auto}
+@keyframes ws-in{from{transform:scale(.35);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes ws-shake{0%,100%{transform:translate(0,0)}20%{transform:translate(-5px,3px)}40%{transform:translate(4px,-4px)}60%{transform:translate(-3px,-3px)}80%{transform:translate(5px,2px)}}
+.ws-popwin .xp79-window-content{background:#000;color:#c33;text-align:center;padding:0}.ws-pop-cv{display:block;width:100%;height:auto}.ws-pop-text{margin:0;padding:6px;font-size:13px;font-weight:bold}
+/* ---- 프로그램 받기와 설치 마법사 ---- */
+.xp-fav-more{border:1px solid #c9a000!important;background:#fff6c0!important}
+.xp-prog{height:16px;border:2px inset #889;background:#fff;margin:8px 0}.xp-prog i{display:block;height:100%;width:0;background:repeating-linear-gradient(90deg,#2a7bd8 0 9px,#fff 9px 11px)}
+.xp-queue-box,.xp-dlask{font-size:12px;line-height:1.6;min-width:240px}.xp-queue-pos{font-weight:bold;color:#a33}
+.xp-dlask-info{margin:6px 0;padding:6px 10px;background:#fff;border:1px solid #999}.xp-dlask-info p{margin:0}
+.xp-dl-head{margin:8px 12px 0;font-weight:bold}.xp-dl-name,.xp-dl-info,.xp-dl-speed{margin:2px 12px;font-size:12px}.xp-dl-check{display:flex;gap:6px;margin:8px 12px;font-size:12px}
+.xp-fly{position:relative;height:46px;margin:8px 12px 0;background:#fff;border:1px solid #999;overflow:hidden}
+.xp-fly-from,.xp-fly-to{position:absolute;top:10px;width:30px;height:24px;background:#f5d76e;border:2px solid #b8941f}.xp-fly-from{left:14px}.xp-fly-to{right:14px;background:#7ec8ff;border-color:#2a7bd8}
+.xp-fly .sheet{position:absolute;top:18px;left:44px;width:14px;height:16px;background:#fff;border:1px solid #556;animation:xp-fly 1.2s linear infinite}.xp-fly .s2{animation-delay:.4s}.xp-fly .s3{animation-delay:.8s}.xp-fly.done .sheet{animation:none;display:none}
+@keyframes xp-fly{0%{left:44px;transform:translateY(0) rotate(0)}50%{transform:translateY(-14px) rotate(20deg)}100%{left:calc(100% - 66px);transform:translateY(0) rotate(0)}}
+.xp-wiz{display:flex;height:calc(100% - 44px);min-height:210px}.xp-wiz-side{flex:0 0 118px;display:flex;flex-direction:column;justify-content:flex-end;gap:2px;padding:12px;background:linear-gradient(#0a246a,#3a6ea5);color:#fff}.xp-wiz-side b{font-size:24px}
+.xp-wiz-main{flex:1;padding:12px 14px;background:#fff;color:#111;font-size:12px;line-height:1.6;overflow:auto}.xp-wiz-main h3{margin:0 0 8px;font-size:14px}.xp-wiz-main p{margin:0 0 8px}
+.xp-wiz-foot{display:flex;justify-content:flex-end;gap:8px;padding:8px 12px;background:#ece9d8;border-top:1px solid #999}.xp-wiz-foot .xp-dialog-btn:disabled{opacity:.5}
+.xp-wiz-license{width:100%;height:96px;font:11px/1.5 'Gulim','굴림',sans-serif;resize:none;box-sizing:border-box}.xp-wiz-radio{display:flex;gap:6px;margin:2px 0}.xp-wiz-path{width:100%;box-sizing:border-box;margin:4px 0}.xp-wiz-line{font-size:11px;color:#555;word-break:break-all}
+.xp79-portal.web-site .xp-note{font-size:11px}
+@media(max-width:620px){.hp-frame{grid-template-columns:1fr;grid-template-areas:'h' 's' 'm'}.hp-side{flex-direction:row;flex-wrap:wrap}.xp-wiz-side{flex-basis:70px;padding:6px}.ch-rooms{grid-template-columns:30px 1fr 44px 70px}.hp-welcome{font-size:26px}.sr-title{font-size:40px}.fl-title{font-size:34px}}
+@media(prefers-reduced-motion:reduce){.ws-marquee span{animation:none;padding-left:0;white-space:normal}.ws-spark,.hp-stars,.hp-new,.hp-trap,.hp-eq.on i,.xp-fly .sheet{animation:none}.ws-scare,.ws-scare-cv{animation:none}.xp-fly .sheet{left:50%}}
+/* 사이트 바탕이 창 아래쪽까지 채워지도록 */
+.xp79-web-page:has(>.web-site){display:flex;flex-direction:column}
+.xp79-web-page>.web-site{flex:1 0 auto;width:100%;margin:0}

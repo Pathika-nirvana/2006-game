@@ -93,11 +93,17 @@ function sizeLabel(bytes){
  const n=Number(bytes)||0;
  return Math.max(1,Math.round(n/1024)).toLocaleString('en-US')+'KB';
 }
+/* A89: 2006년에는 webp가 없었으니 게임 안에서는 jpg 또는 jpeg로 보인다(실제 파일은 그대로 webp) */
+function periodName(name){
+ if(!/\.webp$/i.test(name))return name;
+ let h=0;for(let i=0;i<name.length;i++)h=(h*31+name.charCodeAt(i))>>>0;
+ return name.replace(/\.webp$/i,h%2?'.jpeg':'.jpg');
+}
 function imageNodes(files,parent){
  const out=[];
  for(const f of Array.isArray(files)?files:[]){
   if(!f||typeof f.name!=='string'||!f.name||typeof f.url!=='string')continue;
-  const node={n:f.name,t:'file',size:sizeLabel(f.size),date:fakeDate(f.name),act:'image',url:f.url,bytes:Number(f.size)||0,mtime:f.mtime};
+  const node={n:periodName(f.name),real:f.name,t:'file',size:sizeLabel(f.size),date:fakeDate(f.name),act:'image',url:f.url,bytes:Number(f.size)||0,mtime:f.mtime};
   out.push(node);
  }
  out.sort((a,b)=>a.n.localeCompare(b.n,'ko',{numeric:true}));

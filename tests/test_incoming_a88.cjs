@@ -73,13 +73,13 @@ function boot(port,fetchImpl){
   has(root,'Incoming');
   const thumbs=cls(root,'p88-thumb');
   assert.equal(thumbs.length,4,'그림 4장: '+thumbs.map(t=>t.textContent));
-  for(const n of['crayon_cat.webp','crayon_kids.webp','zz 테스트 03.png','ZZ_테스트_대문자.JPG'])has(root,n);
+  for(const n of['crayon_cat.jpeg','crayon_kids.jpg','zz 테스트 03.png','ZZ_테스트_대문자.JPG'])has(root,n);
   has(root,'그림 작업');has(root,'슬라이드 쇼 보기');has(root,'바탕 화면 배경으로 설정');
   const im=find(thumbs[0],n=>n.tagName==='IMG');assert.ok(/^assets\/pc-desktop\/incoming\//.test(im.src),im.src);assert.equal(im.loading,'lazy');
   /* 선택하면 자세한 정보 */
   const catThumb=thumbs.find(t=>t.textContent.includes('crayon_cat'));
   catThumb.click();
-  has(root,'WEBP 이미지');has(root,'크기: 500KB');has(root,'수정한 날짜: 2006-05-');
+  has(root,'JPEG 이미지');has(root,'크기: 500KB');has(root,'수정한 날짜: 2006-05-');
   const catImg=find(catThumb,n=>n.tagName==='IMG');catImg.naturalWidth=1254;catImg.naturalHeight=1254;catImg.onload();
   has(root,'치수: 1254 x 1254');
   /* 4. 자세히 보기 전환 */
@@ -90,7 +90,7 @@ function boot(port,fetchImpl){
   assert.equal(cls(root,'p88-thumb').length,4);
   /* 5. 뷰어 */
   cls(root,'p88-thumb').find(t=>t.textContent.includes('crayon_cat')).emit('dblclick');
-  has(root,'crayon_cat.webp - Windows 그림 및 팩스 뷰어');
+  has(root,'crayon_cat.jpeg - Windows 그림 및 팩스 뷰어');
   has(root,'1 / 4');
   const viewerWin=find(root,n=>n.classList.contains('p88-viewer-win'));assert.ok(viewerWin);
   const view=find(viewerWin,n=>n.classList.contains('p88-viewer'));
@@ -107,7 +107,7 @@ function boot(port,fetchImpl){
   const holder=find(view,n=>n.classList.contains('p88-holder'));
   vbtn(view,'시계 반대 방향으로 회전').click();vbtn(view,'시계 반대 방향으로 회전').click();assert.ok(vimg.style.transform.includes('rotate(270deg)'));
   /* 이전, 다음은 끝에서 이어진다 */
-  vbtn(view,'다음 이미지').click();has(root,'crayon_kids.webp - Windows 그림 및 팩스 뷰어');has(view,'2 / 4');
+  vbtn(view,'다음 이미지').click();has(root,'crayon_kids.jpg - Windows 그림 및 팩스 뷰어');has(view,'2 / 4');
   assert.ok(vimg.style.transform.includes('rotate(0deg)'),'다른 그림으로 넘기면 회전은 처음으로');
   vbtn(view,'이전 이미지').click();vbtn(view,'이전 이미지').click();has(view,'4 / 4');
   vbtn(view,'다음 이미지').click();has(view,'1 / 4');

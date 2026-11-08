@@ -21,3 +21,13 @@
 .p85-panel-art{position:relative;order:1;flex:none;width:100%;overflow:hidden;aspect-ratio:4/3}
 .p85-panel-art>img{position:absolute;bottom:0;left:0;display:block;width:100%;height:auto;max-width:none;image-rendering:auto}
 .p84-reader-tools button{font-size:12px;padding:6px 10px}
+
+/* A89: 통그림 회차(세상만평), 심의 안내, 지워진 독자 댓글 */
+.p89-whole .p84-panels{display:block}
+.p89-whole .p89-whole-art{border:2px solid #4b3a2a;background:#f6eada}
+.p89-whole .p85-panel-art{aspect-ratio:auto!important}
+.p89-whole .p85-panel-art>img{position:static;width:100%;height:auto}
+.p89-censor{margin:8px 0 0;padding:5px 8px;border:1px dashed #a4906c;background:#fbf4e1;color:#7a6a4a;font-size:12px;line-height:1.5}
+.p89-date{color:#8a7a5c}
+.p84-comments .p89-gone{background:#f1eee6;color:#8a8a84;font-style:italic}
+.p84-episode-list .p84-episode img{object-position:50% 50%}

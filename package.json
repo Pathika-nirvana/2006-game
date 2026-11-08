@@ -1,8 +1,8 @@
 {
   "name": "2006-reminiscence-a38-review",
-  "version": "0.88.1",
+  "version": "0.92.0",
   "private": true,
-  "description": "A88 내 문서 그림 보기(Incoming), 우리동네 아지트, 2006년 무법지대 인터넷 소재",
+  "description": "A92 PC방 컴퓨터의 2006년 기믹 모음(버디버디 메신저, 바탕화면 부수기 내려받기와 설치, 열 곳의 홈페이지와 귀신 그림, 점프 소리와 흐느끼는 소리, 지뢰찾기, 그림판, 타자 연습, 계산기, 바이러스와 팝업 광고, 작업 관리자)",
   "scripts": {
     "start": "node server.js",
     "test:coop": "node tests/test_a26_coop.js",
