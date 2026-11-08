@@ -1,4 +1,4 @@
-/* A90: PC방 컴퓨터의 기본 프로그램 네 가지. 지뢰 찾기, 그림판, 타자 연습, 계산기.
+/* A90: PC방 컴퓨터의 기본 프로그램 네 가지. 지뢰 찾기, 그림판, 타자 연습, 계산기. A93: 그림판이 그림을 파일로 저장한다(내 문서의 내 그림 폴더).
    그림 파일은 쓰지 않고 색과 글자, 캔버스로만 그린다. 규칙 계산은 화면과 따로 두어 시험할 수 있게 했다. */
 (function(w){'use strict';
 /* ---------- 지뢰 찾기 규칙 ---------- */
@@ -84,7 +84,7 @@ function attach(X){
   ms.best=E('p','xp-note','');wrap.append(bar,head,board,ms.best,E('p','xp-note','왼쪽 단추로 열고, 오른쪽 단추(또는 F 키)로 깃발을 꽂습니다. 숫자를 누르면 주변 깃발이 맞을 때 한꺼번에 열립니다.'));win.content.append(wrap);fit(win,L.cols>9?'min(430px,96%)':'min(330px,96%)',L.cols>9?'min(600px,96%)':'min(470px,96%)');msBest();msRefresh()}
  function openMines(){const had=X.windows.get('minesweeper');const win=X.windowFor('minesweeper','지뢰 찾기');if(had&&ms.win===win&&ms.game)return win;ms.win=win;if(!ms.game||ms.game.state!=='play')msNew();else msBuild();return win}
  /* ---- 그림판 ---- */
- const pt={tool:'pencil',size:3,fg:'#000000',bg:'#ffffff',cv:null,g:null,undo:[],win:null,snap:null,from:null,drawing:false,last:null,dirty:false};
+ const pt={tool:'pencil',size:3,fg:'#000000',bg:'#ffffff',cv:null,g:null,undo:[],win:null,snap:null,from:null,drawing:false,last:null,dirty:false,file:'',fmt:'png'};
  const CW=480,CH=320;
  function ptCtx(){return pt.g}
  function ptPush(){try{pt.undo.push(pt.g.getImageData(0,0,CW,CH));if(pt.undo.length>12)pt.undo.shift()}catch(_){}}
@@ -99,21 +99,76 @@ function attach(X){
   pt.drawing=true;pt.last=p;pt.from=p;if(['line','rect','ellipse'].includes(pt.tool))pt.snap=pt.g.getImageData(0,0,CW,CH);else if(pt.tool==='spray')ptSpray(p);else ptStroke(p,p)}
  function ptMove(e){if(!pt.drawing)return;const p=ptXY(e);if(['line','rect','ellipse'].includes(pt.tool))ptShape(pt.from,p);else if(pt.tool==='spray'){ptSpray(p)}else{ptStroke(pt.last,p);pt.last=p}}
  function ptUp(e){if(!pt.drawing)return;pt.drawing=false;if(['line','rect','ellipse'].includes(pt.tool))ptShape(pt.from,ptXY(e));pt.snap=null}
- function ptClear(){if(!pt.g)return;ptPush();pt.g.fillStyle=pt.bg;pt.g.fillRect(0,0,CW,CH);pt.dirty=false}
- function ptSave(){try{const url=pt.cv.toDataURL('image/png');if(!/^data:image\/png;base64,[A-Za-z0-9+/=]{20,400000}$/.test(url)){toast({title:'그림판',text:'그림이 너무 커서 저장하지 못했습니다. 색을 줄여 보세요.',icon:'warn'});return false}S.paint=url;save();pt.dirty=false;toast({title:'그림판',text:'그림을 저장했습니다. 다음에 열 때 불러올 수 있습니다.',icon:'info',ms:4000});return true}catch(_){toast({title:'그림판',text:'그림을 저장하지 못했습니다.',icon:'warn'});return false}}
- function ptLoad(){if(!S.paint||!pt.g){toast({title:'그림판',text:'저장된 그림이 없습니다.',icon:'warn',ms:3500});return}const im=new w.Image();im.onload=()=>{if(!alive||!pt.g)return;ptPush();pt.g.drawImage(im,0,0,CW,CH)};im.src=S.paint}
+ function ptClear(){if(!pt.g)return;ptPush();pt.g.fillStyle=pt.bg;pt.g.fillRect(0,0,CW,CH);pt.dirty=false;pt.file='';ptCaption()}
+ /* ---- 그림 저장과 불러오기 (A93) ---- */
+ const PTYPES=[['png','PNG (*.png)'],['jpg','JPEG (*.jpg)']];
+ const baseOf=n=>String(n||'').replace(/\.(png|jpe?g)$/i,'');
+ const picsNow=()=>X.shell&&X.shell.pics?X.shell.pics():[];
+ const nextName=()=>{const used=new Set(picsNow().map(p=>p.name));for(let n=1;n<100;n++)if(!used.has('그림'+n+'.png')&&!used.has('그림'+n+'.jpg'))return '그림'+n;return '그림'+(Date.now()%1000)};
+ const ptData=fmt=>{try{return pt.cv.toDataURL(fmt==='jpg'?'image/jpeg':'image/png',.92)}catch(_){return ''}};
+ function ptCaption(){const t=(pt.file||'제목 없음')+' - 그림판';if(pt.win&&pt.win.caption)pt.win.caption.textContent=t;if(pt.win&&pt.win.task)pt.win.task.textContent=t}
+ function ptDownload(name,url){
+  /* 진짜 컴퓨터로 내려받는다. 이름이 그대로 따라가도록 가능하면 파일 덩어리(Blob) 주소로 바꿔서 쓴다. */
+  try{const d=w.document,a=d.createElement('a');let href=url,made=null;
+   try{if(typeof w.Blob==='function'&&w.URL&&typeof w.URL.createObjectURL==='function'&&typeof w.atob==='function'){const m=/^data:([a-z/]+);base64,(.*)$/.exec(url);if(m){const bin=w.atob(m[2]),buf=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)buf[i]=bin.charCodeAt(i);made=w.URL.createObjectURL(new w.Blob([buf],{type:m[1]}));href=made}}}catch(_){href=url;made=null}
+   a.href=href;a.download=name;a.style.display='none';(d.body||d.documentElement).appendChild(a);a.click();a.remove();
+   if(made)w.setTimeout(()=>{try{w.URL.revokeObjectURL(made)}catch(_){}},4000)}catch(_){}}
+ const WHY={big:'그림이 너무 커서 저장하지 못했습니다. 색을 줄이거나 지우고 다시 해 보세요.',full:'내 그림 폴더가 가득 찼습니다(12개까지). 내 문서의 내 그림 폴더에서 그림을 지운 뒤 다시 저장하세요.',space:'저장 공간이 모자랍니다. 내 문서의 내 그림 폴더에서 그림을 지운 뒤 다시 저장하세요.'};
+ /* 파일로 저장한다. 성공하면 저장된 그림 정보를, 실패하면 null을 돌려준다. */
+ function ptStore(base,fmt,real){
+  const sh=X.shell;if(!sh||!sh.picSave||!pt.cv){toast({title:'그림판',text:'그림을 저장하지 못했습니다.',icon:'warn'});return null}
+  let f=fmt==='jpg'?'jpg':'png',url=ptData(f),r=sh.picSave(base+'.'+f,url,CW,CH);
+  if(!r.ok&&r.why==='big'&&f==='png'){f='jpg';url=ptData('jpg');r=sh.picSave(base+'.jpg',url,CW,CH);if(r.ok)toast({title:'그림판',text:'PNG가 너무 커서 JPG로 저장했습니다.',icon:'info',ms:4500})}
+  if(!r.ok){toast({title:'그림판',text:WHY[r.why]||WHY.big,icon:'warn',ms:6000});return null}
+  pt.file=r.pic.name;pt.fmt=f;pt.dirty=false;ptCaption();if(real)ptDownload(r.pic.name,url);
+  toast({title:'그림판',text:'"'+r.pic.name+'" 을(를) 내 문서의 내 그림 폴더에 저장했습니다.'+(real?' 진짜 내 컴퓨터로도 내려받았습니다.':''),icon:'info',ms:5500});return r.pic}
+ /* 다른 이름으로 저장 창 */
+ function ptSaveDialog(opt){
+  opt=opt||{};const ui=X.ui;
+  if(!ui||!ui.dialog){const r=ptStore(pt.file?baseOf(pt.file):nextName(),pt.fmt,false);if(r&&opt.then)opt.then(r);return null}
+  let fmt=opt.fmt||pt.fmt||'png',real=!!opt.real;
+  const box=E('div','xp-pt-save'),name=E('input','xp-rename');name.type='text';name.maxLength=40;name.value=opt.name!=null?opt.name:(pt.file?baseOf(pt.file):nextName());name.setAttribute('aria-label','파일 이름');
+  const typeRow=E('div','xp-row'),tb=PTYPES.map(([id,label])=>[id,B(label,()=>{fmt=id;sync()},'xp-mini')]),dl=B('',()=>{real=!real;sync()},'xp-mini wide xp-pt-dl');
+  const sync=()=>{for(const [id,b] of tb)b.classList.toggle('on',id===fmt);dl.textContent=(real?'☑ ':'☐ ')+'진짜 내 컴퓨터에도 내려받기';dl.classList.toggle('on',real)};
+  typeRow.append(E('span','','파일 형식(T):'));for(const [,b] of tb)typeRow.append(b);
+  box.append(E('p','','파일 이름(N):'),name,E('p','xp-pt-where','저장 위치(I): 내 문서\\내 그림'),typeRow,dl);sync();
+  const again=v=>ptSaveDialog({...opt,name:v,fmt,real});
+  const go=()=>{
+   let typed=name.value.replace(/[\\/:*?"<>|]/g,'').trim();const m=/\.(png|jpe?g)$/i.exec(typed);let f=fmt;if(m){f=/^png$/i.test(m[1])?'png':'jpg';typed=typed.slice(0,m.index).trim()}
+   if(!typed){toast({title:'그림판',text:'파일 이름을 입력하세요.',icon:'warn'});return again('')}
+   const full=typed+'.'+f,commit=()=>{const r=ptStore(typed,f,real);if(r&&opt.then)opt.then(r)};
+   if(full!==pt.file&&picsNow().some(p=>p.name===full)){ui.dialog({title:'다른 이름으로 저장 확인',text:'"'+full+'" 은(는) 이미 있습니다. 바꾸시겠습니까?',icon:'ask',buttons:[['예',commit],['아니요',()=>again(typed)]]});return}
+   commit()};
+  const dlg=ui.dialog({title:'다른 이름으로 저장',node:box,icon:'info',buttons:[['저장(S)',go],['취소']]});
+  name.addEventListener('keydown',e=>{if(e.stopPropagation)e.stopPropagation();if(e.key==='Enter'){dlg.close();go()}});if(name.focus)name.focus();return dlg}
+ /* 저장: 이미 이름이 있으면 그 이름으로 바로, 없으면 이름을 묻는다 */
+ function ptSaveClick(){if(pt.file)return ptStore(baseOf(pt.file),pt.fmt,false);return ptSaveDialog()}
+ /* 시험과 다른 곳에서 부르는 조용한 저장 */
+ function ptSave(){return !!ptStore(pt.file?baseOf(pt.file):nextName(),pt.file?pt.fmt:'png',false)}
+ function ptWall(){
+  const sh=X.shell;if(!sh||!sh.wallpaperImage)return;
+  const go=pic=>{if(pic&&sh.wallpaperImage('pic:'+pic.id,pic.name,'fill'))toast({title:'그림판',text:'"'+pic.name+'" 그림을 바탕 화면으로 설정했습니다.',icon:'info',ms:4500})};
+  if(pt.file)return go(ptStore(baseOf(pt.file),pt.fmt,false));ptSaveDialog({then:go})}
+ function ptOpenPic(p){if(!pt.g||typeof w.Image!=='function')return;const im=new w.Image();im.onload=()=>{if(!alive||!pt.g)return;ptPush();pt.g.fillStyle=pt.bg;pt.g.fillRect(0,0,CW,CH);pt.g.drawImage(im,0,0,CW,CH);pt.file=p.name;pt.fmt=/\.jpe?g$/i.test(p.name)?'jpg':'png';pt.dirty=false;ptCaption()};im.src=p.url}
+ function ptLoad(){
+  if(!pt.g)return;const list=picsNow();
+  if(!list.length){toast({title:'그림판',text:'저장된 그림이 없습니다. 먼저 그림을 저장해 보세요.',icon:'warn',ms:3500});return}
+  if(!X.ui||!X.ui.dialog)return ptOpenPic(list[list.length-1]);
+  const box=E('div','xp-pt-open'),col=E('div','xp-list');box.append(E('p','','불러올 그림을 고르세요. (내 문서\\내 그림)'));
+  let dlg=null;for(const p of list)col.append(B(p.name+'　'+p.w+' x '+p.h,()=>{if(dlg)dlg.close();ptOpenPic(p)},'xp-opt'));box.append(col);
+  dlg=X.ui.dialog({title:'열기',node:box,icon:'info',buttons:[['취소']]})}
  function openPaint(){
-  const had=X.windows.get('paint');const win=X.windowFor('paint','제목 없음 - 그림판',true);if(had&&pt.win===win)return win;pt.win=win;win.node.style.left='4%';win.node.style.top='3%';win.content.replaceChildren();pt.undo=[];
+  const had=X.windows.get('paint');const win=X.windowFor('paint','제목 없음 - 그림판',true);if(had&&pt.win===win)return win;pt.win=win;pt.file='';pt.fmt='png';win.node.style.left='4%';win.node.style.top='3%';win.content.replaceChildren();pt.undo=[];
   const wrap=E('div','xp-pt'),menu=E('div','xp79-menu-row xp-pt-menu');
   const cv=E('canvas','xp-pt-cv');cv.width=CW;cv.height=CH;cv.setAttribute('aria-label','그림 그리는 곳');cv.style.touchAction='none';pt.cv=cv;pt.g=cv.getContext?cv.getContext('2d'):null;
-  menu.append(B('새로 만들기',ptClear,'xp-mini'),B('불러오기',ptLoad,'xp-mini'),B('저장',ptSave,'xp-mini'),B('실행 취소',()=>{const u=pt.undo.pop();if(u&&pt.g)pt.g.putImageData(u,0,0)},'xp-mini'),B('배경 화면으로',()=>{if(ptSave()&&X.shell){X.shell.wallpaper('paint');toast({title:'그림판',text:'저장한 그림을 바탕 화면으로 설정했습니다.',icon:'info',ms:4000})}},'xp-mini'));
+  menu.append(B('새로 만들기',ptClear,'xp-mini'),B('불러오기',ptLoad,'xp-mini'),B('저장',ptSaveClick,'xp-mini'),B('다른 이름으로 저장',()=>ptSaveDialog(),'xp-mini'),B('실행 취소',()=>{const u=pt.undo.pop();if(u&&pt.g)pt.g.putImageData(u,0,0)},'xp-mini'),B('배경 화면으로',ptWall,'xp-mini'));
   const side=E('div','xp-pt-side'),tools=[['pencil','연필'],['brush','붓'],['eraser','지우개'],['fill','채우기'],['spray','스프레이'],['line','선'],['rect','사각형'],['ellipse','원']];
   const toolBtns=tools.map(([id,label])=>{const b=B(label,()=>{pt.tool=id;sync()},'xp-mini xp-pt-tool');b.dataset&&(b.dataset.tool=id);return[id,b]});for(const [,b] of toolBtns)side.append(b);
   const sizes=E('div','xp-pt-sizes'),sizeBtns=[1,3,6,10].map(n=>{const b=B(n+'px',()=>{pt.size=n;sync()},'xp-mini');return[n,b]});for(const [,b] of sizeBtns)sizes.append(b);side.append(sizes);
   const pal=E('div','xp-pt-pal'),cur=E('div','xp-pt-cur'),fgSw=E('i','xp-pt-fg'),bgSw=E('i','xp-pt-bg');cur.append(bgSw,fgSw);
   for(const c of PALETTE){const b=B('',()=>{pt.fg=c;sync()},'xp-pt-color');b.style.background=c;b.setAttribute('aria-label','색 '+c);b.addEventListener('contextmenu',e=>{e.preventDefault&&e.preventDefault();pt.bg=c;sync()});pal.append(b)}
   const sync=()=>{for(const [id,b] of toolBtns)b.classList.toggle('on',pt.tool===id);for(const [n,b] of sizeBtns)b.classList.toggle('on',pt.size===n);fgSw.style.background=pt.fg;bgSw.style.background=pt.bg};
-  const stage=E('div','xp-pt-stage');stage.append(cv);const bottom=E('div','xp-pt-bottom');bottom.append(cur,pal,E('small','','왼쪽 단추: 앞색, 오른쪽 단추: 뒷색'));
+  const stage=E('div','xp-pt-stage');stage.append(cv);const bottom=E('div','xp-pt-bottom');bottom.append(cur,pal,E('small','','왼쪽 단추: 앞색, 오른쪽 단추: 뒷색. 저장하면 내 문서의 내 그림 폴더에 파일로 남습니다.'));
   wrap.append(menu,side,stage,bottom);win.content.append(wrap);
   if(pt.g){pt.g.fillStyle=pt.bg;pt.g.fillRect(0,0,CW,CH);pt.g.imageSmoothingEnabled=false}
   cv.addEventListener('pointerdown',ptDown);cv.addEventListener('pointermove',ptMove);cv.addEventListener('pointerup',ptUp);cv.addEventListener('pointercancel',ptUp);cv.addEventListener('contextmenu',e=>{e.preventDefault&&e.preventDefault()});sync();return win}
@@ -150,7 +205,7 @@ function attach(X){
  const api={ids:Object.keys(OPEN),has:id=>!!OPEN[id],open:id=>OPEN[id]&&OPEN[id](),tick,
   reset(){ms.game=null;ms.win=null;pt.win=null;pt.g=null;pt.cv=null;ty.win=null;cal.win=null;cal.screen=null},destroy(){alive=false},
   mines:{game:()=>ms.game,act:msAct,newGame:msNew,state:()=>({level:ms.level,secs:ms.secs,state:ms.game&&ms.game.state,flags:ms.game&&ms.game.flags,opened:ms.game&&ms.game.opened,left:ms.game&&ms.game.left(),flagMode:ms.flagMode})},
-  paint:{state:()=>({tool:pt.tool,size:pt.size,fg:pt.fg,bg:pt.bg,undo:pt.undo.length,canvas:!!pt.g}),save:ptSave},
+  paint:{state:()=>({tool:pt.tool,size:pt.size,fg:pt.fg,bg:pt.bg,undo:pt.undo.length,canvas:!!pt.g,file:pt.file,fmt:pt.fmt}),save:ptSave,saveAs:ptSaveDialog,open:ptOpenPic},
   typing:{state:()=>({phase:ty.phase,round:ty.round,target:ty.target,rounds:ty.rounds.length,last:ty.last||null}),submit:tySubmit},
   calc:{state:()=>({disp:cal.c.disp,mem:cal.c.mem,err:cal.c.err}),press:calKey}};
  return api}

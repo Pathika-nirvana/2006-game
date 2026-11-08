@@ -477,5 +477,7 @@
   "assets/pc-desktop/ghost/sob-female-2.mp3",
   "assets/pc-desktop/ghost/sob-female-3.mp3",
   "tests/test_buddy_ghost_a92.cjs",
-  "RELEASE_A92.md"
+  "RELEASE_A92.md",
+  "tests/test_paint_wall_a93.cjs",
+  "RELEASE_A93.md"
 ]

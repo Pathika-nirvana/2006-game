@@ -1,25 +1,33 @@
-/* A90: PC방 컴퓨터 바탕화면의 2006년 기믹 모음.
+/* A90: PC방 컴퓨터 바탕화면의 2006년 기믹 모음. A93: 내 그림 저장 목록(pics)과 그림 파일 바탕 화면(wallImg)이 더해졌다.
    알림 풍선, 대화 상자, 우클릭 메뉴, 트레이, 흐르는 시계와 달력, 새 폴더와 휴지통, 화면 등록 정보와 화면보호기,
    작업 관리자와 블루스크린, 컴퓨터 끄기. 그림 파일과 소리는 쓰지 않고 색과 도형으로만 그린다. */
 (function(w){'use strict';
 const WD=['일','월','화','수','목','금','토'];
-const DEF=()=>({wallpaper:'bliss',saver:'stars',saverMin:5,items:[],trash:[],popupBlock:false,realtime:true,bars:0,infected:false,smash:false,setupFile:false,nick:'',status:'online',bestMine:{},bestType:0,paint:''});
-const WALL={bliss:['Bliss (기본 배경)',''],blue:['파란 바탕','#3a6ea5'],teal:['청록 바탕','#008080'],black:['검은 바탕','#000'],check:['체크 무늬','repeating-conic-gradient(#8fa0b8 0% 25%,#c8d2e0 0% 50%) 0 0/36px 36px'],paint:['내가 그린 그림 (그림판)','']};
+const DEF=()=>({wallpaper:'bliss',saver:'stars',saverMin:5,items:[],trash:[],popupBlock:false,realtime:true,bars:0,infected:false,smash:false,setupFile:false,nick:'',status:'online',bestMine:{},bestType:0,paint:'',pics:[],wallImg:{url:'',name:'',mode:'fill'}});
+const WALL={bliss:['Bliss (기본 배경)',''],blue:['파란 바탕','#3a6ea5'],teal:['청록 바탕','#008080'],black:['검은 바탕','#000'],check:['체크 무늬','repeating-conic-gradient(#8fa0b8 0% 25%,#c8d2e0 0% 50%) 0 0/36px 36px'],paint:['내가 그린 그림 (그림판)',''],image:['그림 파일','']};
 const SAVERS=[['none','(없음)'],['stars','별 날기'],['text','떠다니는 글자'],['bubbles','거품']];
 const PROCS=[['System Idle Process',0,'idle'],['System',236,'crit'],['smss.exe',388,'crit'],['csrss.exe',4112,'crit'],['winlogon.exe',3568,'crit'],['services.exe',2960,'crit'],['lsass.exe',1240,'crit'],['svchost.exe',4888,'svc'],['svchost.exe',3412,'svc'],['explorer.exe',17640,'shell'],['ctfmon.exe',2760,'svc']];
 const APPPROC={browser:['iexplore.exe',12480],minesweeper:['winmine.exe',3260],paint:['mspaint.exe',6120],calc:['calc.exe',2480],typing:['hantyping.exe',4380],messenger:['buddybuddy.exe',9840],notepad:['notepad.exe',2800],games:['gamestation.exe',7120],club:['iexplore.exe',9020],antivirus:['vdoumi.exe',8240],p2p:['madang.exe',7740],taskmgr:['taskmgr.exe',3640],display:['rundll32.exe',2200],'dl-smash':['iexplore.exe',11800],'setup-smash':['setup.exe',3120]};
 const up=(n,c)=>{for(;n;n=n.parentNode)if(n.classList&&n.classList.contains(c))return n;return null};
 const inside=(a,b)=>{for(;b;b=b.parentNode)if(b===a)return true;return false};
+/* A93: 내 그림(그림판에서 저장한 파일)과 그림 배경. 크기와 모양을 엄격하게 거른다. */
+const PIC_RE=/^data:image\/(png|jpeg);base64,[A-Za-z0-9+/=]{20,300000}$/,SRV_RE=/^assets\/pc-desktop\/incoming\/[A-Za-z0-9%._~*'()!-]{1,300}$/,PIC_MAX=12,PIC_TOTAL=1500000,WMODES=['fill','center','tile'];
+const fileName=n=>{const v=String(n==null?'':n).replace(/[\\/:*?"<>|\u0000-\u001f]/g,'').replace(/\s+/g,' ').trim().slice(0,40);return v||'그림.png'};
+const dim=(n,d)=>{n=Number(n);return Number.isFinite(n)&&n>=1&&n<=4096?Math.round(n):d};
+function cleanPics(a){const out=[],ids=new Set();let tot=0;for(const p of Array.isArray(a)?a:[]){if(!p||typeof p.id!=='string'||!/^[a-z0-9]{1,24}$/.test(p.id)||ids.has(p.id)||typeof p.url!=='string'||!PIC_RE.test(p.url))continue;if(out.length>=PIC_MAX||tot+p.url.length>PIC_TOTAL)break;ids.add(p.id);tot+=p.url.length;out.push({id:p.id,name:fileName(p.name),url:p.url,w:dim(p.w,480),h:dim(p.h,320)})}return out}
+function cleanWall(v,pics){v=v&&typeof v==='object'&&!Array.isArray(v)?v:{};const mode=WMODES.includes(v.mode)?v.mode:'fill',url=typeof v.url==='string'?v.url:'';const ok=SRV_RE.test(url)||(/^pic:[a-z0-9]{1,24}$/.test(url)&&pics.some(p=>'pic:'+p.id===url));return ok?{url,name:fileName(v.name).slice(0,40),mode}:{url:'',name:'',mode}}
 function xs(X){const s=X.saved;if(!s.xp||typeof s.xp!=='object'||Array.isArray(s.xp))s.xp={};const x=s.xp,def=DEF();for(const k of Object.keys(def)){const v=def[k];if(Array.isArray(v)?!Array.isArray(x[k]):(v&&typeof v==='object')?!(x[k]&&typeof x[k]==='object'&&!Array.isArray(x[k])):typeof x[k]!==typeof v)x[k]=v}
  x.items=x.items.filter(i=>i&&typeof i.id==='string'&&['folder','text'].includes(i.kind)&&typeof i.name==='string').slice(0,12).map(i=>({id:i.id,kind:i.kind,name:i.name.slice(0,24),text:typeof i.text==='string'?i.text.slice(0,2000):''}));
  x.trash=x.trash.filter(i=>i&&typeof i.id==='string'&&typeof i.name==='string').slice(0,24);delete x.orders;x.saverMin=[1,2,5,10,15].includes(x.saverMin)?x.saverMin:5;x.bars=Math.max(0,Math.min(3,x.bars|0));
- if(!SAVERS.some(s=>s[0]===x.saver))x.saver='stars';if(!WALL[x.wallpaper])x.wallpaper='bliss';if(typeof x.paint!=='string'||!/^data:image\/png;base64,[A-Za-z0-9+/=]{20,400000}$/.test(x.paint))x.paint='';return x}
+ if(!SAVERS.some(s=>s[0]===x.saver))x.saver='stars';if(!WALL[x.wallpaper])x.wallpaper='bliss';if(typeof x.paint!=='string'||!/^data:image\/png;base64,[A-Za-z0-9+/=]{20,400000}$/.test(x.paint))x.paint='';x.pics=cleanPics(x.pics);x.wallImg=cleanWall(x.wallImg,x.pics);if(x.wallpaper==='image'&&!x.wallImg.url)x.wallpaper='bliss';return x}
 
 const IDS=['display','taskmgr','network','calendar','trash','folder-item','text-item'];
 let X=null,S=null,UI=null;
 
 function attach(ctx){
  X=ctx;S=xs(X);const {E,B,listen,desk,taskbar}=X;
+ /* A93: 예전 그림판이 한 장만 따로 저장해 둔 그림을 내 그림 목록으로 옮긴다 */
+ if(S.paint&&S.paint.length<=300000&&S.pics.length<PIC_MAX&&!S.pics.some(p=>p.url===S.paint)){S.pics.push({id:'p0old',name:'이전 그림.png',url:S.paint,w:480,h:320});S.paint='';if(S.wallpaper==='paint'){S.wallImg={url:'pic:p0old',name:'이전 그림.png',mode:'fill'};S.wallpaper='image'}}
  const timers=[],flags={},log=[];let toastBox=null,menuNode=null,modals=[],saverNode=null,saverStop=null,lastAct=Date.now(),bsodNode=null,standby=null,hiddenShell=false,userNodes=[],itemNo=0;
  const later=(fn,ms)=>{const t=w.setTimeout(()=>{if(alive)fn()},ms);timers.push(t);return t};let alive=true;
  const initial=X.remaining();
@@ -61,7 +69,21 @@ function attach(ctx){
  const clockText=rem=>{const t=fakeMin(rem),h24=Math.floor(t/60)%24,m=t%60;return (h24>=12?'오후 ':'오전 ')+(h24%12||12)+':'+String(m).padStart(2,'0')};
  clock.setAttribute('role','button');clock.tabIndex=0;clock.title='2006년 5월 30일 화요일';listen(clock,'click',()=>X.openApp('calendar'));listen(clock,'keydown',e=>{if(e.key==='Enter')X.openApp('calendar')});
  /* ---- 바탕화면 배경 ---- */
- function wallpaper(name){if(!WALL[name])name='bliss';if(name==='paint'&&!S.paint)name='bliss';S.wallpaper=name;desk.style.background=name==='bliss'?'':name==='paint'?'url('+S.paint+') center/cover':WALL[name][1];X.save()}
+ /* A93: 그림 파일 배경. 내 그림은 'pic:번호'로 가리키고, Incoming 그림은 주소로 가리킨다. */
+ const picUrl=id=>{const p=S.pics.find(q=>q.id===id);return p?p.url:''};
+ function wallUrl(img){if(!img||typeof img.url!=='string')return '';if(img.url.slice(0,4)==='pic:')return picUrl(img.url.slice(4));return SRV_RE.test(img.url)?img.url:''}
+ function wallCss(img,mini){const u=wallUrl(img);if(!u)return '';const q='url("'+u+'")';return img.mode==='tile'?q+(mini?' 0 0/30px auto repeat':' 0 0/auto repeat'):img.mode==='center'?'#3a6ea5 '+q+(mini?' center/contain no-repeat':' center/auto no-repeat'):'#000 '+q+' center/cover no-repeat'}
+ function wallpaper(name){if(!WALL[name])name='bliss';if(name==='paint'&&!S.paint)name='bliss';if(name==='image'&&!wallCss(S.wallImg))name='bliss';S.wallpaper=name;desk.style.background=name==='bliss'?'':name==='paint'?'url('+S.paint+') center/cover':name==='image'?wallCss(S.wallImg):WALL[name][1];X.save()}
+ function probeWall(img){if(!w.Image)return;try{const im=new w.Image();im.onerror=()=>{if(S.wallImg!==img||S.wallpaper!=='image')return;wallpaper('bliss');toast({title:'바탕 화면',text:'그림 파일을 읽을 수 없어 기본 배경으로 되돌렸습니다.',icon:'warn',ms:4500})};im.src=wallUrl(img)}catch(_){}}
+ function wallImage(url,name,mode){const img={url:String(url||''),name:fileName(name).slice(0,40),mode:WMODES.includes(mode)?mode:'fill'};if(!wallCss(img))return false;S.wallImg=img;wallpaper('image');probeWall(img);return true}
+ /* A93: 그림판이 저장한 그림(내 문서 안의 내 그림 폴더에 보인다) */
+ function picSave(name,url,w0,h0){const nm=fileName(name);if(typeof url!=='string'||!PIC_RE.test(url))return{ok:false,why:'big'};
+  const at=S.pics.findIndex(p=>p.name===nm);if(at<0&&S.pics.length>=PIC_MAX)return{ok:false,why:'full'};
+  if(S.pics.reduce((a,p,i)=>a+(i===at?0:p.url.length),0)+url.length>PIC_TOTAL)return{ok:false,why:'space'};
+  const pic={id:at>=0?S.pics[at].id:'p'+Date.now().toString(36)+(++itemNo),name:nm,url,w:dim(w0,480),h:dim(h0,320)};
+  if(at>=0)S.pics[at]=pic;else S.pics.push(pic);X.save();if(S.wallpaper==='image'&&S.wallImg.url==='pic:'+pic.id)wallpaper('image');return{ok:true,pic:{...pic},replaced:at>=0}}
+ function picDelete(id){const at=S.pics.findIndex(p=>p.id===id);if(at<0)return false;S.pics.splice(at,1);if(S.wallImg.url==='pic:'+id){S.wallImg={url:'',name:'',mode:S.wallImg.mode};if(S.wallpaper==='image')wallpaper('bliss')}X.save();return true}
+ const picList=()=>S.pics.map(p=>({...p}));
  /* ---- 새 폴더와 휴지통 ---- */
  function uniqueName(base,ext){const names=S.items.map(i=>i.name);if(!names.includes(base+ext))return base+ext;for(let n=2;n<30;n++)if(!names.includes(base+' ('+n+')'+ext))return base+' ('+n+')'+ext;return base+' ('+Date.now()%1000+')'+ext}
  function renderItems(){
@@ -89,16 +111,18 @@ function attach(ctx){
  /* ---- 화면 등록 정보 ---- */
  function displayWin(){
   const win=X.windowFor('display','화면 등록 정보');win.node.classList.add('xp-small');win.node.style.width='min(420px,94%)';win.node.style.height='min(470px,92%)';win.node.style.left='6%';win.node.style.top='4%';win.content.replaceChildren();
-  let tab='bg',wall=S.wallpaper,saver=S.saver,mins=S.saverMin;const draw=()=>{
+  let tab='bg',wall=S.wallpaper==='paint'?'bliss':S.wallpaper,saver=S.saver,mins=S.saverMin,mode=S.wallImg.mode;const draw=()=>{
    win.content.replaceChildren();const tabs=E('div','xp-tabs');for(const [id,label] of [['bg','배경 화면'],['ss','화면 보호기']])tabs.append(B(label,()=>{tab=id;draw()},'xp-tab'+(tab===id?' on':'')));win.content.append(tabs);
    const pane=E('div','xp-pane');
-   if(tab==='bg'){const mon=E('div','xp-monitor'),scr=E('div','xp-monitor-screen');scr.style.background=wall==='bliss'?'#5594ce url(assets/pc-desktop/hill.webp) center/cover':wall==='paint'&&S.paint?'url('+S.paint+') center/cover':(WALL[wall]||WALL.blue)[1];mon.append(scr);pane.append(mon,E('b','','배경 화면(K):'));
-    const list=E('div','xp-list');for(const [id,[label]] of Object.entries(WALL)){const b=B(label,()=>{if(id==='paint'&&!S.paint)return toast({title:'화면 등록 정보',text:'그림판에서 그림을 저장한 뒤 고를 수 있습니다.',icon:'warn'});wall=id;draw()},'xp-opt'+(wall===id?' on':''));list.append(b)}pane.append(list)}
+   if(tab==='bg'){const mon=E('div','xp-monitor'),scr=E('div','xp-monitor-screen');scr.style.background=wall==='bliss'?'#5594ce url(assets/pc-desktop/hill.webp) center/cover':wall==='image'?(wallCss({url:S.wallImg.url,mode},true)||'#5594ce'):(WALL[wall]||WALL.blue)[1];mon.append(scr);pane.append(mon,E('b','','배경 화면(K):'));
+    const list=E('div','xp-list');for(const [id,[label]] of Object.entries(WALL)){if(id==='paint')continue;if(id==='image'&&!wallCss(S.wallImg))continue;const b=B(id==='image'?'(그림) '+S.wallImg.name:label,()=>{wall=id;draw()},'xp-opt'+(wall===id?' on':''));list.append(b)}pane.append(list);
+    if(wall==='image'){const row=E('div','xp-row xp-wallmode');row.append(E('span','','위치(P):'));for(const [id,label] of [['fill','확대'],['center','가운데'],['tile','바둑판식']])row.append(B(label,()=>{mode=id;draw()},'xp-mini'+(mode===id?' on':'')));pane.append(row)}
+    pane.append(B('찾아보기(B)...',()=>X.openApp('mydocs'),'xp-mini wide'))}
    else{const mon=E('div','xp-monitor'),scr=E('div','xp-monitor-screen saver');scr.append(E('span','',saver==='none'?'':saver==='stars'?'✦ ✧ ✦':saver==='text'?'Windows XP':'○ ◦ ○'));mon.append(scr);pane.append(mon,E('b','','화면 보호기(S):'));
     const list=E('div','xp-list');for(const [id,label] of SAVERS)list.append(B(label,()=>{saver=id;draw()},'xp-opt'+(saver===id?' on':'')));pane.append(list);
     const row=E('div','xp-row');row.append(E('span','','대기(W):'));for(const m of [1,2,5,10,15])row.append(B(m+'분',()=>{mins=m;draw()},'xp-mini'+(mins===m?' on':'')));pane.append(row,B('미리 보기(V)',()=>{if(saver!=='none')startSaver(saver,true)},'xp-mini wide'))}
    win.content.append(pane);
-   const foot=E('div','xp-dialog-foot');const apply=()=>{wallpaper(wall);S.saver=saver;S.saverMin=mins;X.save()};foot.append(B('확인',()=>{apply();X.closeWin('display')},'xp-dialog-btn'),B('취소',()=>X.closeWin('display'),'xp-dialog-btn'),B('적용(A)',apply,'xp-dialog-btn'));win.content.append(foot)};
+   const foot=E('div','xp-dialog-foot');const apply=()=>{if(wall==='image')S.wallImg={...S.wallImg,mode};wallpaper(wall);S.saver=saver;S.saverMin=mins;X.save()};foot.append(B('확인',()=>{apply();X.closeWin('display')},'xp-dialog-btn'),B('취소',()=>X.closeWin('display'),'xp-dialog-btn'),B('적용(A)',apply,'xp-dialog-btn'));win.content.append(foot)};
   draw()}
  /* ---- 화면 보호기 ---- */
  function stopSaver(){if(saverStop){saverStop();saverStop=null}if(saverNode){saverNode.remove();saverNode=null}lastAct=Date.now()}
@@ -176,7 +200,7 @@ function attach(ctx){
   if(up(e.target,'xp79-taskbar')){e.preventDefault&&e.preventDefault();menu(x,Math.max(0,y-70),[['바탕 화면 보기(D)',()=>{for(const win of X.windows.values())win.node.hidden=true}],'-',['작업 관리자(K)',()=>X.openApp('taskmgr'),{bold:true}]]);return}
   if(up(e.target,'xp79-manager'))return;
   e.preventDefault&&e.preventDefault();menu(x,y,[['새로 고침(E)',()=>{X.iconGrid.classList.add('xp-gone');later(()=>X.iconGrid.classList.remove('xp-gone'),180)}],'-',['새로 만들기(W)',null,{sub:[['폴더(F)',()=>addItem('folder')],['텍스트 문서',()=>addItem('text')]]}],'-',...(S.smash?[['바탕화면 부수기',()=>X.openApp('desksmash')]]:[]),['화면 등록 정보(R)',()=>X.openApp('display'),{bold:true}]])});
- renderItems();wallpaper(S.wallpaper);
+ renderItems();wallpaper(S.wallpaper);if(S.wallpaper==='image')probeWall(S.wallImg);
  /* ---- 시각에 맞춰 일어나는 일 ---- */
  function tickClock(rem){const text=clockText(rem);if(clock.textContent!==text)clock.textContent=text;if(calendarWin.time&&X.windows.get('calendar')){const el=Math.max(0,initial-rem),sec=el%60,m=fakeMin(rem),h=Math.floor(m/60)%24;calendarWin.time.textContent=(h>=12?'오후 ':'오전 ')+(h%12||12)+':'+String(m%60).padStart(2,'0')+':'+String(sec).padStart(2,'0')}}
  function tick(rem){
@@ -195,8 +219,8 @@ function attach(ctx){
   return false}
  /* ---- 목록 ---- */
  const OPEN={display:displayWin,taskmgr:taskWin,network:networkWin,calendar:calendarWin,trash:trashWin};
- const api={ids:['display','taskmgr','network','calendar','trash'],has:id=>!!OPEN[id],open:id=>OPEN[id]&&OPEN[id](),tick,onKey,toast,dialog,menu,closeMenu,bsod,startSaver,stopSaver,wallpaper,addItem,renderItems,shutdownDialog,standbyMode,processes,endProcess,explorerCrash,buildFly,
-  toasts:()=>Array.from(toastBox.children).map(c=>c.textContent),log:()=>log.slice(),state:()=>({wallpaper:S.wallpaper,saver:S.saver,saverMin:S.saverMin,items:S.items.map(i=>i.name),trash:S.trash.map(i=>i.name),saverOn:!!saverNode,bsod:!!bsodNode,standby:!!standby,menu:!!menuNode,modals:modals.length,clock:clock.textContent,smash:S.smash,setupFile:S.setupFile}),
+ const api={ids:['display','taskmgr','network','calendar','trash'],has:id=>!!OPEN[id],open:id=>OPEN[id]&&OPEN[id](),tick,onKey,toast,dialog,menu,closeMenu,bsod,startSaver,stopSaver,wallpaper,wallpaperImage:wallImage,pics:picList,picSave,picDelete,addItem,renderItems,shutdownDialog,standbyMode,processes,endProcess,explorerCrash,buildFly,
+  toasts:()=>Array.from(toastBox.children).map(c=>c.textContent),log:()=>log.slice(),state:()=>({wallpaper:S.wallpaper,wallImg:S.wallImg.url?{...S.wallImg}:null,pics:S.pics.map(p=>p.name),saver:S.saver,saverMin:S.saverMin,items:S.items.map(i=>i.name),trash:S.trash.map(i=>i.name),saverOn:!!saverNode,bsod:!!bsodNode,standby:!!standby,menu:!!menuNode,modals:modals.length,clock:clock.textContent,smash:S.smash,setupFile:S.setupFile}),
   reset(){closeMenu();for(const m of [...modals])m.close();Array.from(toastBox.children).forEach(c=>c.remove());stopSaver();if(standby){standby.remove();standby=null}hiddenShell=false;for(const n of [X.iconGrid,taskbar,X.manager])n.classList.remove('xp-gone')},destroy(){alive=false;for(const t of timers){w.clearTimeout(t);w.clearInterval(t)}stopSaver()}};
  UI={toast,dialog,menu};X.ui=UI;X.shell=api;tickClock(X.remaining());
  return api}

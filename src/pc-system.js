@@ -1,10 +1,10 @@
 /* A88 pc-system.js : PC방 컴퓨터의 내 컴퓨터 창, 시스템 등록 정보, 장치 관리자, 프로그램 추가/제거, 내 네트워크 환경,
-   내 문서의 Incoming 폴더와 Windows 그림 및 팩스 뷰어.
+   내 문서의 Incoming 폴더와 Windows 그림 및 팩스 뷰어. A93: 그림판에서 저장한 그림이 내 그림 폴더에 보이고, 그림을 바탕 화면 배경으로 설정할 수 있다.
    xp-desktop.js의 openApp('computer')가 PCSystem.open(ctx)를 부른다. 이 파일이 없으면 이전의 간단한 내 컴퓨터 창이 열린다.
    사양 문구는 아래 specFor() 한 곳에서 정한다. 자리 번호가 홀수이면 160GB, 짝수이면 80GB 하드디스크가 달려 있다.
    Incoming 폴더는 서버의 /api/incoming 목록을 읽는다. assets/pc-desktop/incoming 에 그림 파일을 넣으면 따로 고칠 것 없이 보인다. */
 (function(w){'use strict';
-const VERSION='A88';
+const VERSION='A93';
 const NOW_LABEL='2006-05-30 오후 4:32';
 const RESTRICT='이 작업은 컴퓨터에 적용된 제한 때문에 취소되었습니다. 시스템 관리자에게 문의하십시오.';
 
@@ -122,6 +122,22 @@ function dialog(E,B,host,title,text,kind){
  box.append(bar,body,row);veil.append(box);host.append(veil);return veil;
 }
 
+/* A93: 그림을 바탕 화면 배경으로 설정하는 대화상자 (그림 뷰어와 폴더가 함께 쓴다) */
+const wallTarget=node=>node&&node.mine?'pic:'+node.id:(node&&node.url)||'';
+function openWallDialog(ctx,node,host){
+ const{E,B}=ctx,sh=ctx.shell,ui=ctx.ui;
+ if(!node||!node.url||!sh||!sh.wallpaperImage||!ui||!ui.dialog)return dialog(E,B,host,'바탕 화면 배경으로 설정',RESTRICT,'stop');
+ let mode='fill';
+ const box=E('div','p93-wall'),thumb=E('div','p93-wall-thumb'),im=E('img');im.alt='';im.src=node.url;thumb.append(im);
+ const row=E('div','p93-wall-mode'),btns=[['fill','확대'],['center','가운데'],['tile','바둑판식']].map(([id,label])=>[id,B(label,()=>{mode=id;sync()},'p93-mini')]);
+ row.append(E('span','','위치(P):'));for(const[,b]of btns)row.append(b);
+ const sync=()=>{for(const[id,b]of btns)b.classList.toggle('on',id===mode)};sync();
+ box.append(E('p','','"'+node.n+'" 그림을 바탕 화면 배경으로 설정합니다.'),thumb,row);
+ return ui.dialog({title:'바탕 화면 배경으로 설정',node:box,icon:'info',buttons:[['확인',()=>{
+  if(sh.wallpaperImage(wallTarget(node),node.n,mode)){if(ui.toast)ui.toast({title:'바탕 화면',text:'"'+node.n+'" 그림으로 바탕 화면 배경을 바꿨습니다.',icon:'info',ms:4500})}
+  else dialog(E,B,host,'바탕 화면 배경으로 설정','이 그림은 바탕 화면 배경으로 설정할 수 없습니다.','stop')}],['취소']]});
+}
+
 /* Windows 그림 및 팩스 뷰어 */
 function openViewer(ctx,list,index,opts){
  if(!ctx||!ctx.windowFor||!ctx.E||!ctx.B||!list||!list.length)return null;
@@ -187,12 +203,13 @@ function openViewer(ctx,list,index,opts){
  }
  const sep=()=>E('i','p88-vsep');
  const slideBtn=vbtn('▷','슬라이드','슬라이드 쇼 보기',()=>{timer?stop():startSlide()});
+ const setWall=()=>{stop();openWallDialog(ctx,list[i],win.node)};
  bar.append(
   vbtn('◀','이전','이전 이미지',()=>go(-1)),vbtn('▶','다음','다음 이미지',()=>go(1)),sep(),
   vbtn('▣','맞춤','최적 크기',()=>{stop();fit=true;apply()}),vbtn('▢','실제','실제 크기',()=>{stop();fit=false;scale=1;apply()}),slideBtn,sep(),
   vbtn('＋','확대','확대',()=>zoom(1.25)),vbtn('－','축소','축소',()=>zoom(1/1.25)),
   vbtn('↻','오른쪽','시계 방향으로 회전',()=>{rot=(rot+90)%360;apply()}),vbtn('↺','왼쪽','시계 반대 방향으로 회전',()=>{rot=(rot+270)%360;apply()}),sep(),
-  vbtn('▤','인쇄','이미지 인쇄',lock),vbtn('▥','저장','복사본 저장',lock),vbtn('✕','삭제','삭제',lock),vbtn('✎','편집','편집',lock),
+  vbtn('▤','인쇄','이미지 인쇄',lock),vbtn('▥','저장','복사본 저장',lock),vbtn('✕','삭제','삭제',lock),vbtn('✎','편집','편집',lock),sep(),vbtn('▦','바탕화면','바탕 화면으로 설정',setWall),
   stat
  );
  shell.append(menu,stage,bar);win.content.append(shell);
@@ -201,6 +218,11 @@ function openViewer(ctx,list,index,opts){
  function w_clear(t){const f=timers.clearInterval||w.clearInterval;if(typeof f==='function')f(t)}
  stage.addEventListener('dblclick',()=>{stop();fit=!fit;if(!fit)scale=1;apply()});
  stage.addEventListener('click',()=>{if(timer)stop()});
+ stage.addEventListener('contextmenu',e=>{
+  if(!ctx.ui||!ctx.ui.menu)return;e.preventDefault&&e.preventDefault();e.stopPropagation&&e.stopPropagation();
+  const host=win.node.parentNode,r=host&&host.getBoundingClientRect?host.getBoundingClientRect():{left:0,top:0};
+  ctx.ui.menu((e.clientX||60)-r.left,(e.clientY||60)-r.top,[['바탕 화면으로 설정',setWall,{bold:true}],'-',['이전 이미지',()=>go(-1)],['다음 이미지',()=>go(1)],'-',['복사본 저장',lock],['이미지 인쇄',lock]]);
+ });
  if(w.ResizeObserver){try{new w.ResizeObserver(()=>{if(fit)apply()}).observe(stage)}catch(_){}}
  win.node.tabIndex=0;
  win.node.addEventListener('keydown',e=>{
@@ -213,6 +235,7 @@ function openViewer(ctx,list,index,opts){
   else if(k==='-'||k==='_')zoom(1/1.25);
   else if(k==='0'){stop();fit=true;apply()}
   else if(k==='Enter'){timer?stop():startSlide()}
+  else if(k==='b'||k==='B')setWall();
   else if(k==='Delete')lock();
   else used=false;
   if(used){e.preventDefault?.();e.stopPropagation?.()}
@@ -220,7 +243,7 @@ function openViewer(ctx,list,index,opts){
  show(i,false);
  if(opts.slide)startSlide();
  win.node.focus?.();
- return{win,show,go,zoom,apply,stop,startSlide,state,img,stage};
+ return{win,show,go,zoom,apply,stop,startSlide,state,img,stage,setWall};
 }
 
 /* ───────── 설치된 프로그램 ───────── */
@@ -333,6 +356,22 @@ function open(ctx){
  const incNode=t.mydocs.kids.find(k=>k.act==='incoming');
  const inc={status:'idle',nav:-1};
  const incList=()=>incNode.kids.filter(k=>k.act==='image');
+ /* A93: 그림판이 저장한 그림은 내 그림 폴더에 진짜 파일처럼 나타난다 */
+ const picFolder=t.mydocs.kids.find(k=>k.n==='내 그림');
+ const picList=()=>picFolder?picFolder.kids.filter(k=>k.mine):[];
+ const listFor=node=>node&&node.mine?picList():incList();
+ function syncPics(){
+  if(!picFolder)return;
+  const sh=ctx.shell,list=sh&&sh.pics?sh.pics():[];
+  picFolder.kids=picFolder.kids.filter(k=>!k.mine);
+  for(const p of list){const bytes=Math.max(1,Math.round((p.url.length-23)*3/4));const nd={n:p.name,t:'file',size:sizeLabel(bytes),date:NOW_LABEL,act:'image',url:p.url,mine:true,id:p.id,dim:[p.w,p.h],bytes};decorate(nd,picFolder);picFolder.kids.push(nd)}
+  if(selected&&selected.mine&&!picFolder.kids.includes(selected))selected=null;
+ }
+ function askDelete(node){
+  const sh=ctx.shell,ui=ctx.ui;if(!node||!node.mine||!sh||!sh.picDelete)return;
+  const del=()=>{sh.picDelete(node.id);selected=null;paint()};
+  if(ui&&ui.dialog)ui.dialog({title:'파일 삭제 확인',text:'"'+node.n+'" 을(를) 삭제하시겠습니까?',icon:'ask',buttons:[['예',del],['아니요']]});else del();
+ }
  /* 서버 없이 index.html을 직접 열었을 때: incoming/list.js (그림목록갱신.bat이 만든다)를 읽는다 */
  function listFromFile(){
   return new Promise((ok,no)=>{
@@ -389,7 +428,7 @@ function open(ctx){
   if(node.act==='lock')return lock(win.node,node.path||node.n);
   if(node.act==='games')return openApp('games');
   if(node.act==='notepad')return openApp('notepad');
-  if(node.act==='image'){const list=incList();return openViewer(ctx,list,list.indexOf(node))}
+  if(node.act==='image'){const list=listFor(node);return openViewer(ctx,list,list.indexOf(node))}
   if(node.act==='notready')return msgbox(win.node,'E:\\','E:\\를 사용할 수 없습니다.\n장치가 준비되어 있지 않습니다.','warn');
   if(node.kids)return set(node);
   if(node.t==='file')return lock(win.node,node.n);
@@ -434,11 +473,12 @@ function open(ctx){
    link('프로그램 추가 또는 제거',()=>openPrograms(ctx,spec)),
    link('설정 변경',()=>lock(win.node,'제어판'))
   ]):null;
-  const pics=cur===incNode&&incList().length?card('그림 작업',[
-   link('슬라이드 쇼 보기',()=>openViewer(ctx,incList(),0,{slide:true})),
+  const imgs=cur===incNode?incList():cur===picFolder?picList():[];
+  const pics=imgs.length?card('그림 작업',[
+   link('슬라이드 쇼 보기',()=>openViewer(ctx,imgs,0,{slide:true})),
    link('이미지 인쇄',()=>lock(win.node,'이미지 인쇄')),
    link('이메일로 파일 보내기',()=>lock(win.node,'이메일로 보내기')),
-   link('바탕 화면 배경으로 설정',()=>lock(win.node,'바탕 화면 배경으로 설정'))
+   link('바탕 화면 배경으로 설정',()=>openWallDialog(ctx,selected&&selected.act==='image'?selected:imgs[0],win.node))
   ]):null;
   const other=card('기타 위치',[
    cur==='root'?null:link('내 컴퓨터',()=>set('root')),
@@ -450,6 +490,7 @@ function open(ctx){
   const det=E('div','p87-card p87-details');det.append(E('h4','','자세한 정보'));
   const dbox=detailsFor(selected||(cur==='root'?'root':cur));
   if(selected&&(selected.kids||selected.act||selected.t==='file')){dbox.append(B('열기',()=>activate(selected),'p87-open'))}
+  if(selected&&selected.mine)dbox.append(B('삭제',()=>askDelete(selected),'p87-open'));
   det.append(dbox);
   if(sys)pane.append(sys);
   if(pics)pane.append(pics);
@@ -535,6 +576,7 @@ function open(ctx){
   backBtn.classList.toggle('p87-off',hi===0);fwdBtn.classList.toggle('p87-off',hi>=history.length-1);upBtn.classList.toggle('p87-off',cur==='root');
   viewBtn.hidden=cur!==incNode;
   if(cur===incNode&&inc.nav!==nav){inc.nav=nav;loadIncoming()}
+  if(cur===picFolder)syncPics();
   paintPane();paintView();
  }
  if(atDocs){cur=t.mydocs;history=[t.mydocs];hi=0}
@@ -761,5 +803,5 @@ function openNetwork(ctx,spec){
  return win;
 }
 
-w.PCSystem={version:VERSION,specFor,seatOf,open,openViewer,openProps,openDevices,openPrograms,openNetwork,programList,deviceTree,gb,NOW_LABEL,fakeDate,sizeLabel,imageNodes};
+w.PCSystem={version:VERSION,specFor,seatOf,open,openViewer,openWallDialog,openProps,openDevices,openPrograms,openNetwork,programList,deviceTree,gb,NOW_LABEL,fakeDate,sizeLabel,imageNodes};
 })(window);
