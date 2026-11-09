@@ -439,6 +439,7 @@
   "src/kids-data.js",
   "src/kids-games.js",
   "src/kids-portal.js",
+  "src/kids-more.js",
   "src/desk-smash.js",
   "src/xp-shell.js",
   "src/xp-apps.js",
@@ -466,7 +467,13 @@
   "src/web-flash.js",
   "src/web-sites.js",
   "src/web-more.js",
+  "src/web-fun.js",
+  "src/pc-games.js",
+  "src/xp-minihome.js",
+  "src/pc-mail.js",
   "assets/pc-desktop/web-sites.css",
+  "assets/pc-desktop/pc-fun.css",
+  "assets/pc-desktop/web-fun.css",
   "tests/test_web_sites_a91.cjs",
   "RELEASE_A91.md",
   "assets/pc-desktop/icons/buddy.webp",
@@ -483,5 +490,7 @@
   "tests/test_paint_wall_a93.cjs",
   "RELEASE_A93.md",
   "tests/test_web_more_a94.cjs",
-  "RELEASE_A94.md"
+  "tests/test_pc_fun_a95.cjs",
+  "RELEASE_A94.md",
+  "RELEASE_A95.md"
 ]

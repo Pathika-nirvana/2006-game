@@ -178,7 +178,11 @@ function content(env,c){
  if(t==='home')return env.site==='jr'?homeJr(env,c):homeYk(env,c);
  if(['news','qa','extra','story','read','quiz','arcade','board'].includes(t))return listPage(env,c,t);
  if(t==='item')return itemPage(env,c);if(t==='game')return gamePage(env,c);if(t==='search')return searchPage(env,c);if(t==='safety')return safetyPage(env,c);
+ const ex=EXTRA[env.site+':'+t];if(ex){const head=env.E('div','k-sec-head k-sec-'+t);head.append(env.E('h2','',SITES[env.site].title[t]||t),env.E('p','',ex.blurb||''));c.append(head);return ex.fn(env,c)}
  return missing(env,c)}
+/* A95: 다른 파일에서 코너를 더 붙일 수 있다. KidsPortal.extend(site, type, label, render, blurb) */
+const EXTRA={},TYPES=['home','news','qa','extra','story','read','quiz','arcade','board','item','game','search','safety'];
+function extend(site,type,label,fn,blurb){if(!SITES[site]||!/^[a-z]{2,12}$/.test(type)||typeof fn!=='function'||TYPES.includes(type)&&!EXTRA[site+':'+type])return false;EXTRA[site+':'+type]={fn,blurb:blurb||''};if(!SITES[site].menu.some(m=>m[0]===type))SITES[site].menu.push([type,label]);SITES[site].title[type]=label;if(!TYPES.includes(type))TYPES.push(type);return true}
 
 /* ---------- 주니어네이버 ---------- */
 function mascot(E){const m=E('span','kj-mascot');m.setAttribute('aria-hidden','true');m.append(E('i','leaf'),E('i','eye l'),E('i','eye r'),E('i','mouth'));return m}
@@ -237,5 +241,5 @@ function render(page,r,ctx){
  if(site==='jr')renderJr(page,env);else renderYk(page,env);
  return true}
 function resolveHost(host){host=String(host||'').toLowerCase();if(/(^|\.)kids\.yahoo\.(co\.kr|com)$/.test(host))return 'yk';if(/(^|\.)jr\.naver\.com$/.test(host)||/(^|\.)junior\.naver\.com$/.test(host))return 'jr';return null}
-w.KidsPortal={owns:id=>!!SITES[id],caption:id=>SITES[id]?SITES[id].caption:'',domain:id=>SITES[id]?SITES[id].domain:'',resolveHost,types:['home','news','qa','extra','story','read','quiz','arcade','board','item','game','search','safety'],render,stop,search,findItem,items,sites:SITES,rules:RULES,rankSeed:RANK_SEED,active:()=>active};
+w.KidsPortal={owns:id=>!!SITES[id],caption:id=>SITES[id]?SITES[id].caption:'',domain:id=>SITES[id]?SITES[id].domain:'',resolveHost,types:TYPES,extend,kstate,render,stop,search,findItem,items,sites:SITES,rules:RULES,rankSeed:RANK_SEED,active:()=>active};
 })(window);

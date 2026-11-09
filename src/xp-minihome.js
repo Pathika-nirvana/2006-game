@@ -1,0 +1,311 @@
+/* A95: 미니홈피. 바탕 화면의 ‘나의 미니홈’과 포털의 ‘내 정보’가 새 창으로 연다.
+   내 미니홈피: 홈(미니룸, 일촌평), 프로필, 다이어리, 사진첩(그림판에서 저장한 ‘내 그림’을 올린다), 방명록, 미니룸 꾸미기, 선물가게, 도토리.
+   일촌 파도타기: 동네 사람 열두 명의 미니홈피를 돌아다니며 방명록을 남기고 일촌을 맺는다. 방명록을 남기면 답방이 온다.
+   사람, 노래 제목(옛 클래식 곡 말고는 지어낸 것), 주소는 모두 지어낸 것이다. 글쓴 날짜와 시각은 2006년 5월 30일 오후 4시 32분 이전이다.
+   그림 파일은 쓰지 않고 캔버스로 그린다. 기록은 saved.mini 에 남는다. */
+(function(w){'use strict';
+const TODAY='2006.05.30 (화)';
+const MOODS=[['행복','^^'],['기쁨','\\(^o^)/'],['설렘','♡_♡'],['신남','ㅋㅋ'],['두근두근','>ㅅ<'],['뿌듯','v(^^)v'],['피곤','=_='],['졸림','-_-zZ'],['배고픔','@_@'],['우울','ㅠㅠ'],['바쁨',';;'],['심심','ㅡㅡ']];
+const moodFace=m=>{const x=MOODS.find(a=>a[0]===m);return x?x[0]+' '+x[1]:m};
+/* 동네 사람들. ilchon: 이 사람의 일촌 [id, 일촌명]. says: 이 사람 홈에 적힌 일촌평 [쓴 사람 id, 일촌명, 글]. guest: [쓴 사람, 날짜, 글, 주인 답글]. */
+const FRIENDS=[
+{id:'sujin',name:'김수진',sex:'♀',info:'중학교 2학년',title:'★ 수진이의 반짝반짝 방 ★',intro:'별빛소녀 다솜 언니 ♡ 영원히\n수학 학원 가기 싫어 ㅠㅠ\n일촌 신청 환영~ 답방 꼭 할게요 ^^',mood:'설렘',today:31,total:5280,cover:'stage',skin:'pink',bgm:'별빛소녀 - 반짝반짝 첫사랑',
+ look:{hair:'#3a2418',shirt:'#ff7ab0',style:'long'},room:{wall:'pink',floor:'wood',slots:{W0:'window',W1:'poster',F0:'bed',F2:'teddy',F3:'desk',F4:'plant'}},
+ diary:[['2006.05.30 (화)','맑음','공개방송 방청 응모 당첨됐다!!!!! 6월 3일 토요일 동네 문화회관 ㅠㅠ 다솜 언니를 진짜로 보는 거야?! 엄마한테는 아직 비밀 ㅋㅋ'],['2006.05.27 (토)','흐림','민호랑 PC방 갔는데 걔는 카트만 하고 나는 미니홈피만 꾸몄다 ㅋㅋ 도토리 다 써서 BGM 한 곡 남음 ㅠㅠ'],['2006.05.22 (월)','비','수학 학원 쪽지 시험 망함... 우울해서 BGM을 슬픈 노래로 바꿈 ㅠㅠ']],
+ photos:[['stage','별빛소녀 음악 방송 사전 녹화 (멀리서 찍음 ㅠㅠ)','2006.05.13',['민호::야 잘 안 보인다 ㅋㅋ','지은언니::오 부럽다~','퍼가요~♡']],['food','학원 끝나고 컵떡볶이 ♡','2006.05.25',['민호::나도 사 줘','할머니::우리수진이맛잇게먹엇니']],['selca','얼짱 각도 연습 중 ㅋㅋ (V)','2006.05.29',['민호::얼짱 각도 실패 ㅋㅋㅋ','하늘언니::귀엽다 ^^']]],
+ guest:[['민호','2006.05.30 15:12','야 내일 영어 숙제 뭐냐 ㅋㅋ 알려 주라','알림장 좀 써라 ㅡㅡ 32쪽'],['분홍풍선','2006.05.29 22:40','별빛소녀 팬이시죠?! 저도요 ♡ 일촌해요~','네네 신청할게요 ^^'],['할머니','2006.05.28 19:05','수진아할머니다밥잘먹고다녀라','할머니 ㅋㅋㅋ 띄어쓰기 해야 돼요 ♡'],['지나가던사람','2006.05.26 11:30','투데이 올려 드리고 가요~ 놀러 오세요','']],
+ says:[['minho','동네친구','수진아 PC방 ㄱ?'],['jieun','언니동생','우리 수진이 공부도 열심히 하자 ^^']],
+ ilchon:[['minho','동네친구'],['jieun','언니동생'],['grandma','할머니♡'],['haneul','별빛소녀 팬'],['nabi','냥냥']],
+ accept:'동네친구',toMe:'방가방가~ 미니홈피 이쁘다 ^^ 자주 놀러 갈게!',replies:['ㅋㅋ 반가워요 ^^ 자주 놀러 오세요~','방명록 고마워요 ♡ 답방 갈게요!','오 누구지?? ㅋㅋ 반가워요'],visit:['답방 왔어요~ 미니홈피 귀엽다 ^^','투데이 올려 주고 가요 ♡ 일촌평도 써 줘!'],cm:['ㅋㅋㅋ 공감','오 대박','퍼가요~♡']},
+{id:'minho',name:'박민호',sex:'♂',info:'중학교 2학년',title:'ㅁㅎ의 게임 연구소',intro:'카트 기록 단축 중\n스타는 테란\n공부는 내일부터 -_-',mood:'배고픔',today:12,total:2311,cover:'pc',skin:'green',bgm:'한여름 밴드 - 질주',
+ look:{hair:'#1e1a16',shirt:'#3a7ad8',style:'short'},room:{wall:'check',floor:'tile',slots:{W1:'clock',W2:'frame',F0:'tv',F1:'desk',F3:'shelf',F4:'ball'}},
+ diary:[['2006.05.30 (화)','맑음','학교 끝나고 바로 PC방 옴. 카트 타임 어택 기록 깼다!!! 근데 사장님이 학원 안 가냐고 물어봄 ㄷㄷ 엄마랑 아는 사이임'],['2006.05.26 (금)','맑음','형 휴가 나왔다. 형이 스타 1:1 하자고 해서 했는데 짐 ㅡㅡ 군대에서 연습했나 봄'],['2006.05.20 (토)','흐림','수진이가 미니홈피 BGM 추천해 달래서 해 줬더니 구리다고 함. 다시는 추천 안 함']],
+ photos:[['pc','PC방 명당 자리. 모니터가 제일 큼','2006.05.30',['수진::또 PC방이냐 ㅋㅋ','태현형::공부해라','PC방사장님::컵라면 다 드셨으면 치워 주세요 ^^']],['trophy','카트 타임 어택 개인 최고 기록!!','2006.05.28',['수진::이게 뭔데 ㅋㅋ','준호형::오 꽤 하네']]],
+ guest:[['수진','2006.05.30 15:20','숙제 32쪽이라고 ㅡㅡ 알림장 좀 써라',''],['태현형','2006.05.29 23:10','민호야 형 복귀하기 전에 한 판 더 하자 ㅋㅋ 이번엔 안 봐줌','콜!! 이번엔 내가 이김'],['초보입니다','2006.05.27 17:45','카트 같이 하실래요? 친추해요~','ㅇㅋ'],['준호형','2006.05.24 01:30','고3은 웁니다... 너는 지금 놀아라','형 힘내요 ㅋㅋ']],
+ says:[['sujin','동네친구','민호야 게임 좀 그만 ㅋㅋ'],['taehyun','형제','동생아 공부도 좀 해라. 충성!']],
+ ilchon:[['sujin','동네친구'],['taehyun','형제'],['junho','동네형'],['boss','단골손님'],['dalli','동네동생']],
+ accept:'겜친구',toMe:'ㅋㅋ 일촌 ㄳ 카트 같이 하자',replies:['ㅇㅇ 반가워 ㅋㅋ','카트 같이 하자~','방명록 ㄳ ㅋㅋ'],visit:['답방 ㅋㅋ 홈피 깔끔하네','게임 같이 하자 ㅋㅋ PC방으로 와'],cm:['ㅋㅋㅋㅋ','오 ㄷㄷ','ㄳ']},
+{id:'haneul',name:'하늘',sex:'♀',info:'대학교 1학년 (06학번)',title:'하늘이의 구름 위 일기장',intro:'06학번 새내기 ^^\n개인 홈페이지도 해요 (하늘이의 꿈꾸는 홈페이지)\n별빛소녀 언니들 사랑해요',mood:'피곤',today:18,total:3402,cover:'sky',skin:'sky',bgm:'오르골 - 반짝반짝 작은 별',homepage:true,
+ look:{hair:'#5a3a22',shirt:'#9fd0ff',style:'long'},room:{wall:'sky',floor:'wood',slots:{W0:'window',W2:'frame',F0:'sofa',F2:'desk',F3:'teddy',F4:'plant'}},
+ diary:[['2006.05.29 (월)','비','오늘 우산 사건은 홈페이지 일기에도 썼다 ㅋㅋ 미니홈피랑 홈페이지 둘 다 하니까 바쁘다'],['2006.05.25 (목)','맑음','과제 하다가 미니홈피 스킨만 바꿈. 과제는 그대로...']],
+ photos:[['sky','학교 옥상에서 본 노을','2006.05.24',['지은선배::새내기 사진 잘 찍네~','퍼가요~♡']],['cake','동아리 선배 생일 파티!','2006.05.18',['지은선배::케이크 맛있었지 ^^']]],
+ guest:[['별사탕','2006.05.30 12:20','하늘님 홈페이지 보고 미니홈피도 왔어요 ^^',''],['지은선배','2006.05.28 20:00','새내기 MT 사진 올려라~ 선배 명령이다 ㅋㅋ','넵 선배님 ㅠㅠ 조만간!!']],
+ says:[['jieun','과선배','새내기 하늘이 화이팅!'],['sujin','별빛소녀 팬','언니 BGM 공유해 주세요~']],
+ ilchon:[['jieun','과선배'],['sujin','별빛소녀 팬']],
+ accept:'인터넷친구',toMe:'일촌 고마워요 ^^ 홈페이지에도 놀러 와요 ☆',replies:['방가방가 ^^ 놀러 와 줘서 고마워요','홈페이지에도 놀러 오세요~ ☆'],visit:['답방 왔어요 ^^ 미니룸 예쁘다~','투데이 하나 올리고 가요 ☆'],cm:['ㅎㅎ 귀여워요','오 저도 그래요 ^^']},
+{id:'sora',name:'바다소라',sex:'♀',info:'해솔초등학교 6학년',title:'바다소라의 조개껍데기 ☆',intro:'약속은 지키라고 있는 거야\n북극성처럼 늘 같은 자리 ☆\n인터넷 소설 연재 중 (소설나라)',mood:'두근두근',today:9,total:1530,cover:'capsule',skin:'star',bgm:'피아노 소품 - 캐논 변주곡 (파헬벨)',away:'지금은 자리에 없어요 (철봉 앞 ☆)',
+ look:{hair:'#2a1a12',shirt:'#ffd23f',style:'pony'},room:{wall:'night',floor:'wood',slots:{W0:'window',W2:'clock',F1:'scope',F2:'desk',F3:'shelf'}},
+ diary:[['2006.05.30 (화)','맑음','오늘이다. 4시 반. 철봉 앞. 숟가락도 챙겼다 ㅋㅋ (삽은 무거우니까)'],['2006.05.29 (월)','맑음','하늘반 게시판에 별이 소식 물어봤는데 아무도 모른다. 별이 홈피 이름이 다락방 어쩌구였는데... 링크천국에서 본 것 같기도 하고.'],['2006.05.14 (일)','비','소설나라에 3화 올렸다. 주인공 이름은 비밀인데 다들 눈치챈 것 같다 ㅋㅋ']],
+ photos:[['capsule','(옛날 사진) 4학년 때 별이랑. 운동장 철봉 앞','2004.05.30',['달리기왕::이거 우리 학교 철봉이다!','정다운쌤::그 약속 꼭 지켜지길 바랄게 ^^']],['night','우리 집 창문에서 찍은 북쪽 하늘 (북극성 찾았다!)','2006.05.20',['달리기왕::별 하나밖에 안 보이는데? ㅋㅋ','ㄴ 그게 북극성이야 바보야']]],
+ guest:[['달리기왕','2006.05.30 14:50','소라야 4시 반에 철봉 간다며? 나도 구경 가도 됨? ㅋㅋ','안 돼 ㅡㅡ 우리 둘만의 약속이야'],['핑크사랑','2006.05.28 21:30','소설 4화 언제 올라와요?? 강준이 너무 멋있어요 ㅠㅠ','5화는 5월 30일 이후에 올라가요 ^^'],['정다운쌤','2006.05.25 18:00','소라야 체육대회 응원 최고였어! 목은 괜찮니?','쌤 목 쉬었어요 ㅋㅋ']],
+ says:[['dalli','짝꿍','소라야 내일 수학 숙제 보여 줘 ㅋㅋ'],['teacher','하늘반 쌤','우리 소라 글 솜씨 최고!']],
+ ilchon:[['dalli','짝꿍'],['teacher','하늘반 쌤']],
+ accept:'친구',toMe:'일촌 고마워요 ☆ 북극성 찾아본 적 있어요?',replies:['고마워요 ^^ 혹시... 별이 아니죠? ㅋㅋ 아니구나','방명록 고마워요! 소설나라에도 놀러 와요 ☆'],visit:['답방 왔어요 ☆ 오늘 저 약속 있어요 ㅋㅋ'],cm:['☆ 예쁘다','ㅋㅋㅋ 귀여워요']},
+{id:'dalli',name:'강우진',nick:'달리기왕',sex:'♂',info:'해솔초등학교 6학년',title:'달리기왕의 미니홈피 (1등만 기억한다)',intro:'체육대회 이어달리기 마지막 주자\n축구 국가대표 될 거임\n대~한민국!',mood:'신남',today:7,total:988,cover:'track',skin:'green',bgm:'응원 연주곡 - 대한민국 짝짝짝',
+ look:{hair:'#1a1410',shirt:'#e84d4d',style:'short'},room:{wall:'sky',floor:'mat',slots:{W1:'flag',F0:'bed',F2:'ball',F3:'desk'}},
+ diary:[['2006.05.29 (월)','맑음','토고전 6월 13일 밤 10시!! 엄마가 같이 보자고 함 아싸'],['2006.05.25 (목)','맑음','체육대회 이어달리기 역전승!!! 내가 마지막에 두 명 제침 ㅋㅋㅋ 쌤이 울었다 (쌤은 아니라고 함)']],
+ photos:[['track','체육대회 이어달리기 1등 깃발!','2006.05.25',['정다운쌤::우리 반 최고! (눈에 먼지가...)','바다소라::너 진짜 빨랐어 ㅋㅋ']],['ball','축구공에 사인 받음 (가짜 ㅋㅋ 내가 씀)','2006.05.21',['바다소라::ㅋㅋㅋ 사기꾼']]],
+ guest:[['바다소라','2006.05.30 13:00','철봉 오지 마 ㅡㅡ',''],['붉은악마','2006.05.29 20:10','토고전 새벽 아니고 밤 10시래 ㅋㅋ 다 같이 보자','ㅇㅋ 치킨 사 와']],
+ says:[['sora','짝꿍','달리기만 빠르고 숙제는 느림 ㅋㅋ'],['teacher','하늘반 쌤','우진아 이어달리기 멋졌어!']],
+ ilchon:[['sora','짝꿍'],['teacher','하늘반 쌤'],['minho','동네형']],
+ accept:'친구',toMe:'일촌 ㄳ ㅋㅋ 축구 좋아함?',replies:['ㅇㅇ 방가 ㅋㅋ','달리기 시합 할래? ㅋㅋ'],visit:['답방 ㅋㅋ 너도 축구 좋아해?'],cm:['ㅋㅋㅋ','오~']},
+{id:'teacher',name:'정다운',sex:'♀',info:'해솔초등학교 6학년 2반 담임',title:'정다운 쌤의 하늘반 일기',intro:'하늘반 31명 + 정다운 쌤\n꿈을 향해 날아라! (숙제는 하고 날자)\n※ 방명록에 숙제 물어보기 금지 ^^',mood:'뿌듯',today:15,total:2690,cover:'class',skin:'paper',bgm:'클래식 - 엘리제를 위하여 (베토벤)',
+ look:{hair:'#2a1a12',shirt:'#9ad08a',style:'bob'},room:{wall:'paper',floor:'wood',slots:{W1:'clock',W2:'frame',F2:'desk',F3:'shelf',F4:'plant'}},
+ diary:[['2006.05.30 (화)','맑음','수학여행 안내문 도장 아직 안 받아 온 친구 5명. 내일은 꼭! 그리고 4시 반까지만 운동장에서 놀기로 약속했는데 잘 지켜지려나 ^^'],['2006.05.25 (목)','맑음','체육대회 이어달리기. 우리 반이 역전했다. 울지 않았다. 정말이다.']],
+ photos:[['class','6학년 2반 첫날 칠판','2006.03.02',['달리기왕::쌤 글씨 예뻐요','바다소라::벌써 석 달 됐다 ㅠㅠ']]],
+ guest:[['하늘반막내','2006.05.30 10:20','쌤 사랑해요 ♡ 오늘 숙제 없죠?','수학 익힘책 52~53쪽 ^^'],['학부모','2006.05.27 21:00','선생님 체육대회 수고 많으셨어요. 아이가 너무 좋아했어요.','감사합니다 어머님 ^^']],
+ says:[['sora','제자','쌤 수학여행 때 장기자랑 해요!'],['dalli','제자','쌤 이어달리기 때 우셨죠 ㅋㅋ']],
+ ilchon:[['sora','제자'],['dalli','제자']],
+ accept:'이웃',toMe:'반가워요 ^^ 숙제는 하고 놀기!',replies:['반가워요 ^^ 좋은 하루 보내세요','방명록 고마워요~ 숙제는 하고 놀기!'],visit:['정다운 쌤이에요 ^^ 미니홈피 잘 꾸몄네요!'],cm:['참 잘했어요 ^^','좋은 글이네요~']},
+{id:'junho',name:'최준호',sex:'♂',info:'고등학교 3학년',title:'수능 D-170 (나는 할 수 있다)',intro:'수능까지 D-170\n미니홈피는 수능 끝나고...\n라고 쓰고 매일 들어옴',mood:'우울',today:4,total:1204,cover:'book',skin:'paper',bgm:'미드나잇 - 새벽 두 시 라디오',
+ look:{hair:'#141414',shirt:'#5a5a6a',style:'short'},room:{wall:'paper',floor:'tile',slots:{W0:'dday',W1:'clock',F2:'desk',F3:'shelf'}},
+ diary:[['2006.05.30 (화)','흐림','모의고사 성적표 나옴. 미니홈피 BGM을 슬픈 노래로 바꿨다. 이것이 고3의 일상.'],['2006.05.23 (화)','맑음','독서실에서 졸다가 침 흘림. 옆자리 사람이랑 눈 마주침. 내일부터 다른 독서실 간다.']],
+ photos:[['book','독서실 내 자리. 이 책 다 보면 대학 감?','2006.05.21',['민호::형 화이팅 ㅋㅋ','태현::준호야 군대는 늦게 와라 ㅋㅋ']]],
+ guest:[['민호','2006.05.29 18:30','형 PC방 한 판만 ㅋㅋ','저리 가라 ㅋㅋ 수능 끝나고'],['엄마','2006.05.28 23:50','준호야 미니홈피 할 시간에 공부해라','네...']],
+ says:[['minho','동네동생','형 힘내요!'],['taehyun','선배','준호야 대학 가서 보자']],
+ ilchon:[['minho','동네동생'],['taehyun','선배']],
+ accept:'동생',toMe:'고3이라 짧게... 일촌 고마워',replies:['고3이라 짧게... 고마워','수능 끝나면 놀자 ㅠㅠ'],visit:['고3이지만 답방은 한다... 공부하러 간다'],cm:['부럽다...','공부해라 ㅋㅋ']},
+{id:'taehyun',name:'박태현',sex:'♂',info:'육군 상병 (휴가 중)',title:'충성! 상병 박태현 (휴가 중)',intro:'군인입니다 (휴가 5/26 ~ 6/3)\n전역까지 남은 날은 묻지 마세요\n민호야 공부해라',mood:'행복',today:22,total:3013,cover:'army',skin:'green',bgm:'한여름 밴드 - 우산 속 두 사람',
+ look:{hair:'#141414',shirt:'#5a7a3a',style:'buzz'},room:{wall:'check',floor:'mat',slots:{W1:'flag',W2:'clock',F0:'bed',F3:'tv'}},
+ diary:[['2006.05.29 (월)','맑음','휴가 나와서 제일 먼저 한 것: PC방. 미니홈피 들어오니까 방명록에 충성이 50개 ㅋㅋ'],['2006.05.26 (금)','맑음','휴가 첫날. 엄마 김치찌개 먹고 울 뻔했다. 민호는 스타로 이겨 줬다 (봐준 거임)']],
+ photos:[['army','부대 앞 (사진 찍어도 되는 곳)','2006.04.10',['민호::형 머리 ㅋㅋㅋ','준호::멋있어요 형']],['food','휴가 첫날 엄마 김치찌개','2006.05.26',['민호::나도 먹었음 ㅋㅋ']]],
+ guest:[['군대동기','2006.05.30 09:00','충성! 휴가 잘 보내라 ㅋㅋ 복귀하면 보자','충성! 복귀 안 하고 싶다'],['민호','2006.05.29 22:00','형 오늘 한 판 더 ㄱ?','콜 이번엔 안 봐줌']],
+ says:[['minho','형제','형 휴가 끝나지 마 ㅠㅠ'],['junho','후배','충성! 휴가 즐기세요']],
+ ilchon:[['minho','형제'],['junho','후배']],
+ accept:'충성',toMe:'충성! 일촌 감사합니다 ^^',replies:['충성! 방명록 감사합니다 ^^','휴가 중이라 답이 늦어요 ㅋㅋ'],visit:['충성! 답방 왔습니다 ^^'],cm:['충성!','ㅋㅋ 좋다']},
+{id:'jieun',name:'윤지은',sex:'♀',info:'대학교 2학년',title:'지은이의 찰칵찰칵 디카 앨범',intro:'디카 생겼다 ♡ 사진 찍는 게 취미\n우리 집 고양이 나비도 미니홈피 있음 ㅋㅋ\n과제는... 내일',mood:'행복',today:26,total:6120,cover:'flower',skin:'sky',bgm:'피아노 소품 - 캐논 변주곡 (파헬벨)',
+ look:{hair:'#6a3a1a',shirt:'#fff3a0',style:'long'},room:{wall:'sky',floor:'wood',slots:{W0:'window',W2:'frame',F0:'sofa',F2:'plant',F4:'fish'}},
+ diary:[['2006.05.28 (일)','맑음','디카 들고 동네 한 바퀴. 은하아파트 옥상에서 노을 찍었다. 경비 아저씨한테 혼날 뻔'],['2006.05.21 (일)','흐림','나비가 내 노트북 키보드 위에서 잠. 과제 파일에 ㅋㅋㅋㅋㅋ 300줄 입력됨']],
+ photos:[['flower','동네 화단 장미','2006.05.27',['하늘::선배 사진 진짜 잘 찍어요!','퍼가요~♡']],['cat','나비 낮잠','2006.05.21',['수진::나비 너무 귀여워요 ㅠㅠ','나비::냥']],['sky','은하아파트 옥상에서 본 노을','2006.05.28',['하늘::와 예쁘다','민호::ㅋㅋ 옥상 올라가도 됨?']]],
+ guest:[['하늘','2006.05.29 23:00','선배 디카 몇 화소예요? 저도 사고 싶어요 ㅠㅠ','400만 화소 ㅋㅋ 용돈 모아서 샀지'],['수진','2006.05.26 17:00','언니 나비 사진 더 올려 주세요 ㅠㅠ','ㅋㅋ 나비 미니홈피 가 봐']],
+ says:[['haneul','과후배','선배 사진 강의 해 주세요!'],['nabi','주인님','냥냥 (밥 줘)']],
+ ilchon:[['haneul','과후배'],['sujin','언니동생'],['nabi','주인님']],
+ accept:'사진친구',toMe:'일촌 고마워요 ^^ 사진 많이 올려요~',replies:['고마워요 ^^ 사진 구경 많이 하세요','반가워요~ 사진 퍼가실 때는 말씀해 주세요!'],visit:['답방 왔어요 ^^ 사진첩 구경하고 가요~'],cm:['오 예쁘다 ^^','퍼가요~♡']},
+{id:'nabi',name:'나비',sex:'♀',info:'고양이 (주인: 지은)',title:'냥냥 나비네 집 (주인: 지은)',intro:'나는 고양이다. 이름은 나비.\n좋아하는 것: 참치캔, 키보드 위\n싫어하는 것: 목욕, 청소기',mood:'졸림',today:40,total:7777,cover:'cat',skin:'pink',bgm:'오르골 - 반짝반짝 작은 별',cat:true,
+ look:{hair:'#f2b46a',shirt:'#f2b46a',style:'cat'},room:{wall:'pink',floor:'mat',slots:{W0:'window',F1:'basket',F3:'fish'}},
+ diary:[['2006.05.30 (화)','맑음','오늘도 창가에서 잤다. 주인은 과제한다고 바쁘다. 키보드 위에 누워 주었다. 고마워하는 것 같다.'],['2006.05.24 (수)','비','비가 와서 밖에 못 나갔다. 청소기가 나를 공격했다. 냥.']],
+ photos:[['cat','오늘의 나 (식빵 자세)','2006.05.30',['지은::우리 나비 귀여워 ㅠㅠ','수진::식빵 ㅋㅋㅋ']]],
+ guest:[['수진','2006.05.30 16:00','나비야 안녕 ㅋㅋ 언니가 참치캔 사 갈게','냥 (주인 대신 씀)'],['길고양이','2006.05.28 03:00','냐옹 (밤에 놀자)','']],
+ says:[['jieun','주인님','나비야 그만 자 ㅋㅋ']],
+ ilchon:[['jieun','주인님'],['sujin','냥냥']],
+ accept:'냥',toMe:'냥 (일촌 고맙다냥)',replies:['냥 (주인이 대신 씀 ^^)','냐옹~ 놀러 와 줘서 고맙다냥'],visit:['냥냥 (나비가 다녀감)'],cm:['냥','냐옹']},
+{id:'boss',name:'오정수',sex:'♂',info:'동네 PC방 사장',title:'동네 PC방 사장의 미니홈피',intro:'2층 동네 PC방 사장입니다\n컵라면 물은 정확히 선까지\n학생들은 10시 전에 집에 가세요 ^^',mood:'바쁨',today:19,total:4404,cover:'pc',skin:'paper',bgm:'라디오 - 오후의 음악 편지',
+ look:{hair:'#2a2a2a',shirt:'#e8e8e8',style:'short'},room:{wall:'check',floor:'tile',slots:{W1:'clock',F1:'desk',F2:'desk',F3:'fridge',F4:'plant'}},
+ diary:[['2006.05.30 (화)','맑음','오후 4시. 학생들 몰려오기 시작. {seat}번 자리 손님은 오늘도 미니홈피 꾸미는 중인 듯 ^^'],['2006.05.27 (토)','흐림','월드컵 때 PC방에서 단체 응원 할까 고민 중. 프로젝터를 빌려야 하나.'],['2006.05.20 (토)','맑음','컵라면 하루에 47개 팔았다. 신기록. 물 붓다가 하루가 갔다.']],
+ photos:[['pc','새로 바꾼 17인치 LCD 모니터','2006.05.10',['민호::사장님 의자도 바꿔 주세요','PC방사장님::의자는 다음 달에...']],['ramen','오늘의 인기 메뉴','2006.05.20',['수진::사장님 떡볶이도 팔아 주세요!']]],
+ guest:[['민호','2006.05.30 15:40','사장님 제 자리 키보드 ㅁ 키가 잘 안 눌려요','내일 바꿔 줄게 ^^'],['동네 아주머니','2006.05.29 20:30','우리 아들 거기 있으면 집에 보내 주세요','네 어머님 ^^;']],
+ says:[['minho','단골손님','사장님 컵라면 서비스 ㄳ']],
+ ilchon:[['minho','단골손님']],
+ accept:'단골손님',toMe:'단골 손님 반가워요 ^^ 컵라면은 카운터에서!',replies:['감사합니다 ^^ 또 오세요~','PC방 공지: 컵라면 물은 사장이 부어 드립니다 ^^'],visit:['PC방 사장입니다 ^^ 오늘도 즐거운 시간 되세요'],cm:['^^','좋네요~']},
+{id:'grandma',name:'이순자',sex:'♀',info:'수진이 할머니',title:'순자할머니미니홈피',intro:'손녀수진이가만들어주엇다\n띄어쓰기는어려워\n다들건강하거라',mood:'행복',today:3,total:58,cover:'garden',skin:'pink',bgm:'트로트 메들리 (연주)',
+ look:{hair:'#d8d8d8',shirt:'#a05ab0',style:'perm'},room:{wall:'paper',floor:'mat',slots:{W2:'frame',F0:'tv',F2:'plant',F4:'plant'}},
+ diary:[['2006.05.30 (화)','맑음','오늘은수진이가컴퓨터를가르쳐주엇다마우스가자꾸도망간다'],['2006.05.26 (금)','흐림','텃밭에상추가많이자랏다수진이엄마한테보내야겟다']],
+ photos:[['garden','우리집텃밭상추','2006.05.26',['수진::할머니 상추 맛있어요 ♡','지은::와 싱싱하다']]],
+ guest:[['수진','2006.05.30 16:10','할머니 띄어쓰기는 스페이스바 누르면 돼요 ㅋㅋ','스페이스바가어디잇니'],['수진','2006.05.28 19:30','할머니 미니홈피 개설 축하해요 ♡','고맙다우리강아지']],
+ says:[['sujin','손녀','할머니 사랑해요 ♡']],
+ ilchon:[['sujin','손녀']],
+ accept:'손주친구',toMe:'반갑다밥은먹엇니',replies:['고맙구나밥은먹엇니','우리수진이친구구나반갑다'],visit:['할머니다놀러왓다'],cm:['좋구나','장하다']}
+];
+const FR={};for(const f of FRIENDS)FR[f.id]=f;
+/* 선물가게. slot: floor(바닥) | wall(벽) | wallpaper | flooring | bgm | skin */
+const SHOP=[
+ ['bed','포근한 침대','floor',6],['desk','책상과 컴퓨터','floor',8],['sofa','푹신한 소파','floor',5],['shelf','책장','floor',4],['tv','텔레비전','floor',7],['plant','화분','floor',2],['teddy','곰 인형','floor',3],['guitar','통기타','floor',4],['fish','어항','floor',5],['piano','피아노','floor',10],['scope','망원경','floor',6],['ball','축구공','floor',2],['basket','고양이 바구니','floor',3],['fridge','작은 냉장고','floor',4],
+ ['window','창문','wall',2],['poster','별빛소녀 브로마이드','wall',3],['clock','벽시계','wall',2],['frame','풍경 액자','wall',2],['flag','응원 태극기','wall',3],['dday','D-day 달력','wall',1],
+ ['wp-sky','하늘색 벽지','wallpaper',3],['wp-pink','분홍 꽃무늬 벽지','wallpaper',3],['wp-check','체크무늬 벽지','wallpaper',3],['wp-night','별밤 벽지','wallpaper',4],['wp-paper','미색 벽지','wallpaper',2],
+ ['fl-wood','나무 마루','flooring',2],['fl-tile','하늘 타일','flooring',2],['fl-mat','꽃무늬 장판','flooring',2],
+ ['bgm-1','별빛소녀 - 반짝반짝 첫사랑','bgm',3],['bgm-2','한여름 밴드 - 우산 속 두 사람','bgm',3],['bgm-3','미드나잇 - 새벽 두 시 라디오','bgm',3],['bgm-4','피아노 소품 - 캐논 변주곡 (파헬벨)','bgm',3],['bgm-5','오르골 - 반짝반짝 작은 별','bgm',2],
+ ['sk-pink','분홍 하트 스킨','skin',4],['sk-star','별밤 스킨','skin',4],['sk-green','초록 체크 스킨','skin',4],['sk-paper','공책 스킨','skin',3]
+].map(([id,name,slot,price])=>({id,name,slot,price}));
+const ITEM={};for(const it of SHOP)ITEM[it.id]=it;
+const SLOTS={W0:[66,48],W1:[180,40],W2:[294,48],F0:[64,182],F1:[134,194],F2:[206,180],F3:[280,194],F4:[330,168]};
+const WALL={sky:['#cfe8ff','#b8dcff'],pink:['#ffe0ec','#ffc8dc'],check:['#eef4e0','#d8e8c0'],night:['#1c2a5a','#2a3a72'],paper:['#fbf3dc','#efe2bc']};
+const FLOOR={wood:['#c8955a','#b07a44'],tile:['#d8ecf8','#b8d8ec'],mat:['#f0d8a0','#e0c080']};
+const SKIN={sky:'#9cc3e6',pink:'#f5b7cf',star:'#27346a',green:'#9ccf8e',paper:'#e8dcc0'};
+const COVER_LABEL={stage:'공연 무대',sky:'노을',sea:'바다',night:'밤하늘',flower:'꽃',cat:'고양이',pc:'PC방',book:'책상',cake:'케이크',food:'떡볶이',class:'칠판',garden:'텃밭',capsule:'철봉',track:'운동장',army:'부대 앞',trophy:'기록',selca:'셀카',ball:'축구공',ramen:'컵라면'};
+
+/* ---------- 그리기 ---------- */
+function circ(g,x,y,r,c){g.fillStyle=c;g.beginPath();g.arc(x,y,Math.max(.5,r),0,Math.PI*2);g.fill()}
+function rect(g,x,y,w0,h0,c){g.fillStyle=c;g.fillRect(x,y,w0,h0)}
+function txt(g,s,x,y,c,size,al){g.fillStyle=c;g.font='bold '+(size||11)+'px Dotum,Gulim,sans-serif';g.textAlign=al||'center';g.fillText(s,x,y)}
+function drawItem(g,id,x,y){
+ switch(id){
+  case 'bed':rect(g,x-34,y-26,68,20,'#a0703a');rect(g,x-32,y-30,64,12,'#fff');rect(g,x-10,y-30,42,14,'#ff9ac0');rect(g,x-30,y-36,16,9,'#fff');rect(g,x-36,y-40,6,34,'#8a5a2a');rect(g,x-34,y-6,4,6,'#6a4a2a');rect(g,x+30,y-6,4,6,'#6a4a2a');break;
+  case 'desk':rect(g,x-30,y-30,60,6,'#a0703a');rect(g,x-28,y-24,4,24,'#8a5a2a');rect(g,x+24,y-24,4,24,'#8a5a2a');rect(g,x-14,y-54,28,22,'#e8e4d8');rect(g,x-11,y-51,22,15,'#3a6fd8');rect(g,x-4,y-32,8,3,'#ccc');rect(g,x-16,y-29,24,2,'#555');break;
+  case 'sofa':rect(g,x-34,y-30,68,16,'#e86a5a');rect(g,x-34,y-16,68,12,'#d85a4a');rect(g,x-38,y-24,8,20,'#c84a3a');rect(g,x+30,y-24,8,20,'#c84a3a');rect(g,x-32,y-4,4,4,'#5a3a2a');rect(g,x+28,y-4,4,4,'#5a3a2a');break;
+  case 'shelf':rect(g,x-18,y-62,36,62,'#8a5a2a');for(let i=0;i<3;i++){rect(g,x-15,y-58+i*19,30,15,'#5a3a1a');['#e84d4d','#3a6fd8','#ffd23f','#5aab4a','#a05ab0'].forEach((c,j)=>rect(g,x-14+j*6,y-56+i*19+(j%2),5,13-(j%2),c))}break;
+  case 'tv':rect(g,x-20,y-14,40,14,'#6a4a2a');rect(g,x-18,y-44,36,30,'#333');rect(g,x-14,y-40,26,22,'#6ab0e0');rect(g,x+13,y-38,3,3,'#e84d4d');rect(g,x+13,y-32,3,3,'#ccc');break;
+  case 'plant':rect(g,x-9,y-14,18,14,'#c8653a');for(const [a,b] of [[-8,-26],[0,-32],[8,-26],[-4,-20],[5,-21]])circ(g,x+a,y+b,7,'#4f9a3f');break;
+  case 'teddy':circ(g,x,y-12,11,'#c08a4a');circ(g,x,y-30,9,'#c08a4a');circ(g,x-7,y-37,4,'#c08a4a');circ(g,x+7,y-37,4,'#c08a4a');circ(g,x,y-28,3,'#e8c89a');circ(g,x-3,y-32,1.3,'#111');circ(g,x+3,y-32,1.3,'#111');break;
+  case 'guitar':g.save&&g.save();if(g.translate){g.translate(x,y-26);g.rotate(-.3)}circ(g,0,10,10,'#d08a3a');circ(g,0,-2,8,'#d08a3a');circ(g,0,6,3,'#5a3a1a');rect(g,-2,-30,4,26,'#6a4a2a');g.restore&&g.restore();break;
+  case 'fish':rect(g,x-22,y-12,44,12,'#6a4a2a');rect(g,x-20,y-38,40,26,'rgba(120,200,255,.75)');circ(g,x-6,y-26,4,'#ff9a2a');circ(g,x+8,y-20,3,'#ffd23f');rect(g,x-20,y-40,40,3,'#d8eef8');break;
+  case 'piano':rect(g,x-30,y-46,60,46,'#2a1a14');rect(g,x-28,y-24,56,7,'#fff');for(let i=0;i<9;i++)rect(g,x-26+i*6.2,y-24,2,4,'#111');rect(g,x-28,y-44,56,4,'#4a3020');break;
+  case 'scope':rect(g,x-1,y-26,2,26,'#555');rect(g,x-10,y-2,20,2,'#555');if(g.save){g.save();g.translate(x,y-30);g.rotate(-.6);rect(g,-14,-4,30,8,'#e8e8f0');rect(g,14,-5,4,10,'#3a3a48');g.restore()}break;
+  case 'ball':circ(g,x,y-9,9,'#fff');circ(g,x,y-9,3.5,'#222');circ(g,x-6,y-13,2,'#222');circ(g,x+6,y-6,2,'#222');break;
+  case 'basket':rect(g,x-22,y-12,44,12,'#c89a5a');rect(g,x-20,y-16,40,5,'#ffb0c8');circ(g,x,y-20,8,'#f2b46a');circ(g,x-5,y-27,3,'#f2b46a');circ(g,x+5,y-27,3,'#f2b46a');break;
+  case 'fridge':rect(g,x-14,y-44,28,44,'#e8eef4');rect(g,x-14,y-30,28,2,'#a8b0b8');rect(g,x+8,y-40,2,8,'#888');rect(g,x+8,y-24,2,10,'#888');break;
+  case 'window':rect(g,x-26,y-20,52,40,'#fff');rect(g,x-23,y-17,46,34,'#9fd6ff');rect(g,x-1,y-17,2,34,'#fff');rect(g,x-23,y-1,46,2,'#fff');circ(g,x+12,y-8,5,'#fff');break;
+  case 'poster':rect(g,x-18,y-24,36,48,'#ff9ac0');circ(g,x,y-6,9,'#ffdcb8');rect(g,x-9,y-16,18,5,'#3a2418');txt(g,'별빛소녀',x,y+18,'#fff',8);break;
+  case 'clock':circ(g,x,y,13,'#fff');circ(g,x,y,11,'#ffe8a0');rect(g,x-1,y-8,2,8,'#333');rect(g,x,y-1,7,2,'#333');break;
+  case 'frame':rect(g,x-22,y-16,44,32,'#a0703a');rect(g,x-18,y-12,36,24,'#9fd6ff');rect(g,x-18,y+2,36,10,'#7cc35a');circ(g,x+8,y-5,4,'#ffd23f');break;
+  case 'flag':rect(g,x-26,y-17,52,34,'#fff');circ(g,x,y,8,'#e84d4d');g.fillStyle='#3a6fd8';g.beginPath();g.arc(x,y,8,0,Math.PI);g.fill();for(const [a,b] of [[-18,-10],[14,-10],[-18,6],[14,6]])rect(g,x+a,y+b,5,4,'#111');break;
+  case 'dday':rect(g,x-18,y-20,36,40,'#fff');rect(g,x-18,y-20,36,10,'#e84d4d');txt(g,'수능',x,y-12,'#fff',8);txt(g,'D-170',x,y+8,'#e84d4d',11);break;
+  default:circ(g,x,y-8,8,'#ccc')}}
+function drawRoom(g,room,me){const W0=360,H0=210,wp=WALL[room.wall]||WALL.sky,fl=FLOOR[room.floor]||FLOOR.wood;
+ rect(g,0,0,W0,H0,'#000');rect(g,0,0,W0,130,wp[0]);for(let x=8;x<W0;x+=24)for(let y=8;y<126;y+=24)rect(g,x+(y%48?12:0),y,3,3,wp[1]);
+ g.fillStyle=fl[0];g.beginPath();g.moveTo(0,130);g.lineTo(W0,130);g.lineTo(W0,H0);g.lineTo(0,H0);g.fill();for(let i=0;i<9;i++){g.strokeStyle=fl[1];g.lineWidth=1;g.beginPath();g.moveTo(i*45,130);g.lineTo(i*45-(i-4)*18,H0);g.stroke()}
+ rect(g,0,126,W0,6,'rgba(0,0,0,.18)');
+ const slots=room.slots||{};for(const k of ['W0','W1','W2'])if(slots[k])drawItem(g,slots[k],SLOTS[k][0],SLOTS[k][1]);
+ const fl2=['F0','F1','F2','F3','F4'].sort((a,b)=>SLOTS[a][1]-SLOTS[b][1]);for(const k of fl2)if(slots[k])drawItem(g,slots[k],SLOTS[k][0],SLOTS[k][1]);
+ if(me&&me.draw)me.draw(g);if(room.night){rect(g,0,0,W0,H0,'rgba(10,20,60,.18)')}}
+function chibi(g,x,y,look,s){s=s||1;if(g.save){g.save();g.translate(x,y);g.scale(s,s)}const L=look||{};
+ if(L.style==='cat'){circ(g,0,-14,13,L.hair);circ(g,0,-32,12,L.hair);g.fillStyle=L.hair;g.beginPath();g.moveTo(-10,-40);g.lineTo(-12,-52);g.lineTo(-3,-43);g.fill();g.beginPath();g.moveTo(10,-40);g.lineTo(12,-52);g.lineTo(3,-43);g.fill();circ(g,-4,-33,1.8,'#111');circ(g,4,-33,1.8,'#111');rect(g,12,-12,14,4,L.hair)}
+ else{rect(g,-6,-10,5,10,'#333');rect(g,1,-10,5,10,'#333');rect(g,-9,-26,18,17,L.shirt||'#3a7ad8');circ(g,0,-36,13,'#ffdcb8');
+  const h=L.hair||'#3a2418';if(L.style==='long'){rect(g,-14,-46,28,9,h);rect(g,-15,-42,6,20,h);rect(g,9,-42,6,20,h)}else if(L.style==='pony'){rect(g,-14,-47,28,9,h);circ(g,14,-40,6,h);rect(g,15,-38,4,14,h)}else if(L.style==='bob'){rect(g,-15,-47,30,10,h);rect(g,-15,-40,6,12,h);rect(g,9,-40,6,12,h)}else if(L.style==='perm'){for(const [a,b] of [[-10,-46],[0,-50],[10,-46],[-13,-38],[13,-38]])circ(g,a,b,6,h)}else if(L.style==='buzz'){rect(g,-13,-48,26,5,h)}else{rect(g,-14,-48,28,8,h);rect(g,-14,-42,5,6,h)}
+  circ(g,-4,-35,1.8,'#111');circ(g,4,-35,1.8,'#111');rect(g,-3,-29,6,1.5,'#c05050');circ(g,-8,-31,2.4,'rgba(255,120,120,.35)');circ(g,8,-31,2.4,'rgba(255,120,120,.35)')}
+ if(g.restore)g.restore()}
+function scene(g,type,W0,H0,seed){seed=seed||1;const R=n=>{seed=(seed*16807)%2147483647;return (seed%1000)/1000*n};
+ const grad=(a,b)=>{const gr=g.createLinearGradient?g.createLinearGradient(0,0,0,H0):null;if(gr){gr.addColorStop(0,a);gr.addColorStop(1,b);g.fillStyle=gr}else g.fillStyle=a;g.fillRect(0,0,W0,H0)};
+ const cx=W0/2,cy=H0/2;
+ switch(type){
+  case 'stage':grad('#1a0a2a','#4a1a4a');for(let i=0;i<5;i++){g.globalAlpha=.35;g.fillStyle=['#ff4ad8','#4ad8ff','#ffe24a'][i%3];g.beginPath();g.moveTo(10+i*W0/5,0);g.lineTo(i*W0/5-10,H0*.75);g.lineTo(i*W0/5+40,H0*.75);g.fill();g.globalAlpha=1}rect(g,0,H0*.75,W0,H0*.25,'#2a1a2a');for(let i=0;i<4;i++)circ(g,W0*.3+i*W0*.13,H0*.6,5,'#ffdcb8');for(let i=0;i<14;i++)circ(g,R(W0),H0*.92,6,'#111');break;
+  case 'sky':grad('#ff9a5a','#ffd8a0');circ(g,W0*.7,H0*.62,H0*.16,'#fff2b0');rect(g,0,H0*.72,W0,H0*.28,'#5a4a6a');for(let i=0;i<6;i++)rect(g,i*W0/6+4,H0*.62-R(H0*.2),W0/8,H0,'#4a3a5a');break;
+  case 'sea':grad('#7ac8ff','#3a8ad8');rect(g,0,H0*.55,W0,H0*.45,'#2a6ab8');for(let i=0;i<6;i++)rect(g,R(W0),H0*.6+R(H0*.3),18,2,'#bfe6ff');rect(g,0,H0*.85,W0,H0*.15,'#f0d8a0');break;
+  case 'night':grad('#030818','#14244a');for(let i=0;i<40;i++)rect(g,R(W0),R(H0*.8),1.5,1.5,'#fff');circ(g,W0*.5,H0*.2,2.6,'#fff6c8');rect(g,0,H0*.82,W0,H0*.18,'#0a0a14');break;
+  case 'flower':grad('#bfe6ff','#e8f8ff');rect(g,0,H0*.6,W0,H0*.4,'#5aab4a');for(let i=0;i<7;i++){const x=12+i*(W0-24)/6,y=H0*.55+R(H0*.2);rect(g,x-1,y,2,H0*.3,'#3a7a2a');for(let k=0;k<5;k++)circ(g,x+Math.cos(k*1.26)*6,y+Math.sin(k*1.26)*6,5,'#ff5a7a');circ(g,x,y,3,'#ffd23f')}break;
+  case 'cat':grad('#ffe8c8','#ffd0a0');rect(g,0,H0*.7,W0,H0*.3,'#c89a6a');circ(g,cx,H0*.62,H0*.22,'#f2b46a');circ(g,cx,H0*.38,H0*.17,'#f2b46a');g.fillStyle='#f2b46a';g.beginPath();g.moveTo(cx-H0*.14,H0*.28);g.lineTo(cx-H0*.17,H0*.1);g.lineTo(cx-H0*.03,H0*.24);g.fill();g.beginPath();g.moveTo(cx+H0*.14,H0*.28);g.lineTo(cx+H0*.17,H0*.1);g.lineTo(cx+H0*.03,H0*.24);g.fill();rect(g,cx-9,H0*.38,6,2,'#111');rect(g,cx+3,H0*.38,6,2,'#111');circ(g,cx,H0*.44,2,'#d05a5a');break;
+  case 'pc':grad('#2a2a3a','#4a4a5a');for(let i=0;i<4;i++){const x=8+i*(W0-16)/4;rect(g,x,H0*.3,(W0-16)/4-8,H0*.32,'#ddd');rect(g,x+3,H0*.33,(W0-16)/4-14,H0*.24,['#3a6fd8','#5aab4a','#d85a5a','#e8a83a'][i]);rect(g,x,H0*.7,(W0-16)/4-8,4,'#888')}txt(g,'PC방',cx,H0*.18,'#ffd23f',13);break;
+  case 'book':grad('#5a4a3a','#3a2a1a');rect(g,W0*.1,H0*.55,W0*.8,H0*.35,'#a0703a');for(let i=0;i<6;i++)rect(g,W0*.15+i*W0*.11,H0*.3-R(8),W0*.09,H0*.26,['#e84d4d','#3a6fd8','#ffd23f','#5aab4a','#a05ab0','#fff'][i]);circ(g,W0*.82,H0*.2,8,'#fff3a0');break;
+  case 'cake':grad('#ffe0ec','#ffc8dc');rect(g,cx-30,H0*.5,60,H0*.3,'#fff');rect(g,cx-30,H0*.5,60,6,'#ff9ac0');for(let i=0;i<5;i++){rect(g,cx-20+i*10,H0*.38,3,12,'#7ad0ff');circ(g,cx-18.5+i*10,H0*.35,3,'#ffb02a')}break;
+  case 'food':grad('#fff3e0','#ffd8b0');circ(g,cx,H0*.6,H0*.28,'#fff');circ(g,cx,H0*.6,H0*.22,'#e8402a');for(let i=0;i<8;i++)rect(g,cx-20+R(34),H0*.48+R(H0*.2),14,6,'#ffe0c8');break;
+  case 'ramen':grad('#e8f0ff','#c8d8f0');rect(g,cx-26,H0*.35,52,H0*.5,'#fff');rect(g,cx-26,H0*.35,52,10,'#e84d4d');txt(g,'라면',cx,H0*.68,'#e84d4d',13);for(let i=0;i<3;i++){g.globalAlpha=.5;circ(g,cx-10+i*10,H0*.25-i*4,6,'#fff');g.globalAlpha=1}break;
+  case 'class':grad('#e8e0c8','#d8ccaa');rect(g,W0*.08,H0*.12,W0*.84,H0*.6,'#2f5a3a');txt(g,'6학년 2반',cx,H0*.36,'#fff',14);txt(g,'꿈을 향해 날아라!',cx,H0*.56,'#ffe8a0',11);rect(g,W0*.08,H0*.72,W0*.84,5,'#a0703a');break;
+  case 'garden':grad('#cfe8ff','#e8f8ff');rect(g,0,H0*.55,W0,H0*.45,'#7a5232');for(let r=0;r<2;r++)for(let i=0;i<6;i++)circ(g,14+i*(W0-28)/5,H0*.66+r*H0*.17,8,'#6ac84a');break;
+  case 'capsule':grad('#ffd9a0','#ffefc8');rect(g,0,H0*.7,W0,H0*.3,'#d8b880');rect(g,W0*.3,H0*.3,4,H0*.4,'#888');rect(g,W0*.66,H0*.3,4,H0*.4,'#888');rect(g,W0*.3,H0*.3,W0*.36+4,4,'#aaa');circ(g,W0*.42,H0*.62,7,'#ffdcb8');circ(g,W0*.56,H0*.62,7,'#ffdcb8');rect(g,W0*.4,H0*.66,8,14,'#ffd23f');rect(g,W0*.54,H0*.66,8,14,'#7ad0ff');txt(g,'2004.05.30',W0*.82,H0*.95,'#a05a00',9);break;
+  case 'track':grad('#9fd6ff','#d8f0ff');rect(g,0,H0*.5,W0,H0*.5,'#d0603a');for(let i=0;i<4;i++)rect(g,0,H0*.58+i*H0*.1,W0,2,'#fff');rect(g,W0*.7,H0*.15,3,H0*.4,'#888');rect(g,W0*.7+3,H0*.15,26,16,'#e84d4d');txt(g,'1',W0*.7+16,H0*.15+12,'#fff',11);break;
+  case 'army':grad('#cfe8c8','#9fc890');rect(g,0,H0*.6,W0,H0*.4,'#5a7a3a');rect(g,W0*.2,H0*.35,W0*.6,H0*.3,'#c8c0a0');rect(g,W0*.45,H0*.47,W0*.1,H0*.18,'#5a4a3a');rect(g,W0*.85,H0*.1,2,H0*.5,'#888');rect(g,W0*.85+2,H0*.1,20,13,'#fff');circ(g,W0*.85+12,H0*.1+6.5,3.5,'#e84d4d');break;
+  case 'trophy':grad('#2a3a5a','#0a1a2a');rect(g,cx-14,H0*.25,28,H0*.3,'#ffd23f');rect(g,cx-4,H0*.55,8,H0*.15,'#ffd23f');rect(g,cx-14,H0*.7,28,6,'#c8a020');txt(g,'BEST',cx,H0*.9,'#7ad0ff',11);break;
+  case 'selca':grad('#ffe8f4','#fff');g.globalAlpha=.5;circ(g,cx,cy,H0*.6,'#fff');g.globalAlpha=1;circ(g,cx,H0*.55,H0*.25,'#ffdcb8');rect(g,cx-H0*.27,H0*.25,H0*.54,H0*.14,'#3a2418');rect(g,cx-H0*.28,H0*.3,H0*.1,H0*.4,'#3a2418');rect(g,cx+H0*.18,H0*.3,H0*.1,H0*.4,'#3a2418');circ(g,cx-8,H0*.55,2.5,'#111');circ(g,cx+8,H0*.55,2.5,'#111');txt(g,'V',cx+H0*.36,H0*.8,'#ff6ab0',16);break;
+  case 'ball':grad('#9fd6ff','#e8f8ff');rect(g,0,H0*.65,W0,H0*.35,'#5aab4a');circ(g,cx,H0*.55,H0*.2,'#fff');circ(g,cx,H0*.55,H0*.07,'#222');txt(g,'싸인',cx+H0*.22,H0*.4,'#e84d4d',10);break;
+  default:grad('#ddd','#bbb')}}
+
+/* ---------- 미니홈피 창 ---------- */
+function attach(X){
+ const {E,B}=X;let alive=true,win=null;const timers=new Set(),seen=new Set();
+ const later=(fn,ms)=>{const id=w.setTimeout(()=>{timers.delete(id);if(alive)fn()},ms);timers.add(id);return id};
+ const view={who:'me',tab:'home',sel:null};
+ function S(){const s=X.saved;if(!s.mini||typeof s.mini!=='object'||Array.isArray(s.mini))s.mini={};const m=s.mini;
+  const num=(k,v)=>{if(!Number.isFinite(m[k])||m[k]<0)m[k]=v};num('dotori',10);num('today',3);num('earned',0);
+  for(const k of ['items','diary','photos','gbMine'])if(!Array.isArray(m[k]))m[k]=[];
+  for(const k of ['ilchon','visited','gbTo','says','rewards','pending'])if(!m[k]||typeof m[k]!=='object'||Array.isArray(m[k]))m[k]={};
+  if(!m.room||typeof m.room!=='object'||Array.isArray(m.room))m.room={wall:'sky',floor:'wood',slots:{F2:'desk',W0:'window'}};if(!m.room.slots||typeof m.room.slots!=='object')m.room.slots={};
+  for(const k of Object.keys(m.room.slots))if(!SLOTS[k]||!(ITEM[m.room.slots[k]]||['desk','window'].includes(m.room.slots[k])))delete m.room.slots[k];
+  if(!m.ilchon.sujin&&!m.rewards.start){m.ilchon.sujin='동네친구';m.rewards.start=1}
+  if(typeof m.title!=='string')m.title='';if(typeof m.intro!=='string')m.intro='';if(typeof m.mood!=='string')m.mood='행복';if(typeof m.bgm!=='string')m.bgm='';if(typeof m.skin!=='string')m.skin='sky';
+  m.items=m.items.filter(id=>ITEM[id]);for(const id of ['desk','window','wp-sky','fl-wood'])if(!m.items.includes(id))m.items.push(id);
+  return m}
+ const nick=()=>String((X.saved.xp&&X.saved.xp.nick)||'게스트').slice(0,12);
+ const toast=(title,text)=>{X.ui&&X.ui.toast&&X.ui.toast({title,text,icon:'info',ms:4200})};
+ function give(n,why,flag){const m=S();if(flag){if(m.rewards[flag])return false;m.rewards[flag]=1}m.dotori+=n;m.earned+=n;X.save();toast('도토리 +'+n,why+' (지금 '+m.dotori+'개)');return true}
+ function open(){win=X.windowFor('minihome','미니홈피');if(!win.node.classList.contains('mh-win')){win.node.classList.add('mh-win');win.node.style.width='min(880px,97%)';win.node.style.height='min(640px,97%)';win.node.style.left='2%';win.node.style.top='1%'}render();return win}
+ function go(who,tab){view.who=who||'me';view.tab=tab||'home';view.sel=null;if(view.who!=='me'){const m=S(),f=FR[view.who];if(f&&!seen.has(f.id)){seen.add(f.id);m.visited[f.id]=(m.visited[f.id]||0)+1;X.save();if(!m.rewards['visit-'+f.id])give(1,f.name+'님 미니홈피 첫 방문 (파도타기)','visit-'+f.id)}}render()}
+ const ownerName=()=>view.who==='me'?nick():FR[view.who].name;
+ function render(){if(!win||!X.windows.get('minihome'))return;const m=S(),me=view.who==='me',f=me?null:FR[view.who];if(!me&&!f){view.who='me';return render()}
+  const skin=me?(m.skin||'sky'):f.skin;win.caption.textContent=(me?'♡ '+nick()+'님의 미니홈피 ♡':f.name+'님의 미니홈피')+' - Microsoft Internet Explorer';
+  const c=win.content;c.replaceChildren();const root=E('div','mh-root mh-skin-'+skin);c.append(root);
+  const top=E('div','mh-top'),cnt=E('span','mh-count');const today=me?m.today:f.today+(seen.has(f.id)?1:0),total=me?2006+m.today:f.total+(m.visited[f.id]||0);cnt.append(E('b','','TODAY '),E('span','',String(today)),E('b','',' | TOTAL '),E('span','',total.toLocaleString('ko-KR')));
+  top.append(cnt,E('strong','mh-title',me?(m.title||'♡ '+nick()+'님의 미니홈피 ♡'):f.title));root.append(top);
+  const book=E('div','mh-book'),left=E('aside','mh-left'),main=E('main','mh-main'),tabs=E('nav','mh-tabs');book.append(left,main,tabs);root.append(book);
+  /* 왼쪽: 대문 사진과 프로필 */
+  const cov=E('canvas','mh-cover');cov.width=170;cov.height=130;left.append(cov);const g=cov.getContext&&cov.getContext('2d');
+  if(g){try{if(me){const pic=m.cover&&X.shell&&X.shell.pics?X.shell.pics().find(p=>p.id===m.cover):null;if(pic&&w.Image){const im=new w.Image();im.onload=()=>{g.drawImage(im,0,0,170,130)};im.src=pic.url;rect(g,0,0,170,130,'#eee')}else{scene(g,'sky',170,130,7);if(w.CHARART&&w.CHARART.drawRemote){g.save();g.translate(85,124);g.scale(1.8,1.8);w.CHARART.drawRemote(g,w.CHARART.selected,0,0,1,'stand','mh-cover');g.restore()}}}else{scene(g,f.cover,170,130,f.id.length*97);}}catch(_){}}
+  left.append(E('p','mh-intro',me?(m.intro||'안녕하세요 ^^\n미니홈피 꾸미는 중이에요!\n일촌 신청 환영~'):f.intro));
+  const mood=E('p','mh-mood','오늘의 기분: '+moodFace(me?m.mood:f.mood));left.append(mood);
+  const nm=E('p','mh-name');nm.append(E('b','',me?nick():f.name+(f.nick?' ('+f.nick+')':'')),E('span','',me?' ♡':' '+f.sex),E('small','',me?'동네 PC방에서 접속 중':f.info));left.append(nm);
+  if(!me){const st=E('p','mh-rel',m.ilchon[f.id]?'★ 나와 일촌 (일촌명: '+m.ilchon[f.id]+')':m.pending[f.id]?'일촌 신청 중...':'일촌이 아니에요');left.append(st);
+   if(f.away)left.append(E('p','mh-away',f.away));
+   if(!m.ilchon[f.id]&&!m.pending[f.id])left.append(B('일촌 신청',()=>askIlchon(f),'mh-btn'));}
+  const wave=E('select','mh-wave');wave.setAttribute('aria-label','일촌 파도타기');const first=E('option','','일촌 파도타기 ▼');first.value='';wave.append(first);
+  const list=me?Object.entries(m.ilchon).filter(([id])=>FR[id]).map(([id,n])=>[id,n]):f.ilchon.filter(([id])=>FR[id]);
+  for(const [id,n] of list){const o=E('option','',FR[id].name+' ('+n+')');o.value=id;wave.append(o)}if(!me){const o=E('option','','◀ 내 미니홈피로');o.value='me';wave.append(o)}
+  wave.addEventListener('change',()=>{const v=wave.value;if(v)go(v,'home')});left.append(wave);
+  if(!me)left.append(B('◀ 내 미니홈피로',()=>go('me','home'),'mh-btn small'));
+  if(!me&&f.homepage&&X.navigate)left.append(B('개인 홈페이지 가기',()=>X.navigate({type:'home',portal:'w-hompy'}),'mh-btn small'));
+  /* 오른쪽 메뉴 */
+  const T=me?[['home','홈'],['profile','프로필'],['diary','다이어리'],['photo','사진첩'],['guest','방명록'],['room','미니룸'],['shop','선물가게']]:[['home','홈'],['profile','프로필'],['diary','다이어리'],['photo','사진첩'],['guest','방명록']];
+  for(const [id,label] of T)tabs.append(B(label,()=>{view.tab=id;view.sel=null;render()},'mh-tab'+(view.tab===id?' on':'')));
+  /* BGM */
+  const bgm=me?(m.bgm&&ITEM[m.bgm]?ITEM[m.bgm].name:''):f.bgm;const bar=E('div','mh-bgm');bar.append(E('b','','♬ BGM'),E('span','',bgm?bgm:'배경음악이 없어요 (선물가게에서 고를 수 있어요)'),E('i','mh-eq'));root.append(bar);
+  if(me){const dot=E('div','mh-dotori');dot.append(E('b','','내 도토리 '+m.dotori+'개'),B('도토리 충전',()=>X.ui&&X.ui.dialog?X.ui.dialog({title:'도토리 충전',icon:'warn',text:'휴대폰 결제는 부모님 동의가 필요해요. PC방에서는 결제할 수 없어요 ㅠㅠ\n\n도토리는 파도타기로 처음 놀러 간 집(+1), 일촌 맺기(+2), 방명록 남기기(+1), 다이어리 쓰기(+1), 사진 올리기(+2)로 모을 수 있어요.'}):0,'mh-btn small'));root.append(dot)}
+  const tab=me&&['room','shop'].includes(view.tab)?view.tab:view.tab;
+  if(tab==='home')homeTab(main,m,f);else if(tab==='profile')profileTab(main,m,f);else if(tab==='diary')diaryTab(main,m,f);else if(tab==='photo')photoTab(main,m,f);else if(tab==='guest')guestTab(main,m,f);else if(tab==='room'&&me)roomTab(main,m);else if(tab==='shop'&&me)shopTab(main,m);else homeTab(main,m,f)}
+ function roomCanvas(parent,room,me){const cv=E('canvas','mh-room');cv.width=360;cv.height=210;parent.append(cv);const g=cv.getContext&&cv.getContext('2d');if(!g)return cv;
+  try{drawRoom(g,room,{draw(g){if(me){if(w.CHARART&&w.CHARART.drawRemote){g.save();g.translate(178,204);g.scale(1.25,1.25);w.CHARART.drawRemote(g,w.CHARART.selected,0,0,1,'stand','mh-room');g.restore()}else chibi(g,178,204,{hair:'#3a2418',shirt:'#3a7ad8'})}else if(me===false){}}});if(me===false&&room.look)chibi(g,178,204,room.look,1.1)}catch(_){}return cv}
+ function homeTab(main,m,f){const me=!f;main.append(E('h3','mh-h','미니룸'));
+  if(me)roomCanvas(main,{...m.room,night:m.room.wall==='night'},true);else roomCanvas(main,{...f.room,look:f.look,night:f.room.wall==='night'},false);
+  const news=E('section','mh-box');news.append(E('h4','','최근 소식'));
+  if(me){const d=m.diary[m.diary.length-1],p=m.photos[m.photos.length-1];news.append(E('p','','다이어리 '+m.diary.length+'개 · 사진 '+m.photos.length+'장 · 방명록 '+((X.saved.guestbook||[]).length+m.gbMine.length)+'개'));if(d)news.append(E('p','mh-muted','최근 다이어리: '+d.t.slice(0,30)));if(p)news.append(E('p','mh-muted','최근 사진: '+p.cap));if(!d&&!p)news.append(E('p','mh-muted','아직 글이 없어요. 다이어리를 써 보세요!'))}
+  else{news.append(E('p','','다이어리 '+f.diary.length+'개 · 사진 '+f.photos.length+'장 · 방명록 '+(f.guest.length+(m.gbTo[f.id]||[]).length)+'개'),E('p','mh-muted','최근 다이어리: '+f.diary[0][2].slice(0,34)+'...'))}
+  main.append(news);
+  const says=E('section','mh-box mh-says');says.append(E('h4','','일촌평'));
+  if(me){const ids=Object.keys(m.ilchon).filter(id=>FR[id]);for(const id of ids)says.append(sayLine(FR[id].name,m.ilchon[id],FR[id].toMe));if(!ids.length)says.append(E('p','mh-muted','일촌을 맺으면 일촌평이 달려요.'))}
+  else{for(const [id,n,t] of f.says)says.append(sayLine(FR[id]?FR[id].name:id,n,t));const mine=m.says[f.id];if(mine)says.append(sayLine(nick(),m.ilchon[f.id]||'방문자',mine,true));
+   if(m.ilchon[f.id]){const fm=E('form','mh-form'),inp=E('input');inp.maxLength=40;inp.placeholder='일촌평 한 줄 (40자)';inp.setAttribute('aria-label','일촌평');const sb=B('남기기',()=>{},'mh-btn small');sb.type='submit';fm.append(inp,sb);fm.addEventListener('submit',e=>{e.preventDefault&&e.preventDefault();const t=String(inp.value||'').trim().slice(0,40);if(!t)return;m.says[f.id]=t;X.save();render()});says.append(fm)}else says.append(E('p','mh-muted','일촌만 일촌평을 쓸 수 있어요.'))}
+  main.append(says)}
+ function sayLine(name,ilchon,text,mine){const p=E('p','mh-say'+(mine?' mine':''));p.append(E('b','','('+ilchon+') '+name),E('span','',' : '+text));return p}
+ function profileTab(main,m,f){const me=!f;main.append(E('h3','mh-h','프로필'));
+  if(!me){const box=E('section','mh-box');for(const [a,b] of [['이름',f.name+(f.nick?' ('+f.nick+')':'')],['소개',f.info],['기분',moodFace(f.mood)],['배경음악',f.bgm],['일촌',f.ilchon.length+'명']]){const p=E('p','');p.append(E('b','',a+' '),E('span','',b));box.append(p)}box.append(E('p','mh-intro',f.intro));main.append(box);return}
+  const box=E('form','mh-box mh-profile'),title=E('input'),intro=E('textarea'),mood=E('select'),cover=E('select');
+  title.maxLength=30;title.value=m.title;title.placeholder='미니홈피 제목 (예: ♡ 나의 작은 방 ♡)';title.setAttribute('aria-label','미니홈피 제목');intro.maxLength=120;intro.value=m.intro;intro.placeholder='대문 글 (세 줄 정도)';intro.setAttribute('aria-label','대문 글');
+  for(const [x,y] of MOODS){const o=E('option','',x+' '+y);o.value=x;o.selected=x===m.mood;mood.append(o)}mood.value=m.mood;mood.setAttribute('aria-label','오늘의 기분');
+  const pics=X.shell&&X.shell.pics?X.shell.pics():[];const o0=E('option','','내 캐릭터 (기본)');o0.value='';cover.append(o0);for(const p of pics){const o=E('option','','내 그림: '+p.name);o.value=p.id;o.selected=p.id===m.cover;cover.append(o)}cover.value=m.cover||'';cover.setAttribute('aria-label','대문 사진');
+  const lab=(t,n)=>{const l=E('label','mh-field');l.append(E('b','',t),n);return l};
+  const sb=B('저장',()=>{},'mh-btn');sb.type='submit';box.append(lab('제목',title),lab('대문 글',intro),lab('기분',mood),lab('대문 사진',cover),E('p','mh-muted',pics.length?'대문 사진은 그림판에서 저장한 ‘내 그림’ 중에서 고를 수 있어요.':'그림판에서 그림을 저장하면 대문 사진으로 쓸 수 있어요.'),sb);
+  box.addEventListener('submit',e=>{e.preventDefault&&e.preventDefault();m.title=String(title.value||'').trim().slice(0,30);m.intro=String(intro.value||'').trim().slice(0,120);m.mood=MOODS.some(x=>x[0]===mood.value)?mood.value:'행복';m.cover=pics.some(p=>p.id===cover.value)?cover.value:'';X.save();toast('미니홈피','프로필을 저장했어요.');render()});main.append(box)}
+ function friendComment(list,cb,delay){const m=S(),ids=Object.keys(m.ilchon).filter(id=>FR[id]&&id!=='sora');const id=ids.length?ids[Math.floor(Math.random()*ids.length)]:'sujin';const f=FR[id];later(()=>{cb(f.name+'::'+f.cm[Math.floor(Math.random()*f.cm.length)]);X.save();render()},delay||1500)}
+ function cmList(box,list){for(const t of list){const mm=/^([^:]{1,12})::(.*)$/.exec(t);const p=E('p','mh-cm'+(/^ㄴ/.test(t)?' nest':''));if(mm)p.append(E('b','',mm[1]),E('span','',' '+mm[2]));else p.append(E('span','',t));box.append(p)}}
+ function diaryTab(main,m,f){const me=!f;main.append(E('h3','mh-h','다이어리'));
+  const cal=E('div','mh-cal');cal.append(E('b','','2006년 5월'));for(let d=1;d<=31;d++){const has=me?(d===30&&m.diary.length):f.diary.some(x=>x[0].startsWith('2006.05.'+String(d).padStart(2,'0')));cal.append(E('span',(d===30?'today ':'')+(has?'has':''),String(d)))}main.append(cal);
+  if(me){const fm=E('form','mh-box mh-write'),wea=E('select'),ta=E('textarea');for(const x of ['맑음','흐림','비','바람'])wea.append(Object.assign(E('option','',x),{value:x}));wea.setAttribute('aria-label','날씨');ta.maxLength=300;ta.placeholder='오늘 있었던 일을 적어 보세요 (300자)';ta.setAttribute('aria-label','다이어리');const sb=B('다이어리 쓰기',()=>{},'mh-btn');sb.type='submit';const head=E('p','');head.append(E('b','',TODAY+' '),wea);fm.append(head,ta,sb);
+   fm.addEventListener('submit',e=>{e.preventDefault&&e.preventDefault();const t=String(ta.value||'').trim().slice(0,300);if(!t)return;const entry={d:TODAY,w:wea.value||'맑음',t,cm:[]};m.diary=[...m.diary,entry].slice(-12);X.save();if(m.diary.length<=5)give(1,'다이어리 쓰기','diary-'+m.diary.length);friendComment(entry.cm,x=>entry.cm.push(x));render()});main.append(fm);
+   for(const d of m.diary.slice().reverse()){const box=E('article','mh-box mh-entry');box.append(E('small','',d.d+' · 날씨 '+d.w),E('p','',d.t));const cm=E('div','mh-cms');cmList(cm,d.cm||[]);box.append(cm);main.append(box)}
+   if(!m.diary.length)main.append(E('p','mh-muted','아직 다이어리가 없어요.'));return}
+  for(const [d,wea,t] of f.diary){const box=E('article','mh-box mh-entry');box.append(E('small','',d+' · 날씨 '+wea),E('p','',t.replace('{seat}',String((X.options&&X.options.seat)||12))));main.append(box)}}
+ function photoTab(main,m,f){const me=!f;main.append(E('h3','mh-h','사진첩'));
+  if(me){const pics=X.shell&&X.shell.pics?X.shell.pics():[];const fm=E('form','mh-box mh-write'),sel=E('select'),cap=E('input');sel.setAttribute('aria-label','올릴 그림');for(const p of pics){const o=E('option','',p.name);o.value=p.id;sel.append(o)}cap.maxLength=40;cap.placeholder='사진 설명 (40자)';cap.setAttribute('aria-label','사진 설명');const sb=B('사진 올리기',()=>{},'mh-btn');sb.type='submit';
+   if(pics.length){fm.append(E('p','mh-muted','그림판에서 저장한 ‘내 그림’을 사진첩에 올릴 수 있어요.'),sel,cap,sb);fm.addEventListener('submit',e=>{e.preventDefault&&e.preventDefault();const pic=pics.find(p=>p.id===sel.value);if(!pic)return;const entry={pic:pic.id,cap:String(cap.value||'').trim().slice(0,40)||pic.name,cm:[]};m.photos=[...m.photos,entry].slice(-12);X.save();if(m.photos.length<=3)give(2,'사진 올리기','photo-'+m.photos.length);friendComment(entry.cm,x=>entry.cm.push(x),1800);render()})}
+   else fm.append(E('p','mh-muted','올릴 그림이 없어요. 시작 메뉴의 그림판에서 그림을 그리고 ‘저장’하면 여기에 올릴 수 있어요.'),B('그림판 열기',()=>X.openApp('paint'),'mh-btn small'));main.append(fm);
+   const grid=E('div','mh-photos');for(const p of m.photos.slice().reverse()){const card=E('figure','mh-photo');const pic=pics.find(x=>x.id===p.pic);if(pic){const im=E('img');im.src=pic.url;im.alt=p.cap;card.append(im)}else card.append(E('div','mh-xbox','×'));card.append(E('figcaption','',p.cap));const cm=E('div','mh-cms');cmList(cm,p.cm||[]);card.append(cm);grid.append(card)}main.append(grid);return}
+  const grid=E('div','mh-photos');f.photos.forEach(([type,cap,date,cms],i)=>{const card=E('figure','mh-photo'),cv=E('canvas');cv.width=200;cv.height=140;const g=cv.getContext&&cv.getContext('2d');if(g)try{scene(g,type,200,140,i*31+f.id.length*7)}catch(_){}card.append(cv,E('figcaption','',cap),E('small','',date));const cm=E('div','mh-cms');cmList(cm,cms);card.append(cm);grid.append(card)});main.append(grid)}
+ function guestTab(main,m,f){const me=!f;main.append(E('h3','mh-h','방명록'));
+  const fm=E('form','mh-box mh-write'),ta=E('input');ta.maxLength=100;ta.placeholder=me?'다녀간 흔적 한 줄 (100자)':'방명록 남기기 (100자)';ta.setAttribute('aria-label','방명록');const sb=B('남기기',()=>{},'mh-btn');sb.type='submit';fm.append(ta,sb);main.append(fm);
+  fm.addEventListener('submit',e=>{e.preventDefault&&e.preventDefault();const t=String(ta.value||'').trim().slice(0,100);if(!t)return;
+   if(me){X.saved.guestbook=[...(X.saved.guestbook||[]),t].slice(-15);X.save();render();return}
+   const list=m.gbTo[f.id]=Array.isArray(m.gbTo[f.id])?m.gbTo[f.id]:[];const entry={t,r:''};list.push(entry);m.gbTo[f.id]=list.slice(-8);X.save();give(1,f.name+'님께 방명록 남기기','gb-'+f.id);
+   if(!f.away){later(()=>{entry.r=f.replies[(list.length-1)%f.replies.length];X.save();render()},1400);later(()=>{m.gbMine=[...m.gbMine,{who:f.name,t:f.visit[Math.floor(Math.random()*f.visit.length)],at:'2006.05.30 16:3'+Math.min(2,Math.floor(Math.random()*3))}].slice(-20);m.today+=1;X.save();toast('미니홈피','답방! '+f.name+'님이 내 방명록에 글을 남겼어요.')},3200)}
+   render()});
+  if(me){const items=[...m.gbMine.map(x=>({who:x.who,at:x.at,t:x.t})).reverse(),...(X.saved.guestbook||[]).slice().reverse().map(t=>({who:nick(),at:'2006.05.30',t}))];for(const x of items){const p=E('div','mh-gb');p.append(E('b','',x.who),E('small','',' '+x.at),E('p','',x.t));main.append(p)}if(!items.length)main.append(E('p','mh-muted','아직 방명록이 없어요. 친구 미니홈피에 방명록을 남기면 답방이 와요!'));return}
+  for(const x of (m.gbTo[f.id]||[]).slice().reverse()){const p=E('div','mh-gb mine');p.append(E('b','',nick()),E('small','',' 2006.05.30 16:32'),E('p','',x.t));if(x.r)p.append(E('p','mh-reply','ㄴ '+f.name+': '+x.r));else if(f.away)p.append(E('p','mh-reply muted','ㄴ (주인이 아직 답글을 달지 않았어요)'));main.append(p)}
+  for(const [who,at,t,r] of f.guest){const p=E('div','mh-gb');p.append(E('b','',who),E('small','',' '+at),E('p','',t));if(r)p.append(E('p','mh-reply','ㄴ '+f.name+': '+r));main.append(p)}}
+ function askIlchon(f){const m=S();const ask=name=>{name=String(name||'').trim().slice(0,8)||'친구';m.pending[f.id]=name;X.save();render();
+   if(f.away){toast('일촌 신청','일촌 신청을 보냈어요. '+f.name+'님이 접속하면 확인할 거예요.');return}
+   later(()=>{delete m.pending[f.id];m.ilchon[f.id]=f.accept||name;X.save();give(2,f.name+'님과 일촌이 되었어요 (일촌명: '+(f.accept||name)+')','ilchon-'+f.id);render()},2600)};
+  if(X.ui&&X.ui.dialog){const inp=E('input');inp.maxLength=8;inp.value='친구';inp.setAttribute('aria-label','일촌명');const box=E('div','mh-ask');box.append(E('p','',f.name+'님께 일촌을 신청할까요? 서로 부를 일촌명을 적어 주세요.'),inp);X.ui.dialog({title:'일촌 신청',node:box,buttons:[['신청',()=>ask(inp.value)],['취소']]})}else ask('친구')}
+ function roomTab(main,m){main.append(E('h3','mh-h','미니룸 꾸미기'));const cv=roomCanvas(main,{...m.room,night:m.room.wall==='night'},true);
+  const help=E('p','mh-muted',view.sel?'‘'+ITEM[view.sel].name+'’을(를) 놓을 자리를 고르세요 (방 그림을 눌러도 돼요).':'가진 물건을 고른 다음 놓을 자리를 누르세요. 물건은 선물가게에서 도토리로 살 수 있어요.');main.append(help);
+  const place=slot=>{const it=view.sel&&ITEM[view.sel];if(!it)return;const isWall=slot[0]==='W';if((it.slot==='wall')!==isWall){toast('미니룸',it.slot==='wall'?'벽에 거는 물건이에요.':'바닥에 놓는 물건이에요.');return}for(const k of Object.keys(m.room.slots))if(m.room.slots[k]===it.id&&k!==slot)delete m.room.slots[k];m.room.slots[slot]=it.id;view.sel=null;X.save();render()};
+  cv.addEventListener('pointerdown',e=>{if(!view.sel)return;const r=cv.getBoundingClientRect?cv.getBoundingClientRect():{left:0,top:0,width:360,height:210};const x=(e.clientX-r.left)*360/(r.width||360),y=(e.clientY-r.top)*210/(r.height||210);const it=ITEM[view.sel];let best=null,bd=1e9;for(const [k,[sx,sy]] of Object.entries(SLOTS)){if((k[0]==='W')!==(it.slot==='wall'))continue;const d=Math.hypot(x-sx,y-sy);if(d<bd){bd=d;best=k}}if(best)place(best)});
+  const slots=E('div','mh-slots');for(const k of Object.keys(SLOTS)){const cur=m.room.slots[k];slots.append(B((k[0]==='W'?'벽 ':'바닥 ')+(Number(k[1])+1)+': '+(cur?ITEM[cur]?ITEM[cur].name:cur:'비어 있음'),()=>{if(view.sel)place(k);else if(cur){delete m.room.slots[k];X.save();render()}},'mh-slot'+(cur?' full':'')))}main.append(slots,E('p','mh-muted','물건이 놓인 자리를 그냥 누르면 물건을 치워요.'));
+  const mine=E('div','mh-own');mine.append(E('b','','내 물건'));for(const id of m.items){const it=ITEM[id];if(!it||!['floor','wall'].includes(it.slot))continue;mine.append(B(it.name,()=>{view.sel=view.sel===id?null:id;render()},'mh-chip'+(view.sel===id?' on':'')))}main.append(mine);
+  const deco=E('div','mh-own');deco.append(E('b','','벽지 · 바닥 · 스킨 · BGM'));for(const id of m.items){const it=ITEM[id];if(!it||!['wallpaper','flooring','skin','bgm'].includes(it.slot))continue;const on=(it.slot==='wallpaper'&&m.room.wall===id.slice(3))||(it.slot==='flooring'&&m.room.floor===id.slice(3))||(it.slot==='skin'&&m.skin===id.slice(3))||(it.slot==='bgm'&&m.bgm===id);deco.append(B(it.name+(on?' ✓':''),()=>apply(it),'mh-chip'+(on?' on':'')))}
+  if(m.skin!=='sky')deco.append(B('기본 스킨으로',()=>{m.skin='sky';X.save();render()},'mh-chip'));main.append(deco)}
+ function apply(it){const m=S();if(it.slot==='wallpaper')m.room.wall=it.id.slice(3);else if(it.slot==='flooring')m.room.floor=it.id.slice(3);else if(it.slot==='skin')m.skin=it.id.slice(3);else if(it.slot==='bgm')m.bgm=m.bgm===it.id?'':it.id;X.save();render()}
+ function buy(it){const m=S();if(m.items.includes(it.id))return false;if(m.dotori<it.price){toast('선물가게','도토리가 '+(it.price-m.dotori)+'개 모자라요.');return false}m.dotori-=it.price;m.items.push(it.id);X.save();toast('선물가게','‘'+it.name+'’을(를) 샀어요! (남은 도토리 '+m.dotori+'개)');if(['wallpaper','flooring','skin','bgm'].includes(it.slot))apply(it);else render();return true}
+ function shopTab(main,m){main.append(E('h3','mh-h','선물가게'));main.append(E('p','mh-muted','도토리로 미니룸 물건, 벽지, 스킨, 배경음악을 살 수 있어요. 산 물건은 ‘미니룸’에서 놓아 보세요.'));
+  for(const [slot,label] of [['floor','가구 · 소품'],['wall','벽 장식'],['wallpaper','벽지'],['flooring','바닥'],['skin','미니홈피 스킨'],['bgm','배경음악']]){const box=E('section','mh-box mh-shop');box.append(E('h4','',label));for(const it of SHOP.filter(x=>x.slot===slot)){const own=m.items.includes(it.id);const row=E('div','mh-item');if(['floor','wall'].includes(slot)){const cv=E('canvas','mh-thumb');cv.width=70;cv.height=60;const g=cv.getContext&&cv.getContext('2d');if(g)try{rect(g,0,0,70,60,slot==='wall'?'#cfe8ff':'#f4ead8');drawItem(g,it.id,35,slot==='wall'?30:56)}catch(_){}row.append(cv)}
+   row.append(E('b','',it.name),E('span','mh-price','도토리 '+it.price+'개'),own?E('em','','보유 중'):B('사기',()=>buy(it),'mh-btn small'));box.append(row)}main.append(box)}}
+ const api={ids:['minihome'],has:id=>id==='minihome',open,go,state:()=>({...S(),view:{...view}}),
+  buy:id=>ITEM[id]?buy(ITEM[id]):false,
+  reset(){view.who='me';view.tab='home';view.sel=null;seen.clear()},destroy(){alive=false;for(const t of timers)w.clearTimeout(t);timers.clear()}};
+ return api}
+w.MiniHome={attach,FRIENDS,SHOP,SLOTS,MOODS,drawItem,drawRoom,scene,chibi,version:'A95'};
+})(window);

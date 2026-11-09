@@ -111,5 +111,8 @@ function run(id,host,opt){
  if(w.requestAnimationFrame)raf=w.requestAnimationFrame(frame);else{try{game.draw(g)}catch(_){}}
  return{stop,state:()=>game.state(),phase:()=>phase,begin,result:()=>result,best:()=>best,game};
 }
-w.KidsGames={list:ORDER.map(id=>({id,title:GAMES[id].title,help:GAMES[id].help})),run,has:id=>!!GAMES[id],title:id=>GAMES[id]?GAMES[id].title:''};
+/* A95: 다른 파일에서 오락을 더 붙일 수 있다. KidsGames.register(id, {title, help, init}) */
+const list=ORDER.map(id=>({id,title:GAMES[id].title,help:GAMES[id].help}));
+function register(id,def){if(!/^[a-z][a-z0-9]{1,15}$/.test(id)||GAMES[id]||!def||typeof def.init!=='function')return false;GAMES[id]=def;ORDER.push(id);list.push({id,title:def.title,help:def.help});return true}
+w.KidsGames={list,run,register,has:id=>!!GAMES[id],title:id=>GAMES[id]?GAMES[id].title:'',W,H,text,hud};
 })(window);

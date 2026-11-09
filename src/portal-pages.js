@@ -41,7 +41,7 @@ function create(ctx){
  function paragraphs(parent,text,cls,lead){let first=true;for(const part of String(text||'').split(/\n\s*\n/)){const p=E('p',cls||'xp79-article p86-para');if(lead&&first)p.append(E('b','p87-dateline',lead+' '),E('span','',part));else p.textContent=part;first=false;parent.append(p)}}
  function pagedRows(table,nav,xs,per,drawRow){let page=0,made=[];const pages=Math.max(1,Math.ceil(xs.length/per));const draw=()=>{for(const n of made)n.remove();made=[];xs.slice(page*per,page*per+per).forEach((x,i)=>{const n=drawRow(x,page*per+i);if(n){table.append(n);made.push(n)}});nav.replaceChildren();if(pages>1){nav.append(E('small','p87-pageinfo',xs.length+'건  |  '+(page+1)+' / '+pages+' 쪽'));if(page>0)nav.append(B('◀ 이전',()=>{page--;draw()},'p87-pg'));for(let i=0;i<pages;i++)nav.append(B(String(i+1),()=>{page=i;draw()},'p87-pg'+(i===page?' on':'')));if(page<pages-1)nav.append(B('다음 ▶',()=>{page++;draw()},'p87-pg'))}};draw()}
  function adSlot(parent,product){const slot=E('div','p86-adslot');ctx.displayAd(slot,product);parent.append(slot)}
- function unread(){const list=((boards.mail||{})[P()])||[];return list.filter(m=>m.kind==='inbox'&&m.unread&&!mailRead.has(P()+m.id)).length}
+ function unread(){const list=((boards.mail||{})[P()])||[];const pm=ctx.mail&&ctx.mail();if(pm&&pm.unread)return pm.unread(P(),list);return list.filter(m=>m.kind==='inbox'&&m.unread&&!mailRead.has(P()+m.id)).length}
 
  /* ---------- 공지줄, 하단 ---------- */
  function notice(page){const prof=ctx.profiles[P()];if(!prof||!prof.notice)return;const n=E('div','p86-notice');n.append(E('b','','공지'),E('span','',prof.notice.replace(/^\[[^\]]*\]\s*/,'')));page.append(n)}
@@ -240,7 +240,7 @@ function create(ctx){
   if(r.type==='cafe'){cafePage(content,r);return true}
   if(r.type==='knowledge'){kinPageList(content,r);return true}
   if(r.type==='section'){sectionPage(content,r);return true}
-  if(r.type==='mail'){mailPage(content,r);return true}
+  if(r.type==='mail'){const pm=ctx.mail&&ctx.mail();if(pm&&pm.render){pm.render(content,{rerender:ctx.rerender,portal:P(),portalMail:((boards.mail||{})[P()])||[]});return true}mailPage(content,r);return true}
   if(r.type==='weather')return weatherPage(content);
   if(r.type==='shopping'){shoppingPage(content);return true}
   if(r.type==='unavailable'){errorPage(content,r);return true}

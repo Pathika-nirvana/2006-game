@@ -81,6 +81,7 @@ PAGE.hompy=function(page,env){
  const frame=E('div','hp-frame'),head=E('header','hp-head'),side=E('nav','hp-side'),main=E('main','hp-main');
  head.append(E('h1','hp-logo','★☆ 하늘이의 꿈꾸는 홈페이지 ☆★'),marquee(E,d.marquee,'hp-marq'));
  for(const [type,label] of [['main','HOME'],['profile','프로필'],['diary','다이어리'],['gallery','사진첩'],['guestbook','방명록'],['links','링크']])side.append(B('· '+label,()=>go({type}),'hp-menu'+(r.type===type?' on':'')));
+ if(ctx.X&&ctx.X.mini&&ctx.X.mini.go)side.append(B('· 미니홈피 ♡',()=>{ctx.X.mini.open();ctx.X.mini.go('haneul','home')},'hp-menu hp-mini'));
  const bgm=E('div','hp-bgm'),eq=E('span','hp-eq');for(let i=0;i<5;i++)eq.append(E('i'));let playing=true;eq.classList.add('on');
  const tog=B('■ 정지',()=>{playing=!playing;eq.classList.toggle('on',playing);tog.textContent=playing?'■ 정지':'▶ 재생'},'hp-bgm-btn');bgm.append(E('b','','♪ BGM'),E('span','',d.bgm),eq,tog);side.append(bgm);
  const cnt=E('div','hp-count');cnt.append(E('span','','TODAY '),digits(E,14+k.total%9,3,'sm'),E('span','',' TOTAL '),digits(E,2412+k.total,6));side.append(cnt);
@@ -278,6 +279,10 @@ PAGE.jaryo=function(page,env){
   const cm=E('div','jm-cm');cm.append(E('b','','사용 후기'));for(const [i,t] of it.comments.entries())cm.append(E('p','ws-cm','['+['알짜팬','지나가다','ㅋㅋ'][i%3]+'] '+t));box.append(cm);body.append(box)}
  else site404(env)};
 /* ============ 6. 오늘의 운세 ============ */
+const STK_L=[2,4,2,3,6,5,4,4,8,2,4,1,3,6,4,3,4,4,3],STK_V=[2,3,3,4,2,3,3,4,2,4,5,3,3,2,4,5,3,3,1,2,1],STK_T=[0,2,4,4,2,5,5,3,5,7,9,9,7,9,9,8,4,4,6,2,4,1,3,4,3,4,4,3];
+function strokesOf(ch){const n=ch.charCodeAt(0)-0xAC00;if(n<0||n>11171)return -1;return STK_L[Math.floor(n/588)]+STK_V[Math.floor(n%588/28)]+STK_T[n%28]}
+function pairStrokes(x,y){const A=Array.from(String(x)),Bn=Array.from(String(y));if(!A.length||!Bn.length||[...A,...Bn].some(c=>strokesOf(c)<0))return null;const chars=[];for(let i=0;i<Math.max(A.length,Bn.length);i++){if(A[i])chars.push(A[i]);if(Bn[i])chars.push(Bn[i])}
+ let row=chars.map(c=>strokesOf(c)%10);const rows=[row];while(row.length>2){const nx=[];for(let i=0;i<row.length-1;i++)nx.push((row[i]+row[i+1])%10);row=nx;rows.push(row)}if(row.length<2)row=[0,row[0]];return{chars,rows,pc:row[0]*10+row[1]}}
 PAGE.fate=function(page,env){
  const {E,B,go,r}=env,d=D().fate;
  const head=E('header','ft-head');head.append(B('오늘의 운세',()=>go({type:'home'}),'ft-logo'),E('span','','심리테스트와 운세'));page.append(head);const body=E('main','ft-body');page.append(body);
@@ -291,7 +296,10 @@ PAGE.fate=function(page,env){
  else if(r.type==='past'){
   const nm=field(E,'이름을 입력하세요',10,'이름');body.append(E('h2','ft-h','나의 전생은?'),nm,B('전생 보기',()=>{const t=nm.value.trim();if(!t)return;result.replaceChildren(E('p','ft-big',t+' 님의 전생은'),E('p','',d.past[hash(t)%d.past.length]))},'ft-btn'),result)}
  else if(r.type==='pair'){
-  const a=field(E,'내 이름',10,'내 이름'),b=field(E,'상대 이름',10,'상대 이름');body.append(E('h2','ft-h','이름 궁합'),a,b,B('궁합 보기',()=>{const x=a.value.trim(),y=b.value.trim();if(!x||!y)return;const n=hash([x,y].sort().join('&')),pc=50+n%51;result.replaceChildren(E('p','ft-big',x+' ♥ '+y+' = '+pc+'%'),bar(E,'',pc),E('p','',d.pair[n%d.pair.length]))},'ft-btn'),result)}
+  /* A95: 공책에 쓰던 그 방법. 두 이름을 한 글자씩 번갈아 쓰고, 글자 획수를 이웃끼리 더해(일의 자리만) 두 자리가 남을 때까지 내려간다. */
+  const a=field(E,'내 이름 (한글)',5,'내 이름'),b=field(E,'상대 이름 (한글)',5,'상대 이름');body.append(E('h2','ft-h','이름 궁합 (획수 계산)'),E('p','ft-desc','두 사람 이름을 한 글자씩 번갈아 쓰고, 글자마다 획수를 적은 다음 이웃한 숫자끼리 더해서 내려가요. 마지막 두 숫자가 궁합 점수!'),a,b,B('궁합 보기',()=>{const x=a.value.trim(),y=b.value.trim();if(!x||!y)return;const res=pairStrokes(x,y);if(!res){result.replaceChildren(E('p','ft-big','한글 이름만 넣어 주세요!'));return}const pc=res.pc;
+   const pyr=E('div','ft-pyr');pyr.append(E('p','ft-row names',res.chars.join('  ')));for(const row of res.rows)pyr.append(E('p','ft-row',row.join('  ')));
+   result.replaceChildren(E('p','ft-big',x+' ♥ '+y+' = '+pc+'%'),bar(E,'',pc),pyr,E('p','',pc>=90?'천생연분! 공책 맨 뒷장에 크게 써 두세요 ♡':pc>=70?'아주 잘 어울려요! 같이 떡볶이 먹으러 가세요 ^^':pc>=50?'나쁘지 않아요. 친해질수록 점수가 오르는 사이!':pc>=30?'음... 순서를 바꿔서 다시 계산해 보는 건 어때요? ㅋㅋ':'괜찮아요. 이건 재미로 보는 거예요 ^^'),E('p','ft-desc',d.pair[pc%d.pair.length]),E('small','ft-desc','※ 이름 순서를 바꾸면 점수가 달라질 수 있어요. 다들 그렇게 몇 번씩 해 봤잖아요 ㅋㅋ'))},'ft-btn'),result)}
  else if(r.type==='iq'){
   let i=0,sum=0;body.append(E('h2','ft-h','초간단 IQ 테스트'));const box=E('div','ft-quiz');body.append(box,result);
   const draw=()=>{box.replaceChildren();if(i>=d.iq.length){const n=100+sum*37%80;result.replaceChildren(E('p','ft-big','당신의 IQ는 '+n+' 입니다'),E('p','',n>=140?'천재입니다. 자세히 보면 이 테스트를 만든 사람은 더 천재입니다.':'평범한 천재입니다. 아주 평범합니다. (특별한 뜻은 없습니다)'),B('다시 하기',()=>{i=0;sum=0;result.replaceChildren();draw()},'ft-btn'));return}
@@ -302,7 +310,7 @@ PAGE.chat=function(page,env){
  const {E,B,go,r,k}=env,d=D().chat;
  const head=E('header','ch-head');head.append(B('수다방',()=>go({type:'home'}),'ch-logo'),E('span','','대화방 목록 / 지금 접속 '+(1200+k.total%40)+'명'));page.append(head);
  if(r.type==='home'){
-  const t=E('div','ch-rooms');t.append(E('b','ch-hd','번호'),E('b','ch-hd','방 제목'),E('b','ch-hd','인원'),E('b','ch-hd','방장'));d.rooms.forEach((rm,i)=>{t.append(E('span','',String(i+1)),B(rm[0],()=>go({type:'room',id:String(i)}),'ch-link'),E('span','',rm[1]+'명'),E('span','',rm[2]))});page.append(t,E('p','ch-note','※ 도배, 욕설, 광고는 강제퇴장 사유입니다. 방장의 권한이 막강하니 예의를 지켜 주세요.'));return}
+  const t=E('div','ch-rooms');t.append(E('b','ch-hd','번호'),E('b','ch-hd','방 제목'),E('b','ch-hd','인원'),E('b','ch-hd','방장'));d.rooms.forEach((rm,i)=>{t.append(E('span','',String(i+1)),B(rm[0],()=>go({type:'room',id:String(i)}),'ch-link'),E('span','',rm[1]+'명'),E('span','',rm[2]))});page.append(t,E('p','ch-note','※ 도배, 욕설, 광고는 강제퇴장 사유입니다. 방장의 권한이 막강하니 예의를 지켜 주세요.'));if(SITES['w-word'])page.append(B('★ 끝말잇기 하실 분~ 말놀이 천국에 끝말봇이 기다리고 있어요 (클릭) ★',()=>go({type:'chain'},'w-word'),'ch-wordlink'));return}
  if(r.type==='room'){
   const rm=d.rooms[Number(r.id)];if(!rm){site404(env);return}
   const log=E('div','ch-log'),form=E('form','ch-form'),inp=field(E,'대화 내용을 입력하세요',60,'대화 내용'),send=B('보내기',()=>{},'ws-btn');send.type='submit';form.append(inp,send);
@@ -374,6 +382,6 @@ const favorites=go=>{const base=[['링크천국',()=>go('w-links'),{bold:true}],
 function register(id,def,fn){if(!/^w-[a-z0-9]+$/.test(id)||!def||!def.key||typeof fn!=='function')return false;if(!SITES[id])ORDER.push(id);SITES[id]=def;PAGE[def.key]=fn;if(def.tags)TAGS[id]=def.tags;if(def.desc)DESC[id]=def.desc;return true}
 /* A94: 포털 검색의 '사이트' 칸 */
 function search(q){const term=String(q||'').toLowerCase().replace(/\s/g,'');if(!term)return[];const out=[];for(const id of ORDER){const S=SITES[id];if(S.hidden)continue;const hay=(S.name+S.caption+S.domain+(TAGS[id]||'')).toLowerCase().replace(/\s/g,'');if(hay.includes(term)||(term.length>=2&&(TAGS[id]||'').split(/\s+/).some(t=>t&&term.includes(t.toLowerCase()))))out.push({id,name:S.name,domain:S.domain,desc:DESC[id]||S.caption})}return out}
-w.WebSites={owns:id=>!!SITES[id],caption:id=>SITES[id]?SITES[id].caption:'',domain:id=>SITES[id]?SITES[id].domain:'',resolveHost,route,url:urlOf,render,stop,favorites,sites:SITES,order:ORDER,pages:PAGE,strs,trapKinds:STORY_TRAP,register,search,
+w.WebSites={pairStrokes,owns:id=>!!SITES[id],caption:id=>SITES[id]?SITES[id].caption:'',domain:id=>SITES[id]?SITES[id].domain:'',resolveHost,route,url:urlOf,render,stop,favorites,sites:SITES,order:ORDER,pages:PAGE,strs,trapKinds:STORY_TRAP,register,search,
  kit:{marquee,digits,field,postForm,commentList,bar,stars,sparkle,site404,ie,trap,later,loop,listOf,pushTo,hash,reduced,holdReveal,cleanup:f=>{cleanups.push(f)}}};
 })(window);

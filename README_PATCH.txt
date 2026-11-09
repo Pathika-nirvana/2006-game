@@ -1,30 +1,32 @@
-2006 A94 패치 · 인터넷 디테일 보강 (읽을거리, 긴 괴담, 새 사이트, 숨은 미스터리 홈페이지)
-버전 0.94.0 · 2026-11-09 16:49 (한국시간)
-기준: 이미 적용한 A93 패치 위에 덮어씌우는 패치입니다. (A86부터 A93까지 순서대로 적용한 소스가 기준입니다.)
+2006 A95 패치 · PC방에서 할 거리 늘리기 (온라인 게임 실행, 미니홈피 파도타기, 메일함, 새 사이트 네 곳, 어린이 포털 보강)
+버전 0.95.0 · 2026-11-09 21:19 (한국시간)
+기준: 이미 적용한 A94 패치 위에 덮어씌우는 패치입니다. (A86부터 A94까지 순서대로 적용한 소스가 기준입니다.)
 
 적용 방법
-1. 압축을 풀어 나온 파일을 소스 폴더(index.html이 있는 곳)에 그대로 덮어씌우세요. src 폴더에 web-stories.js, web-more.js 두 파일이 새로 생깁니다.
-2. node server.js 로 켜거나 index.html을 열고, 게임 안 PC방 컴퓨터로 들어가 인터넷을 여세요.
-3. 브라우저에서 예전 화면이 보이면 Ctrl+F5로 새로 고침하세요. (스크립트 뒤의 캐시 번호를 A94로 바꿔 두었습니다.)
+1. 압축을 풀어 나온 파일을 소스 폴더(index.html이 있는 곳)에 그대로 덮어씌우세요. src 폴더에 pc-games.js, xp-minihome.js, pc-mail.js, web-fun.js, kids-more.js 다섯 파일이, assets/pc-desktop 폴더에 pc-fun.css, web-fun.css 두 파일이 새로 생깁니다.
+2. node server.js 로 켜거나 index.html을 열고, 게임 안 PC방 컴퓨터로 들어가세요.
+3. 브라우저에서 예전 화면이 보이면 Ctrl+F5로 새로 고침하세요. (바뀐 파일의 캐시 번호를 A95로 바꿔 두었습니다.)
 
 무엇을 보면 되나
-- 주니어네이버 왼쪽 메뉴의 읽을거리, 야후꾸러기 위쪽 탭의 꾸러기 백과 (글 20편, 동화와 옛이야기 6편 추가)
-- 소름닷컴 괴담 게시판: 길게 읽는 괴담 8편 (PC방 알바, 수련회 연재 3편, 할머니 댁, GOP, 미니홈피, 고시원), 불 끄고 읽기 단추, 연재 목록
-- 즐겨찾기의 추천 사이트 또는 링크천국: 소설나라, 6학년 2반 하늘반, 이모티콘 세상, 미스터리 X파일
-- 숨은 홈페이지 별이네 다락방: 링크천국 맨 아래 접속이 불안정한 곳에서 들어갈 수 있습니다. 여러 사이트에 흩어진 단서를 모아 비밀의 방을 열어 보세요. (정답은 RELEASE_A94.md 맨 아래에 접어 두었습니다)
-- 네이버에서 괴담, 타임캡슐, 외계어 같은 낱말을 검색하면 맨 위에 사이트 칸이 나옵니다.
+- 바탕 화면의 게임 아이콘(스타, 메이플, 서든어택, 카트, 크레이지아케이드, 팡야, 오디션 등 18개)을 두 번 누르기: 패치, 로그인, 서버 고르기 다음에 장르별 작은 게임과 채팅창
+- 바탕 화면의 나의 미니홈: 새 창 미니홈피. 미니룸 꾸미기, 선물가게(도토리), 다이어리, 사진첩, 방명록, 왼쪽 일촌 파도타기로 동네 사람 열두 명 미니홈피 구경, 일촌 신청, 답방
+- 바탕 화면의 받은 쪽지 또는 포털의 메일: 행운의 편지, 광고 수신 거부, 비밀번호를 묻는 사기 메일, 인터넷 엽서, 잘못 온 메일과 반송
+- 인터넷 창의 추천 사이트나 링크천국: 뽀글뽀글 펫 키우기, 두근두근 경매, 말놀이 천국(끝말잇기, 삼행시, OX 서바이벌), 뽀샤시 사진관
+- 오늘의 운세 이름 궁합: 획수 계산 과정이 보이는 옛날 방식
+- 주니어네이버 왼쪽 메뉴 그림일기, 놀이터 구구단 풍선 / 야후꾸러기 위쪽 탭 받아쓰기, 오락실 꾸러기 줄넘기
 
-바뀐 파일 (21개)
-- 새 파일: src/web-stories.js, src/web-more.js, tests/test_web_more_a94.cjs, RELEASE_A94.md
-- 고친 파일: index.html, src/kids-data.js, src/kids-portal.js, src/web-data.js, src/web-sites.js, src/portal-pages.js, src/portal-boards.js, src/portal-news.js, src/xp-desktop.js, assets/pc-desktop/kids.css, assets/pc-desktop/web-sites.css, package.json, README.md, tools/runtime-files.json, tools/source-files.json, tests/test_kids_a89.cjs
+바뀐 파일 (19개)
+- 새 파일: src/pc-games.js, src/xp-minihome.js, src/pc-mail.js, src/web-fun.js, src/kids-more.js, assets/pc-desktop/pc-fun.css, assets/pc-desktop/web-fun.css, tests/test_pc_fun_a95.cjs, RELEASE_A95.md
+- 고친 파일: index.html, src/xp-desktop.js, src/web-sites.js, src/portal-pages.js, src/kids-portal.js, src/kids-games.js, package.json, README.md, tools/runtime-files.json, tools/source-files.json
 
 참고
 - 월드맵, 캐릭터 비율, 이동키, 기존 멀티플레이, 오락기 입력, 배경음악, PC 조작 중 주변 게임음 차단은 건드리지 않았습니다. 새 그림이나 소리 파일은 없습니다.
-- 모든 글은 게임 속 날짜 2006년 5월 30일 오후 4시 32분 기준입니다. 그 뒤에 생긴 말(병맛, 힐링, 먹방, 고인물, 흑역사 등)은 이미 있던 글에서도 그 시절 말로 바꿨습니다.
-- 홈페이지 방명록, 댓글, 추천, 출석 기록이 다시 켜면 사라지던 문제를 고쳤습니다.
-- 이모티콘 복사는 브라우저가 허락할 때만 진짜 클립보드에 들어갑니다.
+- 미니홈피 배경음악은 제목만 보이고 소리는 나지 않습니다. (게임 배경음악 규칙을 건드리지 않으려고 일부러 소리를 넣지 않았습니다.)
+- A91에서 빼신 사장님 호출과 음식 주문은 이번에도 넣지 않았습니다.
+- 모든 글은 게임 속 날짜 2006년 5월 30일 오후 4시 32분 기준입니다. 사람, 서버, 몬스터, 사이트, 노래 제목(옛 클래식 곡 말고)은 모두 지어낸 것입니다.
+- 게임 기록, 미니홈피, 메일, 펫, 경매, 그림일기 같은 기록은 다시 켜도 남습니다.
 - 운영 서버(깃허브, Render)에는 올리지 않았습니다.
-- 자세한 내용은 RELEASE_A94.md를 보세요.
+- 자세한 내용은 RELEASE_A95.md를 보세요.
 
 되돌리는 방법
-- 패치 전체를 취소하려면 A93 패치를 다시 덮어씌우고, src/web-stories.js와 src/web-more.js를 지우세요.
+- 패치 전체를 취소하려면 A94 패치를 다시 덮어씌우고, 새로 생긴 다섯 개의 js 파일과 두 개의 css 파일을 지우세요.
