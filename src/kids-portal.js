@@ -1,16 +1,17 @@
 /* A89: 어린이 포털 두 곳. 주니어네이버(초록, 왼쪽 메뉴가 있는 3단)와 야후꾸러기(노랑과 보라, 위쪽 둥근 탭)를
-   서로 다른 틀로 그린다. 글은 kids-data.js 에서 사이트마다 따로 가져온다. 그림 파일은 쓰지 않고 CSS로만 그린다. */
+   서로 다른 틀로 그린다. 글은 kids-data.js 에서 사이트마다 따로 가져온다. 그림 파일은 쓰지 않고 CSS로만 그린다.
+   A94: 읽을거리(주니어네이버)와 꾸러기 백과(야후꾸러기) 칸을 더했다. 분야별로 골라 읽고, 글 끝에 '알고 있나요?'와 함께 읽을 글이 붙는다. */
 (function(w){'use strict';
 const SITES={
  jr:{name:'주니어네이버',caption:'주니어네이버',domain:'jr.naver.com',
-  menu:[['home','홈'],['news','어린이 뉴스'],['qa','주니어 지식in'],['extra','숙제 도우미'],['story','동화 나라'],['quiz','퀴즈 왕'],['arcade','놀이터'],['board','친구 사귀기']],
-  title:{news:'어린이 뉴스',qa:'주니어 지식in',extra:'숙제 도우미',story:'동화 나라',quiz:'퀴즈 왕',arcade:'놀이터',board:'친구 사귀기'},
-  kind:{news:'news',qa:'kin',extra:'help',story:'story',quiz:'quiz',board:'board'},games:['mole','rain','memory','breakout'],
+  menu:[['home','홈'],['news','어린이 뉴스'],['qa','주니어 지식in'],['extra','숙제 도우미'],['story','동화 나라'],['read','읽을거리'],['quiz','퀴즈 왕'],['arcade','놀이터'],['board','친구 사귀기']],
+  title:{news:'어린이 뉴스',qa:'주니어 지식in',extra:'숙제 도우미',story:'동화 나라',read:'읽을거리',quiz:'퀴즈 왕',arcade:'놀이터',board:'친구 사귀기'},
+  kind:{news:'news',qa:'kin',extra:'help',story:'story',read:'read',quiz:'quiz',board:'board'},games:['mole','rain','memory','breakout'],
   nicks:['별사탕','콩콩이','하늘이','초코쿠키','나비야','튼튼이','다람쥐','꼬마박사']},
  yk:{name:'야후꾸러기',caption:'야후! 꾸러기',domain:'kids.yahoo.co.kr',
-  menu:[['news','꾸러기 신문'],['qa','척척박사'],['extra','놀이 과학'],['story','이야기 보따리'],['arcade','꾸러기 오락실'],['quiz','오늘의 퀴즈'],['board','꾸러기 광장']],
-  title:{news:'꾸러기 신문',qa:'척척박사',extra:'놀이 과학',story:'이야기 보따리',quiz:'오늘의 퀴즈',arcade:'꾸러기 오락실',board:'꾸러기 광장'},
-  kind:{news:'news',qa:'qna',extra:'play',story:'story',quiz:'quiz',board:'board'},games:['dodge','snake','numbers','balloon'],
+  menu:[['news','꾸러기 신문'],['qa','척척박사'],['extra','놀이 과학'],['story','이야기 보따리'],['read','꾸러기 백과'],['arcade','꾸러기 오락실'],['quiz','오늘의 퀴즈'],['board','꾸러기 광장']],
+  title:{news:'꾸러기 신문',qa:'척척박사',extra:'놀이 과학',story:'이야기 보따리',read:'꾸러기 백과',quiz:'오늘의 퀴즈',arcade:'꾸러기 오락실',board:'꾸러기 광장'},
+  kind:{news:'news',qa:'qna',extra:'play',story:'story',read:'read',quiz:'quiz',board:'board'},games:['dodge','snake','numbers','balloon'],
   nicks:['딱지왕','구슬공주','개구쟁이','방방이','토끼눈','달려라하니','냠냠이','꾸러기1호']}
 };
 const SECTION_OF={};for(const id of Object.keys(SITES)){SECTION_OF[id]={};for(const [sec,kind] of Object.entries(SITES[id].kind))SECTION_OF[id][kind]=sec}
@@ -35,7 +36,7 @@ const bestOf=(k,id)=>Number.isFinite(k.scores[id])?k.scores[id]:0;
 /* ---------- 공통 조각 ---------- */
 function section(env,parent,title,more,cls){const {E}=env,n=E('section','k-box '+(cls||'')),h=E('div','k-box-head');h.append(E('h3','',title));if(more)h.append(env.B('더보기 ▶',()=>env.go(more),'k-more'));n.append(h);const body=E('div','k-box-body');n.append(body);parent.append(n);return body}
 function line(env,parent,item,sec,meta){const {E}=env,row=E('div','k-line'),b=env.B(item.title,()=>env.go({type:'item',id:item.id}),'k-link');row.append(b);if(meta)row.append(E('small','',meta));parent.append(row);return row}
-function paragraphs(env,parent,text,cls){for(const p of String(text).split(/\n\n+/))parent.append(env.E('p',cls||'k-p',p))}
+function paragraphs(env,parent,text,cls){for(const p of String(text).split(/\n\n+/)){if(/^■ /.test(p))parent.append(env.E('h4','k-sub',p.slice(2)));else parent.append(env.E('p',cls||'k-p',p))}}
 function crumbs(env,parent,list){const {E}=env,n=E('nav','k-crumbs');n.append(env.B('홈',()=>env.go({type:'home'}),'k-crumb'));for(const [label,route] of list){n.append(E('span','','›'));if(route)n.append(env.B(label,()=>env.go(route),'k-crumb'));else n.append(E('b','',label))}parent.append(n)}
 function searchForm(env,parent,cls,placeholder){const {E}=env,form=E('form','k-search '+(cls||'')),input=E('input');input.type='text';input.maxLength=20;input.placeholder=placeholder;input.setAttribute('aria-label','검색어');input.value=env.r.type==='search'?(env.r.query||''):'';const btn=env.B('검색',()=>{},'k-search-btn');btn.type='submit';form.append(input,btn);form.addEventListener('submit',e=>{e.preventDefault();const q=input.value.trim().slice(0,20);if(q)env.go({type:'search',query:q})});parent.append(form)}
 function nickFor(env,item,i){const pool=SITES[env.site].nicks;return pool[(hash(item.id)+i*3)%pool.length]}
@@ -44,7 +45,8 @@ function commentList(env,parent,item){
  const {E}=env,k=env.k,box=E('section','k-comments');box.append(E('h4','','친구들의 한마디'));
  let n=0;for(const [i,text] of (item.replies||[]).entries()){
   const gone=/^※ 운영자에 의해 삭제된 댓글입니다\.?$/.test(text),nested=/^ㄴ\s/.test(text),row=E('p','k-cm'+(nested?' k-nested p87-nested':'')+(gone?' k-gone p88-deleted':''));
-  if(gone)row.textContent=text;else{n++;row.append(E('b','',nickFor(env,item,i)),E('span','',nested?text.replace(/^ㄴ\s*/,''):text))}
+  const named=/^([^:\s]{1,12})::\s*([\s\S]*)$/.exec(text);
+  if(gone)row.textContent=text;else if(named){n++;row.classList.add('k-named');row.append(E('b','',named[1]),E('span','',named[2]))}else{n++;row.append(E('b','',nickFor(env,item,i)),E('span','',nested?text.replace(/^ㄴ\s*/,''):text))}
   box.append(row)}
  for(const text of guestComments(k,item.id)){const row=E('p','k-cm k-mine');row.append(E('b','','게스트'),E('span','',text));box.append(row)}
  const form=E('form','k-cm-form'),input=E('input'),msg=E('p','k-warn');input.type='text';input.maxLength=80;input.placeholder='예쁜 말로 한마디 남겨요';input.setAttribute('aria-label','댓글');
@@ -97,10 +99,31 @@ function boardPage(env,c){
 function listPage(env,c,section){
  const {E,site}=env,S=SITES[site];
  const head=E('div','k-sec-head k-sec-'+section);head.append(E('h2','',S.title[section]),E('p','',blurb(site,section)));c.append(head);
- if(section==='quiz')return quizPage(env,c);if(section==='arcade')return arcadePage(env,c);if(section==='board')return boardPage(env,c);
+ if(section==='quiz')return quizPage(env,c);if(section==='arcade')return arcadePage(env,c);if(section==='board')return boardPage(env,c);if(section==='read')return readList(env,c);
  if(site==='jr'&&(section==='news'||section==='qa'))return tableList(env,c,section,section==='qa'?[['번호'],['질문'],['글쓴이'],['답변'],['날짜'],['조회']]:[['번호'],['제목'],['글쓴이'],['날짜'],['조회']]);
  cardList(env,c,section)}
-function blurb(site,section){return({jr:{news:'어린이 기자가 전하는 이번 주 소식이에요.',qa:'궁금한 것을 물어보면 친구와 선생님이 답해 줘요.',extra:'숙제가 막힐 때 힌트를 얻어 가요.',story:'잠자리에서 읽기 좋은 짧은 이야기예요.',quiz:'퀴즈를 풀고 똑똑이 점수를 올려요.',arcade:'쉬는 시간에 즐기는 작은 오락이에요.',board:'친구들과 이야기를 나누는 곳이에요. 예쁜 말을 써요.'},yk:{news:'꾸러기 기자단이 직접 취재한 소식이에요.',qa:'뭐든지 아는 척척박사가 알려 줘요.',extra:'집에서 쉽게 해 보는 재미있는 과학 놀이예요.',story:'옛이야기와 새 이야기를 모았어요.',quiz:'하루에 한 문제, 꾸러기 박사에 도전해요.',arcade:'꾸러기 친구들이 가장 좋아하는 오락 모음이에요.',board:'꾸러기 친구들의 이야기 마당이에요. 서로 존중해요.'}})[site][section]||''}
+/* ---------- 읽을거리 (A94) ---------- */
+const CAT_COLOR={'과학':'#2f86d8','동물':'#38a85a','역사':'#b0632a','세계':'#8a5bd6','우주':'#1f3a8a','우리 몸':'#e0567a','환경':'#14998a','스포츠':'#e8890c','생활':'#7a7a2a','옛이야기':'#a0522d'};
+const readMins=item=>Math.max(1,Math.round(String(item.body||'').replace(/\s/g,'').length/380));
+function catBadge(env,cat){const b=env.E('span','k-cat',cat||'기타');b.style.background=CAT_COLOR[cat]||'#777';return b}
+function readList(env,c){
+ const {E,site}=env,list=items(site,'read'),cats=['전체',...Array.from(new Set(list.map(x=>x.cat)))],pick=cats.includes(env.r.query)?env.r.query:'전체';
+ const chips=E('div','k-cats');for(const cat of cats)chips.append(env.B(cat,()=>env.go({type:'read',query:cat==='전체'?'':cat}),'k-chip'+(pick===cat?' on':'')));c.append(chips);
+ const shown=list.filter(x=>pick==='전체'||x.cat===pick);
+ if(site==='jr'){
+  const table=E('table','k-table k-readtable'),head=E('tr');for(const [h,wd] of [['분야',64],['제목',0],['읽는 시간',70],['조회',54]]){const th=E('th','',h);if(wd)th.style.width=wd+'px';head.append(th)}table.append(head);
+  for(const item of shown){const tr=E('tr'),cat=E('td','k-no');cat.append(catBadge(env,item.cat));const td=E('td','k-title');td.append(env.B(item.title,()=>env.go({type:'item',id:item.id}),'k-link'));const n=(item.replies||[]).length;if(n)td.append(E('small','k-re','['+n+']'));tr.append(cat,td,E('td','','약 '+readMins(item)+'분'),E('td','',String(hitsOf(item))));table.append(tr)}
+  c.append(table)}
+ else{
+  const grid=E('div','ky-readgrid');for(const item of shown){const card=env.B('',()=>env.go({type:'item',id:item.id}),'ky-readcard');card.style.setProperty('--cat',CAT_COLOR[item.cat]||'#777');card.append(catBadge(env,item.cat),E('b','',item.title),E('small','',String(item.body||'').replace(/\n+/g,' ').replace(/■ /g,'').slice(0,46)+'…'),E('em','','재미 '+'★'.repeat(item.fun||3)+'☆'.repeat(5-(item.fun||3))+'  ·  약 '+readMins(item)+'분'));grid.append(card)}
+  c.append(grid)}
+ if(!shown.length)c.append(E('p','k-p','아직 이 분야의 글이 없어요.'))}
+function readExtras(env,art,item){
+ const {E,site}=env;
+ if(item.fact){const f=E('div','k-fact');f.append(E('b','',site==='jr'?'알고 있나요?':'꾸러기 박사의 한마디'),E('p','',item.fact));art.append(f)}
+ const more=items(site,'read').filter(x=>x!==item&&x.cat===item.cat).concat(items(site,'read').filter(x=>x!==item&&x.cat!==item.cat)).slice(0,3);
+ if(more.length){const box=E('div','k-related');box.append(E('b','','함께 읽어요'));for(const x of more){const row=E('div','k-line');row.append(catBadge(env,x.cat),env.B(x.title,()=>env.go({type:'item',id:x.id}),'k-link'));box.append(row)}art.append(box)}}
+function blurb(site,section){return({jr:{read:'궁금했던 이야기를 분야별로 골라 읽어요. 과학, 동물, 역사, 세계, 우주 이야기가 가득해요.',news:'어린이 기자가 전하는 이번 주 소식이에요.',qa:'궁금한 것을 물어보면 친구와 선생님이 답해 줘요.',extra:'숙제가 막힐 때 힌트를 얻어 가요.',story:'잠자리에서 읽기 좋은 짧은 이야기예요.',quiz:'퀴즈를 풀고 똑똑이 점수를 올려요.',arcade:'쉬는 시간에 즐기는 작은 오락이에요.',board:'친구들과 이야기를 나누는 곳이에요. 예쁜 말을 써요.'},yk:{read:'알쏭달쏭 궁금했던 것들, 꾸러기 백과에서 시원하게 알려 줄게요!',news:'꾸러기 기자단이 직접 취재한 소식이에요.',qa:'뭐든지 아는 척척박사가 알려 줘요.',extra:'집에서 쉽게 해 보는 재미있는 과학 놀이예요.',story:'옛이야기와 새 이야기를 모았어요.',quiz:'하루에 한 문제, 꾸러기 박사에 도전해요.',arcade:'꾸러기 친구들이 가장 좋아하는 오락 모음이에요.',board:'꾸러기 친구들의 이야기 마당이에요. 서로 존중해요.'}})[site][section]||''}
 
 /* ---------- 글 읽기 ---------- */
 function itemPage(env,c){
@@ -109,11 +132,12 @@ function itemPage(env,c){
  const S=SITES[site],item=f.item,list=D()[site][f.kind];
  crumbs(env,c,[[S.title[f.section],{type:f.section}],[item.title.length>22?item.title.slice(0,22)+'…':item.title,null]]);
  const art=E('article','k-article k-'+f.kind),head=E('header','k-article-head');
- head.append(E('h2','',item.title),E('p','k-meta',[item.nick||item.by||(site==='jr'?'주니어 선생님':'꾸러기 선생님'),item.at?when(item):'',item.at?'조회 '+hitsOf(item):''].filter(Boolean).join('  |  ')));art.append(head);
+ if(f.kind==='read')head.append(catBadge(env,item.cat));head.append(E('h2','',item.title),E('p','k-meta',[item.nick||item.by||(site==='jr'?'주니어 선생님':'꾸러기 선생님'),item.at?when(item):'',item.at?'조회 '+hitsOf(item):'',f.kind==='read'?'읽는 시간 약 '+readMins(item)+'분':''].filter(Boolean).join('  |  ')));art.append(head);
  if(item.answers){const q=E('div','k-q');q.append(E('b','k-qa','Q'));const qb=E('div');paragraphs(env,qb,item.body,'k-p');q.append(qb);art.append(q);
   item.answers.forEach(a=>{const row=E('div','k-a'+(a.pick?' pick':''));row.append(E('b','k-qa','A'));const ab=E('div');ab.append(E('strong','',a.n+(a.pick?'  (채택된 답변)':'')));paragraphs(env,ab,a.text,'k-p');row.append(ab);art.append(row)})}
  else paragraphs(env,art,item.body,'k-p');
  if(f.kind==='help'||f.kind==='play')art.append(E('p','k-tip','어른께 도움을 받아 안전하게 해 보세요.'));
+ if(f.kind==='read')readExtras(env,art,item);
  c.append(art);commentList(env,c,item);
  const i=list.indexOf(item),nav=E('div','k-pager');
  if(i>0)nav.append(env.B('◀ 이전 글',()=>env.go({type:'item',id:list[i-1].id}),'k-btn'));nav.append(env.B('목록',()=>env.go({type:f.section}),'k-btn'));if(i<list.length-1)nav.append(env.B('다음 글 ▶',()=>env.go({type:'item',id:list[i+1].id}),'k-btn'));c.append(nav)}
@@ -152,7 +176,7 @@ function missing(env,c){const {E}=env;c.append(E('h2','','페이지를 찾을 �
 function content(env,c){
  const t=env.r.type;
  if(t==='home')return env.site==='jr'?homeJr(env,c):homeYk(env,c);
- if(['news','qa','extra','story','quiz','arcade','board'].includes(t))return listPage(env,c,t);
+ if(['news','qa','extra','story','read','quiz','arcade','board'].includes(t))return listPage(env,c,t);
  if(t==='item')return itemPage(env,c);if(t==='game')return gamePage(env,c);if(t==='search')return searchPage(env,c);if(t==='safety')return safetyPage(env,c);
  return missing(env,c)}
 
@@ -166,6 +190,7 @@ function homeJr(env,c){
  const kin=section(env,two,'주니어 지식in',{type:'qa'});for(const x of items(site,'qa').slice(0,5))line(env,kin,x,'qa','답변 '+x.answers.length);
  const help=section(env,two,'숙제 도우미',{type:'extra'});for(const x of items(site,'extra').slice(0,5))line(env,help,x,'extra');
  const st=items(site,'story')[0],story=section(env,c,'동화 나라',{type:'story'},'kj-story');story.append(env.B(st.title,()=>env.go({type:'item',id:st.id}),'k-link big'),E('p','k-excerpt',st.body.replace(/\n+/g,' ').slice(0,90)+'…'));
+ const rd=items(site,'read');if(rd.length){const rbox=section(env,c,'오늘의 읽을거리',{type:'read'},'kj-read');for(const x of rd.slice(0,5)){const row=line(env,rbox,x,'read','약 '+readMins(x)+'분');row.insertBefore(catBadge(env,x.cat),row.firstChild)}}
  const bd=section(env,c,'친구 사귀기 · 새 글',{type:'board'},'kj-board');for(const x of items(site,'board').slice(0,5))line(env,bd,x,'board',x.nick+' · '+x.at)}
 function sideJr(env,aside){
  const {E,site}=env,q=section(env,aside,'오늘의 퀴즈',{type:'quiz'},'kj-quiz');miniQuiz(env,q);
@@ -194,7 +219,8 @@ function homeYk(env,c){
  const play=section(env,cols,'놀이 과학',{type:'extra'},'ky-play');for(const x of items(site,'extra').slice(0,5))line(env,play,x,'extra');
  const cols2=E('div','ky-cols2');c.append(cols2);
  const st=items(site,'story')[0],story=section(env,cols2,'이야기 보따리',{type:'story'},'ky-story');story.append(env.B(st.title,()=>env.go({type:'item',id:st.id}),'k-link big'),E('p','k-excerpt',st.body.replace(/\n+/g,' ').slice(0,90)+'…'));
- const bd=section(env,cols2,'꾸러기 광장',{type:'board'},'ky-board');for(const x of items(site,'board').slice(0,5))line(env,bd,x,'board',x.nick)}
+ const bd=section(env,cols2,'꾸러기 광장',{type:'board'},'ky-board');for(const x of items(site,'board').slice(0,5))line(env,bd,x,'board',x.nick);
+ const rd=items(site,'read');if(rd.length){const rbox=section(env,c,'꾸러기 백과 · 오늘은 이게 궁금해!',{type:'read'},'ky-readbox'),grid=E('div','ky-readgrid mini');for(const x of rd.slice(0,4)){const card=env.B('',()=>env.go({type:'item',id:x.id}),'ky-readcard');card.style.setProperty('--cat',CAT_COLOR[x.cat]||'#777');card.append(catBadge(env,x.cat),E('b','',x.title));grid.append(card)}rbox.append(grid)}}
 function renderYk(page,env){
  const {E}=env,head=E('header','ky-head'),logo=env.B('',()=>env.go({type:'home'}),'ky-logo');
  const word=E('span','ky-word');[['Y','#d6197c'],['A','#f58a1f'],['H','#2f9be8'],['O','#4ec36a'],['O','#8a5bd6'],['!','#d6197c']].forEach(([ch,col])=>{const s=E('i','',ch);s.style.color=col;word.append(s)});
@@ -211,5 +237,5 @@ function render(page,r,ctx){
  if(site==='jr')renderJr(page,env);else renderYk(page,env);
  return true}
 function resolveHost(host){host=String(host||'').toLowerCase();if(/(^|\.)kids\.yahoo\.(co\.kr|com)$/.test(host))return 'yk';if(/(^|\.)jr\.naver\.com$/.test(host)||/(^|\.)junior\.naver\.com$/.test(host))return 'jr';return null}
-w.KidsPortal={owns:id=>!!SITES[id],caption:id=>SITES[id]?SITES[id].caption:'',domain:id=>SITES[id]?SITES[id].domain:'',resolveHost,types:['home','news','qa','extra','story','quiz','arcade','board','item','game','search','safety'],render,stop,search,findItem,items,sites:SITES,rules:RULES,rankSeed:RANK_SEED,active:()=>active};
+w.KidsPortal={owns:id=>!!SITES[id],caption:id=>SITES[id]?SITES[id].caption:'',domain:id=>SITES[id]?SITES[id].domain:'',resolveHost,types:['home','news','qa','extra','story','read','quiz','arcade','board','item','game','search','safety'],render,stop,search,findItem,items,sites:SITES,rules:RULES,rankSeed:RANK_SEED,active:()=>active};
 })(window);

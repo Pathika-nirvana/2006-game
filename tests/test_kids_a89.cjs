@@ -9,7 +9,7 @@ for(const f of ['portal-news','portal-boards','portal-pages','portal-comics','ki
 const all=(n=root)=>[n,...n.children.flatMap(c=>all(c))],find=(f,n=root)=>all(n).find(f),cls=(c,n=root)=>all(n).filter(n=>n.classList.contains(c)),button=(s,n=root)=>{const x=find(n=>n.tagName==='BUTTON'&&n.textContent===s,n);assert.ok(x,'button: '+s);return x};
 
 /* 1. 글: 사이트마다 따로, 안전한 말, 그 시절 말투 */
-const K=w.KidsData,SHAPE={jr:{news:6,kin:7,help:6,story:3,quiz:8,board:8},yk:{news:6,qna:7,play:6,story:3,quiz:8,board:8}};
+const K=w.KidsData,SHAPE={jr:{news:6,kin:7,help:6,story:6,quiz:8,board:8,read:10},yk:{news:6,qna:7,play:6,story:6,quiz:8,board:9,read:10}}; /* A94: 읽을거리, 꾸러기 백과, 긴 이야기, 친구 찾기 글 */
 for(const [site,shape] of Object.entries(SHAPE))for(const [kind,n] of Object.entries(shape))assert.equal(K[site][kind].length,n,site+' '+kind);
 const flat=site=>Object.values(K[site]).flat(),ids=[...flat('jr'),...flat('yk')].map(x=>x.id);
 assert.equal(new Set(ids).size,ids.length,'아이디가 겹침');
@@ -35,7 +35,7 @@ assert.equal(cls('kj-left').length,1);assert.equal(cls('ky-tabs').length,0);
 assert.ok(find(n=>n.tagName==='INPUT'&&n.value==='http://jr.naver.com/')||root.textContent.length>0);
 go({type:'home',portal:'yk'});assert.ok(page().classList.contains('yk')&&page().classList.contains('ky'),'꾸러기 틀');assert.ok(caption().includes('꾸러기'));
 assert.ok(text().includes('오늘은 뭐하고 놀까?')&&text().includes('꾸러기 신문')&&text().includes('척척박사')&&text().includes('꾸러기 광장'),'꾸러기 첫 화면');
-assert.equal(cls('ky-tabs').length,1);assert.equal(cls('kj-left').length,0);assert.equal(cls('ky-tab').length,7);
+assert.equal(cls('ky-tabs').length,1);assert.equal(cls('kj-left').length,0);assert.equal(cls('ky-tab').length,8);
 /* 두 사이트 화면 모양이 서로 다르다 */
 go({type:'news',portal:'jr'});assert.ok(cls('k-table').length===1&&cls('k-cards').length===0,'주니어 뉴스는 게시판 표');
 go({type:'news',portal:'yk'});assert.ok(cls('k-cards').length===1&&cls('k-table').length===0,'꾸러기 신문은 카드');

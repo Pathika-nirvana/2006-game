@@ -218,3 +218,28 @@
 .xp79-desktop.ds-shake-s{animation:ds-sk-s .26s linear}
 .xp79-desktop.ds-shake-l{animation:ds-sk-l .5s linear}
 @media(prefers-reduced-motion:reduce){.xp79-desktop.ds-shake-s,.xp79-desktop.ds-shake-l{animation:none}}
+/* ---- A94: 읽을거리(주니어네이버)와 꾸러기 백과(야후꾸러기) ---- */
+.kids-site .k-cat{display:inline-block;flex:none;margin-right:5px;padding:0 6px;border-radius:9px;background:#777;color:#fff;font-size:10px;font-weight:bold;line-height:17px;white-space:nowrap;vertical-align:middle}
+.kids-site .k-article-head .k-cat{margin-bottom:5px;font-size:11px;line-height:19px}
+.kids-site .k-cats{display:flex;flex-wrap:wrap;gap:5px;margin:0 0 10px}
+.kids-site .k-chip{border:2px solid var(--kb,#bfe2a8);border-radius:14px;background:#fff;padding:2px 10px;font-size:12px;color:var(--kt,#2f7d26);cursor:pointer}
+.kids-site .k-chip.on{background:var(--kc,#4cae3c);border-color:var(--kc,#4cae3c);color:#fff;font-weight:bold}
+.kids-site .k-sub{margin:14px 0 6px;padding:2px 0 2px 9px;border-left:5px solid var(--kc,#4cae3c);font-size:14px;color:var(--kt,#2f7d26)}
+.kids-site .k-fact{margin:12px 0 4px;padding:8px 12px;border-radius:10px;background:#fff8d6;border:2px solid #f2d66a}
+.kids-site .k-fact b{display:block;margin-bottom:3px;color:#b07a00;font-size:12px}
+.kids-site .k-fact p{margin:0;font-size:12px;line-height:1.7;color:#5d4a0c}
+.kids-site .k-related{margin-top:10px;padding:8px 10px;border-top:2px dashed var(--kb,#bfe2a8)}
+.kids-site .k-related>b{display:block;margin-bottom:4px;color:var(--kt,#2f7d26);font-size:12px}
+.kids-site .k-related .k-line{display:flex;align-items:center}
+.kids-site .k-readtable td.k-no{text-align:center}
+.kids-site .kj-read .k-line{display:flex;align-items:center}
+.kids-site .k-cm.k-named b{color:#1f5fbf}
+.ky-readgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+.ky-readgrid.mini{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.kids-site .ky-readcard{display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-width:0;padding:10px 12px;border:2px solid var(--cat,#999);border-radius:14px;background:#fff;text-align:left;cursor:pointer;box-shadow:3px 3px 0 var(--cat,#999)}
+.kids-site .ky-readcard:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--cat,#999)}
+.kids-site .ky-readcard b{font-size:13px;line-height:1.45;color:#333}
+.kids-site .ky-readcard small{font-size:11px;line-height:1.5;color:#777}
+.kids-site .ky-readcard em{font-style:normal;font-size:11px;color:#e8890c}
+@media(max-width:560px){.ky-readgrid,.ky-readgrid.mini{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){.kids-site .ky-readcard:hover{transform:none}}

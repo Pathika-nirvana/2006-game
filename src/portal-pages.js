@@ -1,4 +1,5 @@
 /* A87 portal-pages.js : 포털 안의 기사, 게시글, 지식 답변, 상품 후기, 검색, 메일, 날씨, 오류 화면을 그리는 모듈.
+   A94: 검색 결과 맨 위에 ‘사이트’ 칸(WebSites.search)을 더했다.
    xp-desktop.js가 PortalPages.create(ctx)로 불러 쓰며, 이 모듈이 없어도 기존 화면은 그대로 동작한다.
    모든 시각은 2006.05.30 16:32 이전으로 맞춘다.
    A87: 2005년 날짜(YY.MM.DD HH:MM), 기사 앞머리와 저작권 문구, 대댓글, 쪽 넘기기, 홈 화면 채움 모듈을 더했다. */
@@ -146,9 +147,12 @@ function create(ctx){
   parent.append(E('h2','','“'+(raw||'전체')+'” 검색 결과'));
   const found=ctx.catalog().filter(x=>!term||norm(x.title+x.tags+x.body).includes(term));
   const ads=found.filter(x=>x.type==='광고'),rest=found.filter(x=>x.type!=='광고');
-  parent.append(E('p','p86-count','총 '+rest.length+'건'+(raw?'  |  검색 시각 '+short(parse(NOW)):'')));
+  /* A94: 2006년 포털처럼 맨 위에 ‘사이트’ 검색 결과를 보여 준다 (등록된 개인 홈페이지와 사이트) */
+  const sites=raw&&w.WebSites&&w.WebSites.search?w.WebSites.search(raw):[];
+  parent.append(E('p','p86-count','총 '+(rest.length+sites.length)+'건'+(raw?'  |  검색 시각 '+short(parse(NOW)):'')));
+  if(sites.length){const sb=box(parent,'사이트 ('+sites.length+')','p86-group p94-sites');for(const x of sites.slice(0,5)){const line=E('div','p94-site');line.append(link(x.name,{type:'home',portal:x.id}),E('small','p94-site-url','http://'+x.domain),E('p','',x.desc));sb.append(line)}}
   if(ads.length){const sp=box(parent,'스폰서 링크','p86-sponsor');for(const x of ads.slice(0,2)){const line=E('div','p86-sponsor-line');line.append(link(x.title,{type:'article',id:x.id}),E('small','',x.body));sp.append(line)}}
-  if(!rest.length){const none=E('div','p86-nohit');none.append(E('b','','‘'+raw+'’에 대한 검색결과가 없습니다.'),E('p','','· 단어의 철자가 정확한지 확인해 보세요.'),E('p','','· 검색어의 단어 수를 줄이거나, 보다 일반적인 검색어로 다시 검색해 보세요.'),E('p','','· 두 단어 이상을 입력하셨다면 띄어쓰기를 확인해 보세요.'));parent.append(none);const alt=box(parent,'이런 검색어는 어떠세요?','p86-related-q');for(const t of ctx.profiles[P()].trend.slice(0,5))alt.append(link(t,{type:'search',query:t}));return}
+  if(!rest.length){if(!sites.length){const none=E('div','p86-nohit');none.append(E('b','','‘'+raw+'’에 대한 검색결과가 없습니다.'),E('p','','· 단어의 철자가 정확한지 확인해 보세요.'),E('p','','· 검색어의 단어 수를 줄이거나, 보다 일반적인 검색어로 다시 검색해 보세요.'),E('p','','· 두 단어 이상을 입력하셨다면 띄어쓰기를 확인해 보세요.'));parent.append(none)}const alt=box(parent,'이런 검색어는 어떠세요?','p86-related-q');for(const t of ctx.profiles[P()].trend.slice(0,5))alt.append(link(t,{type:'search',query:t}));return}
   const groups=[['뉴스',x=>x.type==='뉴스'],[BOARDLABEL[P()],x=>x.type==='카페'],[meta().kin,x=>x.type==='지식iN'],['만화',x=>x.type==='만화']];
   for(const[name,test]of groups){const xs=order(rest.filter(test));if(!xs.length)continue;const g=box(parent,name+' ('+xs.length+')','p86-group');const holder=E('div','p86-group-list');g.append(holder);let shown=Math.min(4,xs.length);const draw=()=>{holder.replaceChildren();for(const x of xs.slice(0,shown))hitLine(holder,x,raw);if(shown<xs.length){holder.append(B('더 보기 ('+(xs.length-shown)+'건)',()=>{shown=xs.length;draw()},'p86-more'))}};draw()}
   const rel=box(parent,'연관 검색어','p86-related-q');for(const t of ctx.profiles[P()].trend.filter(t=>norm(t)!==term).slice(0,5))rel.append(link(t,{type:'search',query:t}))}

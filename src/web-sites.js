@@ -1,13 +1,15 @@
 /* A91: 포털과 따로 노는 2000년대 초중반 홈페이지 열 곳.
-   개인 홈페이지, 엽기 사이트, 병맛 플래시 극장, 공포 사이트, 프로그램 자료실, 운세, 채팅, 팬클럽, 링크 모음, 귀여운 동물 사진방.
+   개인 홈페이지, 엽기 사이트, 엽기 플래시 극장, 공포 사이트, 프로그램 자료실, 운세, 채팅, 팬클럽, 링크 모음, 귀여운 동물 사진방.
    KidsPortal 처럼 주소(w-로 시작하는 이름)를 가진 곳으로 등록해 인터넷 창에서 열린다. 그림 파일과 소리는 쓰지 않고 CSS와 캔버스로만 그린다.
-   입력 칸은 닉네임과 한 줄 글뿐이고 비밀번호나 개인정보를 받는 화면은 없다. */
+   입력 칸은 닉네임과 한 줄 글뿐이고 비밀번호나 개인정보를 받는 화면은 없다.
+   A94: 다른 파일(web-more.js)이 register()로 사이트를 더할 수 있다. 포털 검색에 쓰는 search(), 소름닷컴의 긴 글(연재, 불 끄고 읽기, 추천)이 더해졌다.
+   화면 글은 2006년 5월 30일 기준이다. 그 뒤에 생긴 말(병맛, 힐링 등)은 쓰지 않는다. */
 (function(w){'use strict';
 const D=()=>w.WebData||{};
 const SITES={
  'w-hompy':{key:'hompy',domain:'skydream.freehomi.net',caption:'★☆ 하늘이의 꿈꾸는 홈페이지 ☆★',name:'하늘이의 홈페이지',types:['home','main','profile','diary','gallery','guestbook','links']},
  'w-yeopgi':{key:'yeopgi',domain:'www.yeopgi.co.kr',caption:'엽기천국 - 오늘도 엽기 충전!',name:'엽기천국',types:['home','board','post','best','bait','fish','free','quiz']},
- 'w-flash':{key:'flash',domain:'www.flashjang.com',caption:'플래시짱 - 병맛 플래시 극장',name:'플래시짱',types:['home','main','play']},
+ 'w-flash':{key:'flash',domain:'www.flashjang.com',caption:'플래시짱 - 엽기 플래시 극장',name:'플래시짱',types:['home','main','play']},
  'w-sorum':{key:'sorum',domain:'www.sorum.co.kr',caption:'소름닷컴 - 한여름밤의 괴담',name:'소름닷컴',types:['home','main','story','exp','stare','dark','curse']},
  'w-jaryo':{key:'jaryo',domain:'www.jaryo-mart.net',caption:'알짜배기 자료실',name:'알짜배기 자료실',types:['home','list','item']},
  'w-fate':{key:'fate',domain:'www.unse-test.com',caption:'오늘의 운세 · 심리테스트',name:'오늘의 운세',types:['home','luck','past','pair','iq']},
@@ -17,6 +19,9 @@ const SITES={
  'w-cute':{key:'cute',domain:'www.cuteanimal-pic.com',caption:'귀여운 동물 사진방',name:'귀여운 동물 사진방',types:['home']}
 };
 const ORDER=Object.keys(SITES);
+/* A94: 포털 검색의 '사이트' 칸에 쓰는 낱말. 숨은 사이트(hidden)는 검색에 나오지 않는다. */
+const TAGS={'w-hompy':'개인 홈페이지 홈피 방명록 일기 다이어리 프로필 하늘이','w-yeopgi':'엽기 웃긴 유머 낚시 자유게시판 퀴즈 웃긴글 엽기사진','w-flash':'플래시 애니메이션 졸라맨 게임 똥피하기 엽기 플래시','w-sorum':'괴담 공포 귀신 무서운 이야기 무서운이야기 실화 심령 소름 공포체험 군대 수련회','w-jaryo':'자료실 프로그램 무료 다운로드 공개 프로그램 바탕화면 부수기','w-fate':'운세 심리테스트 궁합 전생 아이큐 IQ 테스트 띠 운세','w-chat':'채팅 채팅방 수다 대화방 친구','w-fan':'팬클럽 별빛소녀 가수 팬 공식 팬카페','w-links':'링크 사이트 모음 추천 사이트 재미있는 사이트','w-cute':'고양이 동물 귀여운 사진 강아지 애완동물'};
+const DESC={'w-hompy':'하늘이가 직접 만든 개인 홈페이지','w-yeopgi':'세상은 넓고 엽기는 많다! 엽기 유머 모음','w-flash':'엽기 플래시와 미니 게임','w-sorum':'무서운 이야기와 귀신 체험관 (심장 약한 분 주의)','w-jaryo':'공짜 프로그램 자료실','w-fate':'오늘의 운세와 심리테스트','w-chat':'심심할 때 들어오는 채팅방','w-fan':'별빛소녀 공식 팬클럽','w-links':'재미있는 사이트가 다 모인 곳','w-cute':'귀여운 동물 사진 모음'};
 const bare=d=>d.replace(/^www\./,'');
 function resolveHost(host){host=String(host||'').toLowerCase();for(const id of ORDER){const d=SITES[id].domain;if(host===d||bare(host)===bare(d))return id}return null}
 function route(id,url){const S=SITES[id],type=url.pathname.replace(/^\/|\/$/g,'')||'home';return{type:S.types.includes(type)?type:'home',id:url.searchParams.get('id')||'',query:url.searchParams.get('query')||''}}
@@ -37,6 +42,10 @@ const raf=fn=>w.requestAnimationFrame?w.requestAnimationFrame(fn):w.setTimeout((
 const caf=id=>w.cancelAnimationFrame&&w.requestAnimationFrame?w.cancelAnimationFrame(id):w.clearTimeout(id);
 function loop(step){let on=true,id=0,last=0;const f=ts=>{if(!on)return;const dt=last?Math.min(.05,(ts-last)/1000):.016;last=ts;step(dt);if(on)id=raf(f)};id=raf(f);const off=()=>{on=false;caf(id)};cleanups.push(off);return off}
 function stop(){const c=cleanups;cleanups=[];for(const f of c){try{f()}catch(_){}}if(w.WebGhost)w.WebGhost.stop()}
+/* A94: 긴 괴담의 마지막 문단은 화면에 들어올 때 천천히 떠오른다. 관찰 기능이 없으면 잠시 뒤 그냥 보여 준다. */
+function holdReveal(p){const show=()=>{p.classList.add('sr-shown')};
+ if(typeof w.IntersectionObserver==='function'){try{const io=new w.IntersectionObserver(es=>{for(const e of es)if(e.isIntersecting){later(show,700);io.disconnect()}},{threshold:.6});io.observe(p);cleanups.push(()=>io.disconnect());return}catch(_){}}
+ later(show,1200)}
 const reduced=()=>{try{return !!(w.matchMedia&&w.matchMedia('(prefers-reduced-motion: reduce)').matches)}catch(_){return false}};
 /* ---------- 공통 조각 ---------- */
 function ie(env,text,icon){const X=env.ctx.X;if(X&&X.ui)X.ui.dialog({title:'Microsoft Internet Explorer',text,icon:icon||'warn'});return !!(X&&X.ui)}
@@ -137,7 +146,7 @@ PAGE.yeopgi=function(page,env){
 /* ============ 3. 플래시짱 ============ */
 PAGE.flash=function(page,env){
  const {E,B,go,r,k,ctx}=env,d=D().flash,F=w.WebFlash;
- const head=E('header','fl-head');head.append(B('FLASH JANG',()=>go({type:'home'}),'fl-logo'),E('span','fl-sub','병맛 플래시 극장'));page.append(head);
+ const head=E('header','fl-head');head.append(B('FLASH JANG',()=>go({type:'home'}),'fl-logo'),E('span','fl-sub','엽기 플래시 극장'));page.append(head);
  if(r.type==='home'){
   const box=E('div','fl-intro'),barx=E('div','ws-bar fl-bar'),fill=E('i'),txt=E('p','fl-loading',d.loading[0]);barx.append(fill);
   const enter=B('ENTER ▶',()=>go({type:'main'}),'fl-enter');enter.hidden=true;
@@ -174,24 +183,54 @@ PAGE.flash=function(page,env){
  site404(env)};
 /* ============ 4. 소름닷컴 ============ */
 const STORY_TRAP={s1:['click','scream','마지막 줄을 읽으셨군요'],s3:['time','child','뒤를 보세요'],s6:['click','grin','발자국은 당신 앞에서 멈췄습니다']};
+const SR_CATS=[['','전체 글'],['real','실화 괴담'],['serial','연재'],['short','짧은 괴담']];
+const srCat=st=>st.cat||'short';
+const srDate=st=>st.date||('05.'+String(10+hash(st.id)%18).padStart(2,'0')+' '+String(hash(st.id+'h')%24).padStart(2,'0')+':'+String(hash(st.id+'m')%60).padStart(2,'0'));
+const srLong=st=>String(st.text||'').length>1500;
+const srMins=st=>Math.max(1,Math.round(String(st.text||'').replace(/\s/g,'').length/450));
+const srTitle=st=>(st.tag?'['+st.tag+'] ':'')+st.title+(st.parts?' ('+st.part+'/'+st.parts+')':'');
 PAGE.sorum=function(page,env){
  const {E,B,go,r,k,ctx}=env,d=D().sorum;
  const logo=B('소름',()=>go({type:'main'}),'sr-logo');logo.append(E('small','','.com'));
  if(r.type==='home'){
   const gate=E('div','sr-gate');gate.append(E('h1','sr-title','소름닷컴'),E('p','sr-sub','한여름밤의 괴담'));for(const t of d.gate)gate.append(E('p','sr-warn',t));
   gate.append(B('입장하기 (각오가 되신 분만)',()=>go({type:'main'}),'sr-enter'),B('나가기',()=>go({type:'home'},'w-links'),'sr-leave'),E('small','sr-count',d.visitors.join(' · ')));page.append(gate);return}
+ if(k.srNight===1)page.classList.add('sr-night');
  const head=E('header','sr-head');head.append(logo,E('span','sr-tag','이 사이트에는 귀신이 삽니다'));
  const nav=E('nav','sr-nav');for(const [type,label] of [['main','괴담 게시판'],['exp','귀신 체험관']])nav.append(B(label,()=>go({type}),'sr-tab'+(r.type===type||(type==='main'&&r.type==='story')?' on':'')));page.append(head,nav);
  const body=E('main','sr-body');page.append(body);
+ const recOf=st=>(st.rec||Math.round(st.hits/180))+(k.rec['sr-'+st.id]?1:0);
  if(r.type==='main'){
-  body.append(E('h2','sr-h','무서운 이야기 (조회순)'));const list=E('div','sr-list');for(const s of d.stories.slice().sort((a,b)=>b.hits-a.hits)){const row=E('div','sr-row');row.append(B(s.title,()=>go({type:'story',id:s.id}),'sr-link'),E('small','',s.nick+' · 조회 '+s.hits.toLocaleString('ko-KR')+' · 댓글 '+s.comments.length))
-   ;list.append(row)}body.append(list,E('p','sr-foot-note','※ 불을 끄고 혼자 보세요. 읽다가 뒤를 돌아보는 것은 자유입니다.'))}
+  const cat=SR_CATS.some(c=>c[0]===r.query)?r.query:'';
+  const tabs=E('div','sr-cats');for(const [id,label] of SR_CATS)tabs.append(B(label,()=>go({type:'main',query:id}),'sr-cat'+(cat===id?' on':'')));body.append(tabs);
+  if(!cat){const best=E('section','sr-best');best.append(E('b','','★ 이번 주 베스트 (조회순)'));d.stories.slice().sort((a,b)=>b.hits-a.hits).slice(0,5).forEach((st,i)=>{const row=E('div','sr-best-row');row.append(E('i','',String(i+1)),B(srTitle(st),()=>go({type:'story',id:st.id}),'sr-link'),E('small','','조회 '+st.hits.toLocaleString('ko-KR')));best.append(row)});body.append(best)}
+  body.append(E('h2','sr-h',cat?SR_CATS.find(c=>c[0]===cat)[1]:'무서운 이야기 게시판'));
+  const list=E('div','sr-list'),rows=d.stories.filter(st=>!cat||srCat(st)===cat).slice().sort((a,b)=>srDate(b).localeCompare(srDate(a))||(a.part||0)-(b.part||0));
+  const total=rows.length;
+  rows.forEach((st,i)=>{const row=E('div','sr-row');row.append(E('span','sr-no',String(1400+total-i)));const t=B(srTitle(st),()=>go({type:'story',id:st.id}),'sr-link');row.append(t);if(st.comments.length)row.append(E('em','sr-cmn','['+st.comments.length+']'));if(srDate(st)>='05.28')row.append(E('b','sr-new','NEW'));if(srLong(st))row.append(E('span','sr-scroll','스크롤 압박'));row.append(E('small','',st.nick+' · '+srDate(st).slice(0,5)+' · 조회 '+st.hits.toLocaleString('ko-KR')+' · 추천 '+recOf(st)));list.append(row)});
+  body.append(list,E('p','sr-foot-note','※ 불을 끄고 혼자 보세요. 읽다가 뒤를 돌아보는 것은 자유입니다. 퍼가실 때는 출처를 꼭 밝혀 주세요.'))}
  else if(r.type==='story'){
-  const s=d.stories.find(x=>x.id===r.id);if(!s){site404(env);return}
-  const tr=STORY_TRAP[s.id];const art=E('article','sr-story');art.append(E('h2','sr-h',s.title),E('small','sr-meta',s.nick+' · 조회 '+s.hits.toLocaleString('ko-KR')),E('p','sr-text',s.text));body.append(art);
+  const st=d.stories.find(x=>x.id===r.id);if(!st){site404(env);return}
+  const tr=STORY_TRAP[st.id]||(Array.isArray(st.trap)?st.trap:null);const art=E('article','sr-story'+(srLong(st)?' long':''));
+  art.append(E('h2','sr-h',srTitle(st)),E('small','sr-meta',st.nick+' · 2006.'+srDate(st)+' · 조회 '+st.hits.toLocaleString('ko-KR')+' · 추천 '+recOf(st)));
+  const tools=E('div','sr-tools');if(srLong(st))tools.append(E('span','sr-scroll','※ 스크롤 압박 주의 · 읽는 데 약 '+srMins(st)+'분'));
+  tools.append(B(k.srNight===1?'☀ 불 켜고 읽기':'● 불 끄고 읽기',()=>{k.srNight=k.srNight===1?0:1;ctx.save();ctx.rerender()},'sr-night-btn'));art.append(tools);
+  const series=st.series?d.stories.filter(x=>x.series===st.series).sort((a,b)=>a.part-b.part):[];
+  const seriesBar=()=>{const bar=E('div','sr-series');bar.append(E('b','','연재 목록'));for(const x of series)bar.append(B(x.part+'편',()=>go({type:'story',id:x.id}),'sr-part'+(x===st?' on':'')));return bar};
+  if(series.length>1)art.append(seriesBar());
+  const paras=String(st.text).split(/\n\n+/);
+  paras.forEach((tx,i)=>{const p=E('p','sr-text sr-para',tx);if(st.slowEnd&&i===paras.length-1){p.classList.add('sr-hold');holdReveal(p)}art.append(p)});
+  if(st.note){const n=E('div','sr-note');n.append(E('b','','글쓴이의 말'),E('p','',st.note));art.append(n)}
+  body.append(art);
+  const vote=B(k.rec['sr-'+st.id]?'추천 완료 ('+recOf(st)+')':'추천하기 ('+recOf(st)+')',()=>{if(k.rec['sr-'+st.id])return;k.rec['sr-'+st.id]=1;ctx.save();ctx.rerender()},'sr-vote');body.append(vote);
+  if(series.length>1){const at=series.indexOf(st),pager=E('div','sr-pager');if(at>0)pager.append(B('◀ 이전 편',()=>go({type:'story',id:series[at-1].id}),'sr-leave'));if(at<series.length-1)pager.append(B('다음 편 보기 ▶',()=>go({type:'story',id:series[at+1].id}),'sr-enter'));else pager.append(E('span','sr-end','(완결)'));body.append(pager)}
   if(tr&&tr[0]==='click'){const out=E('p','sr-oops','');art.append(B('...그래서 어떻게 됐나요? (마지막 줄 보기)',()=>trap(env,{kind:tr[1],text:tr[2],after:()=>{out.textContent='마지막 줄은 보지 않는 편이 좋았습니다.'}}),'sr-last'),out)}
-  if(tr&&tr[0]==='time'){const fire=()=>{trap(env,{kind:tr[1],text:tr[2]})};later(fire,9000)}
-  const cm=E('div','sr-cm');cm.append(E('b','','댓글'));commentList(env,cm,'sr-'+s.id,s.comments,['소름','공포매니아','밤손님','무서워요']);cm.append(postForm(env,{nick:'손님',textPh:'댓글 (무서우면 불을 켜세요)',max:60},(a,t)=>{pushTo(k,'cm','sr-'+s.id,a+': '+t,10);ctx.save();ctx.rerender()}));body.append(cm,B('◀ 목록으로',()=>go({type:'main'}),'sr-leave'))}
+  if(tr&&tr[0]==='time'){const fire=()=>{trap(env,{kind:tr[1],text:tr[2]})};later(fire,tr[3]||9000)}
+  const nicks=['소름','공포매니아','밤손님','무서워요','새벽두시','불켜놓음','자작아님?','지나가다'];
+  const cm=E('div','sr-cm');cm.append(E('b','','댓글 '+st.comments.length));
+  st.comments.forEach((t,i)=>{const named=/^([^:\s]{1,12})::\s*([\s\S]*)$/.exec(t),nest=/^ㄴ\s/.test(t);const p=E('p','ws-cm'+(nest?' sr-nest':''));const who=named?named[1]:nicks[(hash(st.id)+i*3)%nicks.length];p.append(E('b','sr-who','['+who+']'),E('span','',' '+(named?named[2]:nest?t.replace(/^ㄴ\s*/,''):t)));cm.append(p)});
+  for(const t of listOf(k,'cm','sr-'+st.id,10))cm.append(E('p','ws-cm mine',t));
+  cm.append(postForm(env,{nick:'손님',textPh:'댓글 (무서우면 불을 켜세요)',max:60},(a,t)=>{pushTo(k,'cm','sr-'+st.id,a+': '+t,10);ctx.save();ctx.rerender()}));body.append(cm,B('◀ 목록으로',()=>go({type:'main'}),'sr-leave'))}
  else if(r.type==='exp'){
   body.append(E('h2','sr-h','귀신 체험관'));for(const [name,desc,type] of d.fear){const row=E('div','sr-row');row.append(B(name,()=>go({type}),'sr-link'),E('small','',desc));body.append(row)}}
  else if(r.type==='stare'){
@@ -301,14 +340,18 @@ PAGE.links=function(page,env){
  const {E,B,go}=env,d=D().links;
  const head=E('header','lk-head');head.append(B('링크천국',()=>go({type:'home'}),'lk-logo'),E('span','','재미있는 사이트가 모여 있는 곳'));page.append(head,marquee(E,'★ 신규 등록 사이트 접수중 ★ 서로 링크 걸어요 ★ 오늘의 추천: 엽기천국 ★','lk-marq'));
  const body=E('main','lk-body');page.append(body);
- for(const [cat,list] of d.cats){const box=E('section','lk-box');box.append(E('h3','',cat));for(const [id,name,desc,star] of list){const row=E('div','lk-row');row.append(B(name,()=>go({type:'home'},id),'lk-link'),E('small','',' '+desc),E('em','lk-star',stars(star)),E('small','lk-url',SITES[id]?SITES[id].domain:''));box.append(row)}body.append(box)}
- const dead=E('section','lk-box');dead.append(E('h3','','접속이 불안정한 곳'));for(const [dom,name] of d.dead)dead.append(B(name,()=>go({type:'unavailable',query:'http://'+dom},'naver'),'lk-link dead'));body.append(dead);
- const rnd=B('두근두근 랜덤 사이트로 이동!',()=>{const list=ORDER.filter(x=>x!=='w-links'),pick=list[Math.floor(Math.random()*list.length)];go({type:'home'},pick)},'lk-random');body.append(rnd);
+ const cats=d.cats.map(([cat,list])=>[cat,list.slice()]);
+ for(const id of ORDER){const S=SITES[id];if(!S.linkCat||S.hidden)continue;let c=cats.find(x=>x[0]===S.linkCat);if(!c){c=[S.linkCat,[]];cats.push(c)}c[1].push([id,S.name,S.desc||'',S.star||4])}
+ for(const [cat,list] of cats){const box=E('section','lk-box');box.append(E('h3','',cat));for(const [id,name,desc,star] of list){const row=E('div','lk-row');row.append(B(name,()=>go({type:'home'},id),'lk-link'),E('small','',' '+desc),E('em','lk-star',stars(star)),E('small','lk-url',SITES[id]?SITES[id].domain:''));if(SITES[id]&&SITES[id].isNew)row.append(E('b','lk-new','NEW'));box.append(row)}body.append(box)}
+ const dead=E('section','lk-box');dead.append(E('h3','','접속이 불안정한 곳'));for(const [dom,name] of d.dead)dead.append(B(name,()=>go({type:'unavailable',query:'http://'+dom},'naver'),'lk-link dead'));
+ for(const id of ORDER){const S=SITES[id];if(!S.deadLink)continue;const b=B(S.deadLink,()=>{if(b.disabled)return;b.disabled=true;let n=0;const tick=()=>{n++;b.textContent=S.deadLink+'  ...연결 시도 중 ('+n+'/3)';if(n<3)later(tick,450);else later(()=>go({type:'home'},id),450)};tick()},'lk-link dead revive');dead.append(b)}
+ body.append(dead);
+ const rnd=B('두근두근 랜덤 사이트로 이동!',()=>{const list=ORDER.filter(x=>x!=='w-links'&&!SITES[x].hidden),pick=list[Math.floor(Math.random()*list.length)];go({type:'home'},pick)},'lk-random');body.append(rnd);
  const tips=E('section','lk-box');tips.append(E('h3','','이용 안내'));for(const t of d.tips)tips.append(E('p','',t));body.append(tips)};
 /* ============ 10. 귀여운 동물 사진방 ============ */
 PAGE.cute=function(page,env){
  const {E,B,go,r}=env,d=D().cute,G=w.WebGhost;
- const head=E('header','ct-head');head.append(B('귀여운 동물 사진방',()=>go({type:'home'}),'ct-logo'),E('span','','보기만 해도 힐링 ♡'));page.append(head);
+ const head=E('header','ct-head');head.append(B('귀여운 동물 사진방',()=>go({type:'home'}),'ct-logo'),E('span','','보기만 해도 기분이 좋아지는 곳 ♡'));page.append(head);
  let i=Math.max(0,Math.min(3,parseInt(r.id,10)||0));
  const cv=E('canvas','ct-photo');cv.width=360;cv.height=260;const g=cv.getContext?cv.getContext('2d'):null;if(g&&G&&i<3){try{G.kitten(g,360,260,i)}catch(_){}}
  const cap=E('p','ct-cap',d.slides[i]),no=E('p','ct-no',(i+1)+' / 4');
@@ -325,6 +368,12 @@ function render(page,r,ctx){
  if(w.WebGhost&&w.WebGhost.preload&&['hompy','yeopgi','sorum','cute'].includes(S.key))w.WebGhost.preload();
  const env={ctx,E:ctx.E,B:ctx.B,site,key:S.key,r,k:kstate(ctx),page,go:(rt,to)=>ctx.navigate({...rt,portal:to||site})};
  const fn=PAGE[S.key];if(!fn)return false;fn(page,env);return true}
-const favorites=go=>[['링크천국',()=>go('w-links'),{bold:true}],'-',['알짜배기 자료실',()=>go('w-jaryo')],['엽기천국',()=>go('w-yeopgi')],['플래시짱',()=>go('w-flash')],['하늘이의 홈페이지',()=>go('w-hompy')],['오늘의 운세',()=>go('w-fate')],['수다방 채팅',()=>go('w-chat')],['별빛소녀 팬클럽',()=>go('w-fan')]];
-w.WebSites={owns:id=>!!SITES[id],caption:id=>SITES[id]?SITES[id].caption:'',domain:id=>SITES[id]?SITES[id].domain:'',resolveHost,route,url:urlOf,render,stop,favorites,sites:SITES,order:ORDER,pages:PAGE,strs,trapKinds:STORY_TRAP};
+const favorites=go=>{const base=[['링크천국',()=>go('w-links'),{bold:true}],'-',['알짜배기 자료실',()=>go('w-jaryo')],['엽기천국',()=>go('w-yeopgi')],['플래시짱',()=>go('w-flash')],['하늘이의 홈페이지',()=>go('w-hompy')],['오늘의 운세',()=>go('w-fate')],['수다방 채팅',()=>go('w-chat')],['별빛소녀 팬클럽',()=>go('w-fan')]];
+ const more=ORDER.filter(id=>SITES[id].fav&&!SITES[id].hidden).map(id=>[SITES[id].name,()=>go(id)]);return more.length?base.concat(['-'],more):base};
+/* A94: 다른 파일에서 사이트를 더한다. def: {key,domain,caption,name,types,linkCat,desc,star,tags,fav,hidden,deadLink,isNew} */
+function register(id,def,fn){if(!/^w-[a-z0-9]+$/.test(id)||!def||!def.key||typeof fn!=='function')return false;if(!SITES[id])ORDER.push(id);SITES[id]=def;PAGE[def.key]=fn;if(def.tags)TAGS[id]=def.tags;if(def.desc)DESC[id]=def.desc;return true}
+/* A94: 포털 검색의 '사이트' 칸 */
+function search(q){const term=String(q||'').toLowerCase().replace(/\s/g,'');if(!term)return[];const out=[];for(const id of ORDER){const S=SITES[id];if(S.hidden)continue;const hay=(S.name+S.caption+S.domain+(TAGS[id]||'')).toLowerCase().replace(/\s/g,'');if(hay.includes(term)||(term.length>=2&&(TAGS[id]||'').split(/\s+/).some(t=>t&&term.includes(t.toLowerCase()))))out.push({id,name:S.name,domain:S.domain,desc:DESC[id]||S.caption})}return out}
+w.WebSites={owns:id=>!!SITES[id],caption:id=>SITES[id]?SITES[id].caption:'',domain:id=>SITES[id]?SITES[id].domain:'',resolveHost,route,url:urlOf,render,stop,favorites,sites:SITES,order:ORDER,pages:PAGE,strs,trapKinds:STORY_TRAP,register,search,
+ kit:{marquee,digits,field,postForm,commentList,bar,stars,sparkle,site404,ie,trap,later,loop,listOf,pushTo,hash,reduced,holdReveal,cleanup:f=>{cleanups.push(f)}}};
 })(window);
