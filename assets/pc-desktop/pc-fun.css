@@ -83,3 +83,22 @@
 .ml-star{position:absolute;top:-20px;color:#ffd23f;font-style:normal;opacity:0}.ml-card.open .ml-star{animation:mlFall 2.4s linear infinite;opacity:1}@keyframes mlFall{from{transform:translateY(0)}to{transform:translateY(190px) rotate(180deg)}}
 @media (prefers-reduced-motion:reduce){.ml-card.open .ml-star{animation:none}}
 @media (max-width:640px){.ml-layout{grid-template-columns:1fr}.ml-side{flex-direction:row;flex-wrap:wrap}.ml-row{grid-template-columns:90px minmax(0,1fr)}.ml-at,.ml-size{display:none}}
+/* ---- 버디버디 같은 방 친구 (A96) ---- */
+.xp-msn-buddy.real .nick{color:#0a6a2a;font-weight:bold}.xp-msn-hint{margin:2px 8px 6px;padding:5px 7px;border:1px dashed #9ab;border-radius:4px;background:#f6fbff;color:#456;font-size:11px;line-height:1.5}
+/* ---- 폰 화면 (A96): 좁은 화면이나 가로로 눕힌 폰에서는 창을 늘 꽉 차게 하나씩, 손가락으로 위아래 스크롤 ---- */
+@media (max-width:760px),(max-height:520px){
+ .playroom-panel.xp-screen-panel{width:100vw;height:96vh;max-height:96vh}
+ @supports (height:100dvh){.playroom-panel.xp-screen-panel{height:96dvh;max-height:96dvh}}
+ .xp79-window,.xp79-window.xp79-wide,.xp79-window.xp-small,.mh-win{left:0!important;top:0!important;width:100%!important;height:100%!important;min-width:0!important;min-height:0!important;border-radius:0;border-width:2px}
+ .xp79-title{min-height:30px;touch-action:auto;cursor:default}
+ .xp79-window-buttons button{min-width:36px;min-height:28px;font-size:15px}
+ .xp79-window-content{overflow:auto!important;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+ .xp79-web-page,.pg-root,.mh-main,.ml-main,.pg-log,.wd-log{-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+ .xp79-task{min-height:30px;max-width:42vw}
+ .xp79-shortcut{min-height:64px}
+ .mh-main{max-height:none}.mh-book{min-height:0}
+ .pg-head{padding:8px 10px}.pg-title strong{font-size:16px}.pg-body{padding:8px}.pg-start{min-width:0;width:90%}
+ .pg-rooms{grid-template-columns:24px minmax(0,1fr) 46px;font-size:11px}.pg-rooms>:nth-child(5n+3),.pg-rooms>:nth-child(5n+4){display:none}
+ .pg-pad .pg-btn{min-width:60px;min-height:44px;font-size:18px}
+ .xp-toasts{width:min(260px,calc(100% - 12px))}
+}

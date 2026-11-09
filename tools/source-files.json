@@ -491,6 +491,8 @@
   "RELEASE_A93.md",
   "tests/test_web_more_a94.cjs",
   "tests/test_pc_fun_a95.cjs",
+  "tests/test_buddy_mobile_a96.cjs",
   "RELEASE_A94.md",
-  "RELEASE_A95.md"
+  "RELEASE_A95.md",
+  "RELEASE_A96.md"
 ]

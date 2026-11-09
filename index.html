@@ -12,6 +12,9 @@
 /* BUILD 02: unobtrusive affordance for nearby doors, playground and stationery props */
 .action-label{position:absolute;bottom:10px;right:10px;color:#f8e8c8;background:#213b46b8;border:1px solid #d9caa74f;font-size:10px;padding:5px 9px;pointer-events:none;max-width:42%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 @media(max-width:760px){.action-label{font-size:9px;padding:3px 5px;bottom:5px}.control-legend span:nth-last-child(-n+2){display:none}.touch button{min-width:38px;padding:0 6px}.right-tools{flex-wrap:wrap}}
+/* A96: 폰 터치 단추. 오른쪽 단추가 많아지면 두 줄로 쌓는다. */
+.touch .t-eat{background:#a8402ce8;border-color:#e0906a}.touch button[hidden]{display:none}
+@media(max-width:760px){.touch{align-items:flex-end}.touch>div:last-child{flex-wrap:wrap-reverse;justify-content:flex-end;max-width:calc(100% - 112px);gap:6px}.touch button{height:44px}}
 
 /* A2 keeps the wallet visible in the control bar without covering pixel playfield. */
 .game-toolbar .right-tools{flex-wrap:wrap;justify-content:flex-end;gap:6px}.game-toolbar .top-wallet{border-right:1px solid #748385;padding-right:11px;margin-right:6px}@media(max-width:900px){.game-toolbar .top-wallet{width:100%;justify-content:flex-end}}
@@ -369,7 +372,7 @@ body.playing-a5 #bgmControls{position:fixed;z-index:1100;bottom:0;left:0;right:0
 <link rel="stylesheet" href="assets/pc-desktop/kids.css?v=A94">
 <link rel="stylesheet" href="assets/pc-desktop/xp-extras.css?v=A94">
 <link rel="stylesheet" href="assets/pc-desktop/web-sites.css?v=A94">
-<link rel="stylesheet" href="assets/pc-desktop/pc-fun.css?v=A95">
+<link rel="stylesheet" href="assets/pc-desktop/pc-fun.css?v=A96">
 <link rel="stylesheet" href="assets/pc-desktop/web-fun.css?v=A95">
 <link rel="stylesheet" href="assets/pc-desktop/boot.css">
 </head>
@@ -475,7 +478,7 @@ body.playing-a5 #bgmControls{position:fixed;z-index:1100;bottom:0;left:0;right:0
 <div class="memory-modal hidden" id="memoOverlay" role="dialog" aria-modal="true" aria-label="추억 수첩">
     <section class="memory-book"><header><div><small>2006 · 방과 후의 메모</small><strong>추억 수첩</strong></div><button id="memoClose" aria-label="수첩 닫기">×</button></header><div class="memo-pages" id="memoContents"></div><footer>목표나 업적은 없어. 그저 오늘 스쳐 간 장면들을 적어 두는 곳.</footer></section>
   </div>
-  <div class="touch" aria-label="터치 컨트롤"><div><button data-key="ArrowLeft" aria-label="왼쪽">◀</button><button data-key="ArrowRight" aria-label="오른쪽">▶</button></div><div><button data-key="ArrowUp">↑</button><button data-key="ArrowDown">↓</button><button data-key="Space">점프</button><button data-key="KeyE">E</button><button data-key="KeyC">앉기</button></div></div>
+  <div class="touch" aria-label="터치 컨트롤"><div><button data-key="ArrowLeft" aria-label="왼쪽">◀</button><button data-key="ArrowRight" aria-label="오른쪽">▶</button></div><div><button data-key="ArrowUp">↑</button><button data-key="ArrowDown">↓</button><button data-key="Space">점프</button><button data-key="KeyE">E</button><button data-key="KeyC">앉기</button><button data-key="KeyF" class="t-eat" hidden>먹기</button><button data-key="KeyI" class="t-bag">가방</button></div></div>
 <div id="a22Overlay" class="a22-overlay hidden" role="dialog" aria-modal="true" aria-hidden="true" aria-label="2006년 옥상 풍경 감상">
  <section class="a22-card"><div class="a22-head"><div><small>ART A24 · 2006년의 거리 · 옥상에서 보는 생활 풍경</small><h2>아파트 옥상에서</h2></div><button id="a22Close" type="button">감상 끝내기 (Esc)</button></div>
  <canvas id="a22Canvas" width="800" height="450" aria-label="아파트 옥상에서 보이는 움직이는 2006년 한국 동네: 승용차, 버스, 보행자, 골목과 주택, 창문 불빛"></canvas>
@@ -3247,7 +3250,7 @@ window.A12ART={retouch,retouchRoute,dynamic,get enabled(){return enabled},set en
 })();
 
 /* END src/16_pilot_art.js */
-</script><script src="assets/maps/after-school/manifest.js"></script><script src="src/after-school-map.js"></script><script src="src/playground-space.js"></script><script src="src/side-alley-map.js"></script><script src="src/apartment-path-map.js"></script><script src="src/back-alley-map.js"></script><script src="src/narrow-alley-map.js"></script><script src="src/stationery-interior.js"></script><script src="src/supermarket-map.js"></script><script src="src/courtyard-map.js"></script><script src="src/pcroom-map.js"></script><script src="src/portal-comics.js?v=A89"></script><script src="src/portal-news.js?v=A94"></script><script src="src/portal-boards.js?v=A94"></script><script src="src/portal-pages.js?v=A95"></script><script src="src/pc-system.js?v=A89"></script><script src="src/club-seed.js?v=A88"></script><script src="src/club-core.js?v=A88"></script><script src="src/club.js?v=A88"></script><script src="src/kids-data.js?v=A94"></script><script src="src/kids-games.js?v=A95"></script><script src="src/kids-portal.js?v=A95"></script><script src="src/kids-more.js?v=A95"></script><script src="src/desk-smash.js?v=A89"></script><script src="src/xp-shell.js?v=A94"></script><script src="src/xp-setup.js?v=A94"></script><script src="src/xp-apps.js?v=A94"></script><script src="src/xp-messenger.js?v=A94"></script><script src="src/xp-net.js?v=A94"></script><script src="src/web-data.js?v=A94"></script><script src="src/web-stories.js?v=A94"></script><script src="src/web-ghost.js?v=A94"></script><script src="src/web-flash.js?v=A94"></script><script src="src/web-sites.js?v=A95"></script><script src="src/web-more.js?v=A94"></script><script src="src/web-fun.js?v=A95"></script><script src="src/pc-games.js?v=A95"></script><script src="src/xp-minihome.js?v=A95"></script><script src="src/pc-mail.js?v=A95"></script><script src="src/xp-desktop.js?v=A95"></script><script src="src/block104.js"></script><script src="src/commercial-road.js"></script><script>
+</script><script src="assets/maps/after-school/manifest.js"></script><script src="src/after-school-map.js"></script><script src="src/playground-space.js"></script><script src="src/side-alley-map.js"></script><script src="src/apartment-path-map.js"></script><script src="src/back-alley-map.js"></script><script src="src/narrow-alley-map.js"></script><script src="src/stationery-interior.js"></script><script src="src/supermarket-map.js"></script><script src="src/courtyard-map.js"></script><script src="src/pcroom-map.js"></script><script src="src/portal-comics.js?v=A89"></script><script src="src/portal-news.js?v=A94"></script><script src="src/portal-boards.js?v=A94"></script><script src="src/portal-pages.js?v=A95"></script><script src="src/pc-system.js?v=A89"></script><script src="src/club-seed.js?v=A88"></script><script src="src/club-core.js?v=A88"></script><script src="src/club.js?v=A88"></script><script src="src/kids-data.js?v=A94"></script><script src="src/kids-games.js?v=A95"></script><script src="src/kids-portal.js?v=A95"></script><script src="src/kids-more.js?v=A95"></script><script src="src/desk-smash.js?v=A89"></script><script src="src/xp-shell.js?v=A94"></script><script src="src/xp-setup.js?v=A94"></script><script src="src/xp-apps.js?v=A94"></script><script src="src/xp-messenger.js?v=A96"></script><script src="src/xp-net.js?v=A94"></script><script src="src/web-data.js?v=A94"></script><script src="src/web-stories.js?v=A94"></script><script src="src/web-ghost.js?v=A94"></script><script src="src/web-flash.js?v=A94"></script><script src="src/web-sites.js?v=A95"></script><script src="src/web-more.js?v=A94"></script><script src="src/web-fun.js?v=A95"></script><script src="src/pc-games.js?v=A95"></script><script src="src/xp-minihome.js?v=A95"></script><script src="src/pc-mail.js?v=A95"></script><script src="src/xp-desktop.js?v=A95"></script><script src="src/block104.js"></script><script src="src/commercial-road.js"></script><script>
 /* BEGIN src/13_game_core.js */
 
 /* 《2006년.. 90년대생의 회상》 ART STAGE 10 (everyday neighborhood detours + A8 routines)
@@ -3469,6 +3472,8 @@ function takeBite(){
 }
 function keyup(e){input.delete(e.code)}
 window.addEventListener('keydown',keydown);window.addEventListener('keyup',keyup);window.addEventListener('blur',()=>input.clear());window.addEventListener('arcade-focus-change',()=>input.clear());
+/* A96: 폰에서도 먹기(F)와 가방(I)을 쓸 수 있게. 먹기 단추는 손에 음식을 들고 있을 때만 보인다. */
+setInterval(()=>{const eat=document.querySelector('.touch .t-eat');if(eat){const on=!!(window.SHOPS&&window.SHOPS.held);if(eat.hidden===on)eat.hidden=!on}},350);
 for(const btn of document.querySelectorAll('.touch button')){
  const k=btn.dataset.key;let held=false;
  btn.addEventListener('pointerdown',e=>{e.preventDefault();held=true;btn.setPointerCapture(e.pointerId);keydown({code:k,repeat:false,preventDefault(){}})});

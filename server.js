@@ -24,6 +24,28 @@ const rooms = new Map();
 const physicsRooms=new Map();
 /* A88 동네 아지트: 방마다 게시판, 낙서, 출석부, 채팅 기록, 쪽지가 있다. 서버 메모리에만 있고 방이 비면 6시간 뒤에 지운다. */
 const clubs=new Map();const CLUB_TTL=6*3600*1000,MAX_CLUBS=200,CLUB_ALIVE=50000;
+/* A96: 버디버디. PC방 컴퓨터를 켠 사람끼리 같은 방에서 1:1 대화와 흔들기를 주고받는다. 서버는 전달만 하고 대화를 저장하지 않는다. */
+const BUDDY_ALIVE=50000,buddyKeys=new Map();
+const buddyText=t=>String(t||'').normalize('NFC').replace(/[\x00-\x08\x0b-\x1f\x7f]/g,'').trim();
+function buddyWho(room,force,only){
+  const now=Date.now(),list=[...(rooms.get(room)||[])].filter(x=>x.buddySeen&&now-x.buddySeen<BUDDY_ALIVE).map(x=>({id:x.id,name:x.name,nick:x.buddyNick||x.name})).sort((a,b)=>a.id<b.id?-1:1);
+  const key=list.map(x=>x.id+'\u0001'+x.nick).join('\u0002');const msg={type:'buddy',op:'who',list,t:now};
+  if(only){send(only,msg);if(!force)return}
+  if(!force&&buddyKeys.get(room)===key)return;buddyKeys.set(room,key);cast(room,msg);
+}
+function buddyMessage(s,obj){
+  if(!s.room)return;const now=Date.now(),op=String(obj.op||'').slice(0,10);
+  if(op==='on'){const was=s.buddySeen&&now-s.buddySeen<BUDDY_ALIVE,nick=buddyText(obj.nick).replace(/[<>]/g,'').slice(0,20);const changed=nick!==(s.buddyNick||'');s.buddySeen=now;s.buddyNick=nick||s.name;if(!was||changed)buddyWho(s.room,true);else buddyWho(s.room,false,s);return}
+  if(op==='off'){if(s.buddySeen){s.buddySeen=0;buddyWho(s.room,true)}return}
+  if(op!=='say'&&op!=='nudge')return;
+  const gap=op==='say'?350:1500,key=op==='say'?'lastBuddySay':'lastBuddyNudge';
+  if(now-(s[key]||0)<gap){send(s,{type:'buddy',op:'error',message:'조금 천천히 보내 주세요.',t:now});return}
+  const to=[...(rooms.get(s.room)||[])].find(x=>x.id===String(obj.to||''));
+  if(!to||to===s){send(s,{type:'buddy',op:'error',message:'상대가 방에 없어요.',to:String(obj.to||'').slice(0,40),t:now});return}
+  const text=op==='say'?buddyText(obj.text).slice(0,100):'';if(op==='say'&&!text)return;s[key]=now;
+  const out={type:'buddy',op,from:s.id,name:s.name,nick:s.buddyNick||s.name,text,at:now};
+  send(to,out);send(s,Object.assign({},out,{op:op==='say'?'sent':'nudged',to:to.id,toPc:!!(to.buddySeen&&now-to.buddySeen<BUDDY_ALIVE)}));
+}
 const CLUB_WRITE=new Set(['post','comment','rec','del','scrawl','attend','note']);
 function clubOf(room){
   let e=clubs.get(room);
@@ -146,7 +168,7 @@ function publicState(s){return {id:s.id,name:s.name,scene:s.state.scene,x:s.stat
 function end(s){
   if(s.closed)return;s.closed=true;sessions.delete(s);
   if(s.room)PLAY.clearUser(physicsRooms.get(s.room),s.id);
-  if(s.room){const group=rooms.get(s.room);group?.delete(s);if(group?.size===0){rooms.delete(s.room);physicsRooms.delete(s.room);musicRooms.delete(s.room);const ce=clubs.get(s.room);if(ce)ce.expires=Date.now()+CLUB_TTL}else{cast(s.room,{type:'left',id:s.id});if(s.clubSeen)clubWho(s.room)}}
+  if(s.room){const group=rooms.get(s.room);group?.delete(s);if(group?.size===0){rooms.delete(s.room);buddyKeys.delete(s.room);physicsRooms.delete(s.room);musicRooms.delete(s.room);const ce=clubs.get(s.room);if(ce)ce.expires=Date.now()+CLUB_TTL}else{cast(s.room,{type:'left',id:s.id});if(s.clubSeen)clubWho(s.room);if(s.buddySeen)buddyWho(s.room,true)}}
   try{s.socket.destroy()}catch{}
 }
 const code=/^[A-Z0-9]{4,8}$/;
@@ -203,6 +225,7 @@ function onMessage(s,obj){
    cast(s.room,{type:'chat',id:s.id,name:s.name,text:msg,scene:s.state.scene,at:now});return;
  }
  if(obj.type==='club'){clubMessage(s,obj);return}
+ if(obj.type==='buddy'){buddyMessage(s,obj);return}
 }
 function onData(s,chunk){
   if(s.closed)return;s.buffer=Buffer.concat([s.buffer,chunk]);
@@ -257,6 +280,8 @@ const clubClock=setInterval(()=>{
  }
 },20000);
 clubClock.unref();
+const buddyClock=setInterval(()=>{for(const room of rooms.keys())buddyWho(room)},20000);
+buddyClock.unref();
 let physicsNetTicks=0;
 const playgroundClock=setInterval(()=>{physicsNetTicks++;
  for(const [room,arena] of physicsRooms){

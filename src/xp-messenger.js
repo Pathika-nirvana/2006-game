@@ -59,12 +59,24 @@ const EVENTS=[{at:90,type:'msg',id:'sonagi',text:'야 접속했네? 나 지금 P
 const EMO=['^^',';;','ㅠㅠ','ㅋㅋㅋ','-_-','♥'];
 const pick=(list,n)=>list[n%list.length];
 function replyFor(b,text,n){const t=String(text||'');for(const [re,list] of b.rules||[])if(re.test(t))return pick(list,n);return b.generic&&b.generic.length?pick(b.generic,n):''}
+/* A96: 같은 방 친구와 진짜로 대화하기. 함께 걷기 방에 들어와 있으면 서버(server.js의 buddy 메시지)를 통해
+   PC를 켠 친구끼리 1:1 대화와 흔들기를 주고받고, ‘우리 방 전체 대화’는 동네 채팅과 같은 통로를 쓴다.
+   PC를 끈 상태에서 받은 말은 함께 걷기 채팅 기록에 한 줄 남기고, 다음에 버디버디를 열면 대화창에 들어간다. */
+const NET={active:null,pending:[],subscribed:false,tries:0};
+const net=()=>w.A25NET;
+const netReady=()=>{const n=net();return !!(n&&n.state&&n.state.ready)};
+function worldLog(m){try{const log=w.document&&w.document.getElementById&&w.document.getElementById('a25Log');if(!log)return;const row=w.document.createElement('div');row.className='a25-line chat';const b=w.document.createElement('strong');b.textContent='[버디버디] '+(m.nick||m.name||'친구');const sp=w.document.createElement('span');sp.textContent=m.op==='nudge'?'(창을 흔들었어요)':m.text;row.append(b,sp);log.append(row);log.scrollTop=log.scrollHeight}catch(_){}}
+function ensureNet(){if(NET.subscribed)return true;const n=net();if(!n||typeof n.subscribe!=='function')return false;NET.subscribed=true;
+ n.subscribe(m=>{if(!m||typeof m!=='object')return;if(NET.active){NET.active(m);return}if(m.type==='buddy'&&(m.op==='say'||m.op==='nudge')){NET.pending.push(m);if(NET.pending.length>40)NET.pending.shift();worldLog(m)}});return true}
+(function waitNet(){if(ensureNet()||NET.tries++>40)return;if(typeof w.setTimeout==='function')w.setTimeout(waitNet,1500)})();
 function attach(X){
  const {E,B,listen,save,saved}=X;const S=w.XPShell?w.XPShell.xs(X):(saved.xp=saved.xp||{});if(typeof S.nick!=='string')S.nick='';if(!STATUS.some(s=>s[0]===S.status))S.status='online';
  const toast=o=>X.ui&&X.ui.toast(o);const initial=X.remaining();const timers=[];let alive=true,boot=false,list=null,listWin=null;const done=new Set();
  const later=(fn,ms)=>{const t=w.setTimeout(()=>{if(alive)fn()},ms);timers.push(t);return t};
  const bd=BUDDIES.map(b=>({...b,online:b.loginAt===0,log:[],unread:0,n:0,nudges:0,typing:false}));const byId=id=>bd.find(b=>b.id===id);
- const myNick=()=>S.nick||'동네 친구';
+ const ROOMID='net-room';let pcList=[],heart=null;
+ const roomName=()=>{try{const el=netReady()&&w.document&&w.document.getElementById&&w.document.getElementById('a25Name');return el&&el.value?String(el.value).trim().slice(0,14):''}catch(_){return ''}};
+ const myNick=()=>S.nick||roomName()||'동네 친구';
  const hidden=()=>S.status==='hidden';
  const chatId=id=>'chat-'+id;
  /* ---- 대화 ---- */
@@ -77,38 +89,68 @@ function attach(X){
   const form=E('form','xp-chat-form'),input=E('input','xp-chat-input');input.type='text';input.maxLength=100;input.autocomplete='off';input.setAttribute('aria-label',b.nick+' 님에게 보낼 말');form.append(input,B('전송',()=>{},'xp-dialog-btn'));form.lastElementChild.type='submit';
   form.addEventListener('submit',e=>{e.preventDefault&&e.preventDefault();const t=input.value.trim();if(!t)return;input.value='';send(b,t)});
   wrap.append(E('p','xp-chat-head',b.nick+(b.online?'':' (오프라인)')+'  '+b.msg),logBox,bar,form);win.content.append(wrap);
-  if(!b.log.length)line(b,'',b.online?'대화를 시작했습니다. ('+X.clockEl.textContent+')':'상대방이 오프라인입니다. 남긴 말은 다음 접속 때 전달됩니다.','sys');else for(const r of b.log)addLine(logBox,r);
+  if(!b.log.length)line(b,'',b.real?(b.id===ROOMID?(b.online?'우리 방 전체 대화예요. 여기 쓴 말은 동네 채팅으로 방 사람 모두에게 보이고, 내 캐릭터 머리 위에도 말풍선이 떠요.':'함께 걷기 방에 들어가면 쓸 수 있어요.'):(b.online?'같은 방 친구 '+b.nick+' 님과 대화를 시작했습니다. (진짜 친구예요)':'상대가 방에 없어요.')):b.online?'대화를 시작했습니다. ('+X.clockEl.textContent+')':'상대방이 오프라인입니다. 남긴 말은 다음 접속 때 전달됩니다.','sys');else for(const r of b.log)addLine(logBox,r);
   b.unread=0;renderList();input.focus&&input.focus();return win}
- function send(b,text){line(b,'me',text);if(!b.online||!b.generic.length)return;respond(b,text)}
+ function send(b,text){if(b.real)return netSay(b,text);line(b,'me',text);if(!b.online||!b.generic.length)return;respond(b,text)}
+ /* ---- 같은 방 친구 (A96) ---- */
+ function realBuddy(peerId,name,nick){const id=peerId===ROOMID?ROOMID:'net-'+peerId;let b=byId(id);if(!b){b={id,peer:peerId,nick:nick||name,name,group:'같은 방 친구',msg:'',online:true,real:true,log:[],unread:0,n:0,nudges:0,typing:false,generic:[],greet:[],rules:[]};bd.unshift(b)}else{if(nick)b.nick=nick;if(name)b.name=name}return b}
+ function syncPeers(){const n=net();const ready=netReady();const peers=ready&&n.peers?n.peers:[];const pcs=new Map(pcList.map(x=>[x.id,x]));const myId=ready?n.state.id:null;
+  const room=byId(ROOMID)||realBuddy(ROOMID,'우리 방 전체 대화','우리 방 전체 대화');room.online=ready;room.msg=ready?'방 사람 모두가 보는 동네 채팅 ('+(peers.length+1)+'명)':'함께 걷기 방에 들어가면 열려요';
+  const seen=new Set([ROOMID]);for(const p of peers){if(p.id===myId)continue;const pc=pcs.get(p.id);const b=realBuddy(p.id,p.name,pc?pc.nick:p.name);b.online=true;b.pc=!!pc;b.msg=pc?'PC방 컴퓨터로 버디버디 접속 중':'동네에 있음 (버디버디 꺼짐, 보내면 동네 채팅 기록에 떠요)';seen.add(b.id)}
+  for(const p of pcList){if(p.id===myId||seen.has('net-'+p.id))continue;const b=realBuddy(p.id,p.name,p.nick);b.online=true;b.pc=true;b.msg='PC방 컴퓨터로 버디버디 접속 중';seen.add(b.id)}
+  for(const b of bd)if(b.real&&!seen.has(b.id)){b.online=false;b.pc=false;b.msg='방에서 나감'}
+  renderList()}
+ function netSay(b,text){if(!netReady()){line(b,'','함께 걷기 방에 들어가 있지 않아서 보낼 수 없어요.','sys');return false}
+  if(b.id===ROOMID){net().send({type:'chat',text:String(text).slice(0,80)});return true}
+  if(!b.online){line(b,'',b.nick+' 님이 방에 없어서 보낼 수 없어요.','sys');return false}
+  net().send({type:'buddy',op:'say',to:b.peer,text:String(text).slice(0,100)});return true}
+ function heartbeat(){if(!alive)return;if(!netReady())return;const n=net();if(hidden())n.send({type:'buddy',op:'off'});else n.send({type:'buddy',op:'on',nick:S.nick||''})}
+ function fromNet(m){if(!alive)return;
+  if(m.type==='welcome'){later(()=>{heartbeat();syncPeers()},300);return}
+  if(m.type==='network_close'){pcList=[];syncPeers();return}
+  if(m.type==='state'||m.type==='joined'||m.type==='left'){if(m.type!=='state'||!byId('net-'+m.id))syncPeers();return}
+  if(m.type==='chat'){const room=byId(ROOMID)||realBuddy(ROOMID,'우리 방 전체 대화','우리 방 전체 대화');const mine=netReady()&&m.id===net().state.id;line(room,mine?'me':String(m.name||'친구'),String(m.text||''));if(!mine&&!X.windows.get(chatId(ROOMID))){room.unread++;renderList()}return}
+  if(m.type!=='buddy')return;
+  if(m.op==='who'){pcList=Array.isArray(m.list)?m.list.filter(x=>x&&typeof x.id==='string'):[];syncPeers();return}
+  if(m.op==='error'){const b=m.to?byId('net-'+m.to):null;toast({title:'버디버디',text:String(m.message||'보내지 못했어요.'),icon:'warn',ms:4000});if(b)line(b,'',String(m.message||'보내지 못했어요.'),'sys');return}
+  if(m.op==='sent'){const b=realBuddy(m.to,'',null);line(b,'me',String(m.text||''));if(!m.toPc)line(b,'','(상대가 PC를 켜고 있지 않아서 동네 채팅 기록에 떠요)','sys');return}
+  if(m.op==='nudged'){const b=realBuddy(m.to,'',null);line(b,'','내가 창을 흔들었습니다.','sys');const win=X.windows.get(chatId(b.id));if(win)shake(win);return}
+  if(m.op==='say'||m.op==='nudge'){const b=realBuddy(m.from,m.name,m.nick);b.online=true;if(m.op==='say')line(b,b.nick,String(m.text||''));else line(b,'',b.nick+' 님이 창을 흔들었습니다.','sys');
+   const win=X.windows.get(chatId(b.id));if(win){if(m.op==='nudge')shake(win)}else{b.unread++;toast({title:b.nick+' (같은 방 친구)',text:m.op==='nudge'?'창을 흔들었습니다!':String(m.text||'').slice(0,46),icon:'msg',ms:9000,onClick:()=>{const x=openChat(b.id);if(x&&m.op==='nudge')shake(x)}})}renderList()}}
+ NET.active=fromNet;ensureNet();
+ for(const m of NET.pending.splice(0))fromNet(m);
  function respond(b,text){if(b.typing)return;b.typing=true;const win=X.windows.get(chatId(b.id));let tip=null;const hello=/안녕|하이|방가|ㅎㅇ|반갑|^hi$/i.test(text);const delay=900+((b.n*353)%1100);
   if(win&&win.logBox){tip=E('p','sys typing',b.nick+' 님이 입력 중입니다...');win.logBox.append(tip)}
   later(()=>{b.typing=false;if(tip)tip.remove();const r=hello&&!b.said?pick(b.greet,b.n):replyFor(b,text,b.n);b.said=true;b.n++;line(b,b.nick,r);if(!X.windows.get(chatId(b.id))){b.unread++;toast({title:b.nick,text:r,icon:'msg',onClick:()=>openChat(b.id)});renderList()}},delay)}
- function nudge(b){const win=X.windows.get(chatId(b.id));if(!win)return;line(b,'','내가 창을 흔들었습니다.','sys');shake(win);b.nudges++;if(b.online&&b.generic.length)later(()=>{line(b,b.nick,b.nudges%3===0?'앗 깜짝이야 ㅋㅋ 나도 흔들어 줄게!':'ㅋㅋ 왜 흔들어 ㅎㅎ');if(b.nudges%3===0){line(b,'',b.nick+' 님이 창을 흔들었습니다.','sys');const x=X.windows.get(chatId(b.id));if(x)shake(x)}},1000)}
+ function nudge(b){if(b.real){if(b.id===ROOMID){toast({title:'버디버디',text:'전체 대화에서는 흔들 수 없어요.',icon:'info',ms:3000});return}if(netReady()&&b.online)net().send({type:'buddy',op:'nudge',to:b.peer});else line(b,'','상대가 방에 없어요.','sys');return}const win=X.windows.get(chatId(b.id));if(!win)return;line(b,'','내가 창을 흔들었습니다.','sys');shake(win);b.nudges++;if(b.online&&b.generic.length)later(()=>{line(b,b.nick,b.nudges%3===0?'앗 깜짝이야 ㅋㅋ 나도 흔들어 줄게!':'ㅋㅋ 왜 흔들어 ㅎㅎ');if(b.nudges%3===0){line(b,'',b.nick+' 님이 창을 흔들었습니다.','sys');const x=X.windows.get(chatId(b.id));if(x)shake(x)}},1000)}
  function shake(win){win.node.classList.remove('xp-shake');void(win.node.offsetWidth);win.node.classList.add('xp-shake');later(()=>win.node.classList.remove('xp-shake'),700)}
  /* ---- 친구 목록 ---- */
  const collapsed=new Set();
- function renderList(){if(!list||X.windows.get('messenger')!==listWin)return;list.replaceChildren();const groups=['친구','학교','동호회'];
+ function renderList(){if(!list||X.windows.get('messenger')!==listWin)return;list.replaceChildren();const groups=['같은 방 친구','친구','학교','동호회'];
   for(const g of groups){const members=bd.filter(b=>b.group===g).sort((a,b)=>(b.online-a.online)),on=members.filter(b=>b.online).length;const head=B((collapsed.has(g)?'▶ ':'▼ ')+g+' ('+on+'/'+members.length+')',()=>{collapsed.has(g)?collapsed.delete(g):collapsed.add(g);renderList()},'xp-msn-group');list.append(head);
-   if(!collapsed.has(g))for(const b of members){const row=B('',()=>openChat(b.id),'xp-msn-buddy'+(b.online?'':' off'));row.dataset&&(row.dataset.buddy=b.id);row.append(E('i','dot '+(b.online?(b.id==='bando'?'busy':'on'):'off')),E('span','nick',b.nick+(b.unread?' ('+b.unread+')':'')),E('small','msg',b.online?b.msg:'오프라인'));list.append(row)}}
+   if(!collapsed.has(g))for(const b of members){const row=B('',()=>openChat(b.id),'xp-msn-buddy'+(b.online?'':' off')+(b.real?' real':''));row.dataset&&(row.dataset.buddy=b.id);row.append(E('i','dot '+(b.online?(b.id==='bando'||(b.real&&b.id!==ROOMID&&!b.pc)?'busy':'on'):'off')),E('span','nick',b.nick+(b.real&&b.name&&b.name!==b.nick&&b.id!==ROOMID?' ('+b.name+')':'')+(b.unread?' ('+b.unread+')':'')),E('small','msg',b.online||b.real?b.msg:'오프라인'));list.append(row)}
+   if(g==='같은 방 친구'&&!collapsed.has(g)&&!netReady())list.append(E('p','xp-msn-hint','동네에서 ‘함께 걷기’ 방에 들어가면, 같은 방 친구와 여기서 진짜로 대화할 수 있어요.'))}
   if(me.nick)me.nick.textContent=myNick();if(me.stat)me.stat.textContent='상태: '+STATUS.find(s=>s[0]===S.status)[1]}
  const me={nick:null,stat:null};
  function renameMe(){if(!X.ui)return;const box=E('div'),input=E('input','xp-rename');input.type='text';input.maxLength=20;input.value=myNick();input.setAttribute('aria-label','내 대화명');box.append(E('p','','내 대화명을 입력하세요. 친구들에게 보입니다.'),input);
-  const ok=()=>{const v=input.value.replace(/[<>]/g,'').trim().slice(0,20);if(!v)return;S.nick=v;save();renderList()};const dlg=X.ui.dialog({title:'대화명 변경',node:box,icon:'info',buttons:[['확인',ok],['취소']]});input.addEventListener('keydown',e=>{if(e.stopPropagation)e.stopPropagation();if(e.key==='Enter'){ok();dlg.close()}});input.focus&&input.focus()}
- function cycleStatus(){const i=STATUS.findIndex(s=>s[0]===S.status);S.status=STATUS[(i+1)%STATUS.length][0];save();renderList();if(S.status==='hidden')toast({title:'버디버디',text:'오프라인으로 표시됩니다. 친구들의 먼저 오는 말이 오지 않습니다.',icon:'info',ms:4500})}
+  const ok=()=>{const v=input.value.replace(/[<>]/g,'').trim().slice(0,20);if(!v)return;S.nick=v;save();renderList();heartbeat()};const dlg=X.ui.dialog({title:'대화명 변경',node:box,icon:'info',buttons:[['확인',ok],['취소']]});input.addEventListener('keydown',e=>{if(e.stopPropagation)e.stopPropagation();if(e.key==='Enter'){ok();dlg.close()}});input.focus&&input.focus()}
+ function cycleStatus(){const i=STATUS.findIndex(s=>s[0]===S.status);S.status=STATUS[(i+1)%STATUS.length][0];save();renderList();heartbeat();if(S.status==='hidden')toast({title:'버디버디',text:'오프라인으로 표시됩니다. 친구들의 먼저 오는 말이 오지 않습니다.',icon:'info',ms:4500})}
  function buddyIco(cls){const im=E('img',cls);im.src='assets/pc-desktop/icons/buddy.webp?v=A92';im.alt='';im.draggable=false;return im}
  function openList(){const had=X.windows.get('messenger');const win=X.windowFor('messenger','버디버디');if(had&&listWin===win&&list)return win;listWin=win;win.node.classList.add('xp-small');win.node.style.width='min(300px,96%)';win.node.style.height='min(520px,94%)';win.node.style.left='58%';win.node.style.top='10%';win.content.replaceChildren();
   const wrap=E('div','xp-msn'),head=E('div','xp-msn-me');me.nick=E('b','',myNick());me.stat=B('상태: '+STATUS.find(s=>s[0]===S.status)[1],cycleStatus,'xp-mini');head.append(buddyIco('xp-buddy-ico'),E('i','dot on'),me.nick,B('대화명 변경',renameMe,'xp-mini'),me.stat);list=E('div','xp-msn-list');
-  const load=E('div','xp-msn-load');load.append(buddyIco('xp-buddy-big'),E('p','','버디버디에 로그인하는 중...'),E('span','xp-bar'));wrap.append(head,load,list,E('p','xp-note','친구들은 모두 이 게임 안의 가상 인물입니다. 이름을 누르면 대화창이 열립니다.'));win.content.append(wrap);
+  const load=E('div','xp-msn-load');load.append(buddyIco('xp-buddy-big'),E('p','','버디버디에 로그인하는 중...'),E('span','xp-bar'));wrap.append(head,load,list,E('p','xp-note','‘같은 방 친구’는 함께 걷기 방에 같이 들어온 진짜 친구예요. 나머지 친구들은 이 게임 안의 가상 인물입니다. 이름을 누르면 대화창이 열립니다.'));win.content.append(wrap);
   if(boot){load.remove();renderList()}else{list.hidden=true;later(()=>{load.remove();list.hidden=false;boot=true;renderList();const on=bd.filter(b=>b.online).length;toast({title:'버디버디',text:'로그인했습니다. 친구 '+on+'명이 접속 중입니다.',icon:'msg',ms:5000,onClick:()=>X.openApp('messenger')})},1200)}return win}
  /* ---- 시간이 흐르며 일어나는 일 ---- */
  function tick(rem){if(hidden())return;const el=initial-rem;for(const ev of EVENTS){const key=ev.at+ev.type+ev.id;if(done.has(key)||el<ev.at)continue;done.add(key);const b=byId(ev.id);if(!b)continue;
   if(ev.type==='login'){b.online=true;toast({title:'버디버디',text:b.nick+' 님이 접속했습니다.',icon:'msg',ms:6000,onClick:()=>openChat(b.id)});renderList()}
   else{if(!b.online){b.online=true}b.said=true;line(b,b.nick,ev.text);const open=X.windows.get(chatId(b.id));if(!open){b.unread++;toast({title:b.nick,text:ev.text.length>46?ev.text.slice(0,46)+'...':ev.text,icon:'msg',ms:9000,onClick:()=>openChat(b.id)})}renderList()}}}
  const api={ids:['messenger'],has:id=>id==='messenger',open:()=>openList(),openChat,tick,
-  reset(){boot=false;list=null;listWin=null;for(const b of bd){b.log=[];b.unread=0;b.typing=false;b.online=b.loginAt===0;b.said=false;b.nudges=0}done.clear()},
-  destroy(){alive=false;for(const t of timers)w.clearTimeout(t)},
+  reset(){boot=false;list=null;listWin=null;for(const b of bd){b.log=[];b.unread=0;b.typing=false;b.online=b.loginAt===0;b.said=false;b.nudges=0}done.clear();syncPeers()},
+  destroy(){if(netReady())try{net().send({type:'buddy',op:'off'})}catch(_){}if(heart&&w.clearInterval)w.clearInterval(heart);heart=null;if(NET.active===fromNet)NET.active=null;alive=false;for(const t of timers)w.clearTimeout(t)},
+  net:{sync:syncPeers,receive:fromNet,beat:heartbeat},
   send:(id,text)=>{const b=byId(id);if(b)send(b,text)},nudge:id=>{const b=byId(id);if(b)nudge(b)},
-  state:()=>({buddies:bd.map(b=>({id:b.id,online:b.online,unread:b.unread,log:b.log.length})),status:S.status,nick:myNick(),done:done.size})};
+  state:()=>({buddies:bd.map(b=>({id:b.id,online:b.online,unread:b.unread,log:b.log.length,real:!!b.real,pc:!!b.pc})),status:S.status,nick:myNick(),done:done.size})};
+ heartbeat();syncPeers();if(typeof w.setInterval==='function')heart=w.setInterval(()=>{if(alive)heartbeat()},20000);
  return api}
 w.XPMessenger={attach,BUDDIES,EVENTS,STATUS,EMO,replyFor,pick};
 })(window);
