@@ -11,6 +11,7 @@ const crypto = require('node:crypto');
 const PLAY=require('./server_playground.js');
 const CLUB=require('./src/club-core.js');
 const CLUB_SEED=require('./src/club-seed.js');
+const MINI=require('./server_minihome.js');
 const { TextDecoder } = require('node:util');
 const ROOT = __dirname;
 const PORT = Number(process.env.PORT || 3000);
@@ -45,6 +46,30 @@ function buddyMessage(s,obj){
   const text=op==='say'?buddyText(obj.text).slice(0,100):'';if(op==='say'&&!text)return;s[key]=now;
   const out={type:'buddy',op,from:s.id,name:s.name,nick:s.buddyNick||s.name,text,at:now};
   send(to,out);send(s,Object.assign({},out,{op:op==='say'?'sent':'nudged',to:to.id,toPc:!!(to.buddySeen&&now-to.buddySeen<BUDDY_ALIVE)}));
+}
+/* A97 미니홈피: 같은 방 친구들의 미니홈피를 방마다 메모리에 둔다(규칙은 server_minihome.js). 방이 비면 아지트처럼 6시간 뒤에 지운다. */
+const minis=new Map(),MINI_ROOMS=80,miniTimers=new Map();
+function miniOnline(room){const m=new Map();for(const x of rooms.get(room)||[])if(x.miniHid&&!m.has(x.miniHid))m.set(x.miniHid,{pc:x.state.scene==='pcroom',id:x.id,look:x.state.look});return m}
+function miniOf(room){
+  let st=minis.get(room);
+  if(!st){if(minis.size>=MINI_ROOMS){const old=[...minis].filter(([r])=>!rooms.has(r)).sort((a,b)=>a[1].touched-b[1].touched)[0];if(!old)return null;minis.delete(old[0])}st=MINI.createRoom(Date.now());minis.set(room,st)}
+  st.expires=0;return st;
+}
+function miniList(room){
+  if(miniTimers.has(room))return;
+  const t=setTimeout(()=>{miniTimers.delete(room);const st=minis.get(room);if(!st||!rooms.has(room))return;cast(room,Object.assign({type:'mini',t:Date.now()},MINI.listMsg(st,miniOnline(room))))},150);t.unref?.();miniTimers.set(room,t);
+}
+function miniMessage(s,obj){
+  const now=Date.now(),op=String(obj.op||'').slice(0,10),kind=MINI.kindOf(op);if(!kind)return;
+  const key='lastMini_'+kind;
+  if(now-(s[key]||0)<MINI.GAP[kind]){if(kind!=='read'&&kind!=='visit')send(s,{type:'mini',op:'error',for:op,message:'조금 천천히 해 주세요.',t:now});return}
+  s[key]=now;
+  const st=miniOf(s.room);if(!st){send(s,{type:'mini',op:'error',for:op,message:'지금은 미니홈피를 열 수 없어요.',t:now});return}
+  const res=MINI.apply(st,{id:s.id,name:s.name,look:s.state.look,hid:s.miniHid||''},obj,now,miniOnline(s.room));
+  if(res.bind)s.miniHid=res.bind;
+  if(res.reply)send(s,Object.assign({type:'mini',t:now},res.reply));
+  for(const p of res.push||[])for(const x of rooms.get(s.room)||[])if(x!==s&&x.miniHid===p.hid)send(x,Object.assign({type:'mini',t:now},p.msg));
+  if(res.list)miniList(s.room);
 }
 const CLUB_WRITE=new Set(['post','comment','rec','del','scrawl','attend','note']);
 function clubOf(room){
@@ -168,7 +193,7 @@ function publicState(s){return {id:s.id,name:s.name,scene:s.state.scene,x:s.stat
 function end(s){
   if(s.closed)return;s.closed=true;sessions.delete(s);
   if(s.room)PLAY.clearUser(physicsRooms.get(s.room),s.id);
-  if(s.room){const group=rooms.get(s.room);group?.delete(s);if(group?.size===0){rooms.delete(s.room);buddyKeys.delete(s.room);physicsRooms.delete(s.room);musicRooms.delete(s.room);const ce=clubs.get(s.room);if(ce)ce.expires=Date.now()+CLUB_TTL}else{cast(s.room,{type:'left',id:s.id});if(s.clubSeen)clubWho(s.room);if(s.buddySeen)buddyWho(s.room,true)}}
+  if(s.room){const group=rooms.get(s.room);group?.delete(s);if(group?.size===0){rooms.delete(s.room);buddyKeys.delete(s.room);physicsRooms.delete(s.room);musicRooms.delete(s.room);const ce=clubs.get(s.room);if(ce)ce.expires=Date.now()+CLUB_TTL;const me=minis.get(s.room);if(me)me.expires=Date.now()+CLUB_TTL}else{cast(s.room,{type:'left',id:s.id});if(s.clubSeen)clubWho(s.room);if(s.buddySeen)buddyWho(s.room,true);if(s.miniHid)miniList(s.room)}}
   try{s.socket.destroy()}catch{}
 }
 const code=/^[A-Z0-9]{4,8}$/;
@@ -226,6 +251,7 @@ function onMessage(s,obj){
  }
  if(obj.type==='club'){clubMessage(s,obj);return}
  if(obj.type==='buddy'){buddyMessage(s,obj);return}
+ if(obj.type==='mini'){miniMessage(s,obj);return}
 }
 function onData(s,chunk){
   if(s.closed)return;s.buffer=Buffer.concat([s.buffer,chunk]);
@@ -278,6 +304,7 @@ const clubClock=setInterval(()=>{
   if(!rooms.has(room)){if(e.expires&&now>e.expires)clubs.delete(room);continue}
   clubWho(room);
  }
+ for(const [room,st] of minis)if(!rooms.has(room)&&st.expires&&now>st.expires)minis.delete(room);
 },20000);
 clubClock.unref();
 const buddyClock=setInterval(()=>{for(const room of rooms.keys())buddyWho(room)},20000);
@@ -291,4 +318,4 @@ const playgroundClock=setInterval(()=>{physicsNetTicks++;
  }
 },1000/60);playgroundClock.unref();
 if(require.main===module){app.listen(PORT,HOST,()=>console.log(`2006 A27: http://${HOST}:${PORT} — 최대 ${MAX_ROOM}명/방`))}
-module.exports={app,rooms,sessions,physicsRooms,musicRooms,clubs,clubOf};
+module.exports={app,rooms,sessions,physicsRooms,musicRooms,clubs,clubOf,minis};

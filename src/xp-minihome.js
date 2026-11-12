@@ -2,7 +2,9 @@
    내 미니홈피: 홈(미니룸, 일촌평), 프로필, 다이어리, 사진첩(그림판에서 저장한 ‘내 그림’을 올린다), 방명록, 미니룸 꾸미기, 선물가게, 도토리.
    일촌 파도타기: 동네 사람 열두 명의 미니홈피를 돌아다니며 방명록을 남기고 일촌을 맺는다. 방명록을 남기면 답방이 온다.
    사람, 노래 제목(옛 클래식 곡 말고는 지어낸 것), 주소는 모두 지어낸 것이다. 글쓴 날짜와 시각은 2006년 5월 30일 오후 4시 32분 이전이다.
-   그림 파일은 쓰지 않고 캔버스로 그린다. 기록은 saved.mini 에 남는다. */
+   그림 파일은 쓰지 않고 캔버스로 그린다. 기록은 saved.mini 에 남는다.
+   A97 (2026-11-12 KST): 같은 방(함께 걷기)에 들어온 친구끼리 미니홈피를 실시간으로 주고받는다. 친구 홈 구경(투데이), 방명록과 주인 답글,
+   일촌 신청과 수락, 일촌평, 사진 세 장, 일촌 파도타기가 서버(server_minihome.js)를 거쳐 바로 보이고 알림이 뜬다. 방이 없으면 예전처럼 혼자 논다. */
 (function(w){'use strict';
 const TODAY='2006.05.30 (화)';
 const MOODS=[['행복','^^'],['기쁨','\\(^o^)/'],['설렘','♡_♡'],['신남','ㅋㅋ'],['두근두근','>ㅅ<'],['뿌듯','v(^^)v'],['피곤','=_='],['졸림','-_-zZ'],['배고픔','@_@'],['우울','ㅠㅠ'],['바쁨',';;'],['심심','ㅡㅡ']];
@@ -188,11 +190,76 @@ function scene(g,type,W0,H0,seed){seed=seed||1;const R=n=>{seed=(seed*16807)%214
   case 'ball':grad('#9fd6ff','#e8f8ff');rect(g,0,H0*.65,W0,H0*.35,'#5aab4a');circ(g,cx,H0*.55,H0*.2,'#fff');circ(g,cx,H0*.55,H0*.07,'#222');txt(g,'싸인',cx+H0*.22,H0*.4,'#e84d4d',10);break;
   default:grad('#ddd','#bbb')}}
 
+/* ---------- A97: 같은 방 친구와 미니홈피 실시간 연동 ----------
+   함께 걷기 방에 들어오면 내 미니홈피(제목, 대문 글, 기분, 미니룸, 스킨, 배경음악 이름, 다이어리 세 개, 사진첩 사진 세 장을 작게 줄인 것)를 서버에 올린다.
+   같은 방 친구는 내 미니홈피를 구경하고(투데이가 오른다) 방명록, 일촌 신청, 일촌평을 남길 수 있고, 나는 그 자리에서 알림을 받는다.
+   PC를 켜지 않았을 때 온 알림은 함께 걷기 채팅 기록에 한 줄 남는다. 서버 규칙은 server_minihome.js에 있다.
+   주인 확인용 비밀 열쇠는 이 브라우저에만 따로 저장한다(2006_mini_uid_v1). 남에게는 열쇠를 바꾼 홈 번호만 보인다. */
+const UID_KEY='2006_mini_uid_v1',SAVE_KEY='2006_xp_desktop_v1';
+const MN={active:null,src:null,subscribed:false,tries:0,uid:'',list:[],me:null,homes:{},gb:{},ph:{},jobs:null,last:'',q:{read:[],visit:[],pub:[],write:[]},qt:{read:0,visit:0,pub:0,write:0}};
+const QGAP={read:140,visit:330,pub:640,write:780};
+const mnet=()=>w.A25NET;
+const mready=()=>{const n=mnet();return !!(n&&n.state&&n.state.ready)};
+const byteLen=s=>{let n=0;for(let i=0;i<s.length;i++){const c=s.charCodeAt(i);n+=c<128?1:c<2048?2:(c>=55296&&c<=56319?(i++,4):3)}return n};
+const IMG_RE=/^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$/;
+function randUid(){const abc='abcdefghijklmnopqrstuvwxyz0123456789';let out='';try{if(w.crypto&&w.crypto.getRandomValues){const a=new Uint8Array(20);w.crypto.getRandomValues(a);for(const x of a)out+=abc[x%36];return out}}catch(_){}for(let i=0;i<20;i++)out+=abc[Math.floor(Math.random()*36)];return out}
+function myUid(){if(MN.uid)return MN.uid;let u='';try{u=w.localStorage.getItem(UID_KEY)||''}catch(_){}if(!/^[a-z0-9]{16,32}$/.test(u)){u=randUid();try{w.localStorage.setItem(UID_KEY,u)}catch(_){}}MN.uid=u;return u}
+/* 서버는 같은 종류의 요청을 너무 촘촘하게 받지 않으므로 종류마다 줄을 세워 조금씩 간격을 두고 보낸다 */
+function mq(kind,o){if(!mready())return false;const msg=Object.assign({type:'mini'},o);if(byteLen(JSON.stringify(msg))>8000)return false;MN.q[kind].push(msg);mpump(kind);return true}
+function mpump(kind){if(MN.qt[kind])return;const msg=MN.q[kind].shift();if(!msg)return;if(mready())try{mnet().send(msg)}catch(_){}
+ if(typeof w.setTimeout==='function')MN.qt[kind]=w.setTimeout(()=>{MN.qt[kind]=0;mpump(kind)},QGAP[kind]);else mpump(kind)}
+function readSaved(){try{const raw=w.localStorage&&w.localStorage.getItem(SAVE_KEY);const s=raw?JSON.parse(raw):null;if(!s||typeof s!=='object')return null;return {m:s.mini&&typeof s.mini==='object'&&!Array.isArray(s.mini)?s.mini:{},pics:s.xp&&Array.isArray(s.xp.pics)?s.xp.pics:[]}}catch(_){return null}}
+function pubPayload(m){const room=m.room&&typeof m.room==='object'?m.room:{},today=Number.isFinite(m.today)?m.today:3,bgm=m.bgm&&ITEM[m.bgm]?ITEM[m.bgm].name:'';
+ return {op:'pub',uid:myUid(),prof:{title:String(m.title||''),intro:String(m.intro||''),mood:String(m.mood||'행복'),bgm,skin:String(m.skin||'sky'),wall:String(room.wall||'sky'),floor:String(room.floor||'wood'),slots:room.slots&&typeof room.slots==='object'?room.slots:{},base:2006+today,today0:today},
+  diary:(Array.isArray(m.diary)?m.diary:[]).slice(-3).map(d=>({d:String(d&&d.d||TODAY),w:String(d&&d.w||'맑음'),t:String(d&&d.t||'').slice(0,300)}))}}
+/* 사진첩 최근 세 장. 칸 0이 가장 최근 사진이다. sig로 이미 올린 사진인지 알아본다 */
+function photoJobs(m,pics){const list=(Array.isArray(m.photos)?m.photos:[]).slice(-3).reverse(),jobs=[];
+ for(let i=0;i<3;i++){const p=list[i],pic=p&&pics.find(x=>x&&x.id===p.pic);jobs.push(pic?{i,sig:String(p.pic+'|'+(p.cap||'')).slice(0,40),url:pic.url,cap:String(p.cap||'').slice(0,40)}:{i,sig:'',url:'',cap:''})}return jobs}
+function shrink(url,cb){try{if(!w.Image||!w.document||!w.document.createElement||typeof url!=='string'||!url){cb('');return}const im=new w.Image();
+ im.onload=()=>{try{const W0=im.naturalWidth||im.width||160,H0=im.naturalHeight||im.height||120;for(const [mx,q] of [[160,.62],[136,.56],[112,.5],[96,.45],[80,.4]]){const sc=Math.min(1,mx/Math.max(W0,H0)),cw=Math.max(1,Math.round(W0*sc)),ch=Math.max(1,Math.round(H0*sc));const cv=w.document.createElement('canvas');cv.width=cw;cv.height=ch;const g=cv.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,cw,ch);g.drawImage(im,0,0,cw,ch);const d=cv.toDataURL('image/jpeg',q);if(typeof d==='string'&&d.length<=5600&&IMG_RE.test(d)){cb(d);return}}cb('')}catch(_){cb('')}};
+ im.onerror=()=>cb('');im.src=url}catch(_){cb('')}}
+function publish(force){if(!mready())return false;const src=(MN.src?MN.src():readSaved())||{m:{},pics:[]};const p=pubPayload(src.m||{}),key=JSON.stringify(p);MN.jobs=photoJobs(src.m||{},src.pics||[]);
+ if(!force&&key===MN.last){syncPhotos();return true}MN.last=key;mq('pub',p);return true}
+function syncPhotos(){const me=MN.me,jobs=MN.jobs;if(!me||!jobs)return;MN.jobs=null;for(const j of jobs){const have=(Array.isArray(me.ph)&&me.ph[j.i])||'';if(have===j.sig)continue;
+ if(!j.sig){mq('pub',{op:'photo',i:j.i,data:''});continue}shrink(j.url,data=>{if(data)mq('pub',{op:'photo',i:j.i,data,cap:j.cap,sig:j.sig})})}}
+const NOTE={visit:n=>n.n+'님이 내 미니홈피에 놀러 왔어요! (TODAY +1)',gb:n=>n.n+'님이 내 방명록에 글을 남겼어요: '+n.t,say:n=>n.n+'님이 내 미니홈피에 일촌평을 남겼어요: '+n.t,
+ ask:n=>n.n+'님이 일촌을 신청했어요 (일촌명: '+n.nick+'). 미니홈피 첫 화면에서 수락할 수 있어요.',ilchon:n=>n.n+'님과 일촌이 되었어요! (일촌명: '+n.nick+')',gbrep:n=>n.n+'님이 내 방명록 글에 답글을 달았어요: '+n.t};
+function noteOf(m){const n=m.op==='note'?m:m.note;return n&&NOTE[n.k]?{k:n.k,n:String(n.n||'친구').slice(0,14),t:String(n.t||'').slice(0,100),nick:String(n.nick||'').slice(0,8),hid:typeof n.hid==='string'?n.hid:''}:null}
+const noteText=m=>{const n=noteOf(m);return n?NOTE[n.k](n):''};
+function mWorldLog(text){try{const d=w.document,log=d&&d.getElementById&&d.getElementById('a25Log');if(!log)return;const row=d.createElement('div');row.className='a25-line chat';const b=d.createElement('strong');b.textContent='[미니홈피]';const sp=d.createElement('span');sp.textContent=' '+text;row.append(b,sp);log.append(row);log.scrollTop=log.scrollHeight}catch(_){}}
+function mReset(){MN.me=null;MN.list=[];MN.homes={};MN.gb={};MN.ph={};MN.last='';MN.jobs=null;for(const k of Object.keys(MN.q))MN.q[k].length=0}
+function mReceive(m){if(!m||typeof m!=='object')return;
+ if(m.type==='welcome'){mReset();if(typeof w.setTimeout==='function')w.setTimeout(()=>publish(true),450)}
+ else if(m.type==='network_close')mReset();
+ else if(m.type==='mini'){
+  if(m.op==='list'&&Array.isArray(m.list))MN.list=m.list.filter(r=>r&&typeof r.hid==='string');
+  else if(m.op==='me'&&typeof m.hid==='string'){MN.me=m;syncPhotos()}
+  else if(m.op==='home'&&typeof m.hid==='string')MN.homes[m.hid]=m;
+  else if(m.op==='gb'&&typeof m.hid==='string')MN.gb[m.hid]=m;
+  else if(m.op==='ph'&&typeof m.hid==='string')MN.ph[m.hid+':'+m.i]={data:typeof m.data==='string'&&IMG_RE.test(m.data)?m.data:'',sig:String(m.sig||''),cap:String(m.cap||'')};
+  else if(m.op==='gone'){delete MN.homes[m.hid];delete MN.gb[m.hid]}
+  if(!MN.active){const t=noteText(m);if(t)mWorldLog(t)}}
+ if(MN.active)MN.active(m)}
+function mEnsure(){if(MN.subscribed)return true;const n=mnet();if(!n||typeof n.subscribe!=='function')return false;MN.subscribed=true;n.subscribe(mReceive);if(mready()&&!MN.active&&typeof w.setTimeout==='function')w.setTimeout(()=>{if(!MN.me)publish(true)},300);return true}
+(function waitMini(){if(mEnsure()||MN.tries++>40)return;if(typeof w.setTimeout==='function')w.setTimeout(waitMini,1500)})();
+/* 같은 방 친구가 지금 어디 있는지(접속 번호로 함께 걷기 친구 목록에서 찾는다) */
+function whereOf(row){if(!row||!row.on)return '지금은 방에 없어요';const n=mnet(),p=n&&Array.isArray(n.peers)?n.peers.find(x=>x&&x.id===row.id):null;const scene=p?p.scene:row.pc?'pcroom':'';return scene==='pcroom'?'PC방에서 접속 중':'동네에 있어요'}
+const ago=at=>{const m=Math.floor((Date.now()-Number(at||0))/6e4);if(!(m>=1))return '방금 전';if(m<60)return m+'분 전';const h=Math.floor(m/60);return h<24?h+'시간 전':Math.floor(h/24)+'일 전'};
+
 /* ---------- 미니홈피 창 ---------- */
 function attach(X){
  const {E,B}=X;let alive=true,win=null;const timers=new Set(),seen=new Set();
  const later=(fn,ms)=>{const id=w.setTimeout(()=>{timers.delete(id);if(alive)fn()},ms);timers.add(id);return id};
  const view={who:'me',tab:'home',sel:null};
+ /* A97: 같은 방 친구 미니홈피. view.who가 'r:홈번호'이면 진짜 친구의 홈이다 */
+ const seenReal=new Set();let pubTimer=0;
+ const isReal=who=>typeof who==='string'&&who.slice(0,2)==='r:';
+ const realHid=()=>isReal(view.who)?view.who.slice(2):'';
+ const myHid=()=>(MN.me&&MN.me.hid)||'';
+ const liveRow=hid=>MN.list.find(r=>r.hid===hid);
+ const liveFriends=()=>MN.list.filter(r=>r.hid!==myHid());
+ function changed(){if(!mready())return;if(pubTimer)w.clearTimeout(pubTimer);pubTimer=later(()=>{pubTimer=0;publish(false)},900)}
+ const save=()=>{X.save();changed()};
  function S(){const s=X.saved;if(!s.mini||typeof s.mini!=='object'||Array.isArray(s.mini))s.mini={};const m=s.mini;
   const num=(k,v)=>{if(!Number.isFinite(m[k])||m[k]<0)m[k]=v};num('dotori',10);num('today',3);num('earned',0);
   for(const k of ['items','diary','photos','gbMine'])if(!Array.isArray(m[k]))m[k]=[];
@@ -203,16 +270,22 @@ function attach(X){
   if(typeof m.title!=='string')m.title='';if(typeof m.intro!=='string')m.intro='';if(typeof m.mood!=='string')m.mood='행복';if(typeof m.bgm!=='string')m.bgm='';if(typeof m.skin!=='string')m.skin='sky';
   m.items=m.items.filter(id=>ITEM[id]);for(const id of ['desk','window','wp-sky','fl-wood'])if(!m.items.includes(id))m.items.push(id);
   return m}
- const nick=()=>String((X.saved.xp&&X.saved.xp.nick)||'게스트').slice(0,12);
+ /* 이름: PC에서 정한 별명이 없으면 함께 걷기에서 쓰는 이름(같은 방 친구들이 보는 이름) */
+ const roomName=()=>{try{const el=w.document&&w.document.getElementById&&w.document.getElementById('a25Name');const v=el&&String(el.value||'').trim();if(v)return v;return String((w.localStorage&&w.localStorage.getItem('2006_a25_name'))||'').trim()}catch(_){return ''}};
+ const nick=()=>String((X.saved.xp&&X.saved.xp.nick)||(MN.me&&mready()&&MN.me.n)||roomName()||'게스트').slice(0,12);
  const toast=(title,text)=>{X.ui&&X.ui.toast&&X.ui.toast({title,text,icon:'info',ms:4200})};
  function give(n,why,flag){const m=S();if(flag){if(m.rewards[flag])return false;m.rewards[flag]=1}m.dotori+=n;m.earned+=n;X.save();toast('도토리 +'+n,why+' (지금 '+m.dotori+'개)');return true}
  function open(){win=X.windowFor('minihome','미니홈피');if(!win.node.classList.contains('mh-win')){win.node.classList.add('mh-win');win.node.style.width='min(880px,97%)';win.node.style.height='min(640px,97%)';win.node.style.left='2%';win.node.style.top='1%'}render();return win}
- function go(who,tab){view.who=who||'me';view.tab=tab||'home';view.sel=null;if(view.who!=='me'){const m=S(),f=FR[view.who];if(f&&!seen.has(f.id)){seen.add(f.id);m.visited[f.id]=(m.visited[f.id]||0)+1;X.save();if(!m.rewards['visit-'+f.id])give(1,f.name+'님 미니홈피 첫 방문 (파도타기)','visit-'+f.id)}}render()}
+ function go(who,tab){view.who=who||'me';view.tab=tab||'home';view.sel=null;
+  if(isReal(view.who)){const hid=realHid();if(hid===myHid()){view.who='me';return render()}mq('read',{op:'get',hid});if(view.tab==='guest')mq('read',{op:'gb',hid,page:1});
+   if(!seenReal.has(hid)){seenReal.add(hid);mq('visit',{op:'visit',hid});const r=liveRow(hid);give(1,(r?r.n:'같은 방 친구')+'님 미니홈피 첫 방문 (같은 방 친구)','visit-r-'+hid)}return render()}
+  if(view.who==='me'&&view.tab==='guest'&&myHid())mq('read',{op:'gb',hid:myHid(),page:1});
+  if(view.who!=='me'){const m=S(),f=FR[view.who];if(f&&!seen.has(f.id)){seen.add(f.id);m.visited[f.id]=(m.visited[f.id]||0)+1;X.save();if(!m.rewards['visit-'+f.id])give(1,f.name+'님 미니홈피 첫 방문 (파도타기)','visit-'+f.id)}}render()}
  const ownerName=()=>view.who==='me'?nick():FR[view.who].name;
- function render(){if(!win||!X.windows.get('minihome'))return;const m=S(),me=view.who==='me',f=me?null:FR[view.who];if(!me&&!f){view.who='me';return render()}
+ function render(){if(!win||!X.windows.get('minihome'))return;if(isReal(view.who))return renderReal();const m=S(),me=view.who==='me',f=me?null:FR[view.who];if(!me&&!f){view.who='me';return render()}
   const skin=me?(m.skin||'sky'):f.skin;win.caption.textContent=(me?'♡ '+nick()+'님의 미니홈피 ♡':f.name+'님의 미니홈피')+' - Microsoft Internet Explorer';
   const c=win.content;c.replaceChildren();const root=E('div','mh-root mh-skin-'+skin);c.append(root);
-  const top=E('div','mh-top'),cnt=E('span','mh-count');const today=me?m.today:f.today+(seen.has(f.id)?1:0),total=me?2006+m.today:f.total+(m.visited[f.id]||0);cnt.append(E('b','','TODAY '),E('span','',String(today)),E('b','',' | TOTAL '),E('span','',total.toLocaleString('ko-KR')));
+  const top=E('div','mh-top'),cnt=E('span','mh-count');const real=me&&MN.me&&mready()?Number(MN.me.real)||0:0,today=me?m.today+real:f.today+(seen.has(f.id)?1:0),total=me?2006+m.today+real:f.total+(m.visited[f.id]||0);cnt.append(E('b','','TODAY '),E('span','',String(today)),E('b','',' | TOTAL '),E('span','',total.toLocaleString('ko-KR')));
   top.append(cnt,E('strong','mh-title',me?(m.title||'♡ '+nick()+'님의 미니홈피 ♡'):f.title));root.append(top);
   const book=E('div','mh-book'),left=E('aside','mh-left'),main=E('main','mh-main'),tabs=E('nav','mh-tabs');book.append(left,main,tabs);root.append(book);
   /* 왼쪽: 대문 사진과 프로필 */
@@ -226,13 +299,15 @@ function attach(X){
    if(!m.ilchon[f.id]&&!m.pending[f.id])left.append(B('일촌 신청',()=>askIlchon(f),'mh-btn'));}
   const wave=E('select','mh-wave');wave.setAttribute('aria-label','일촌 파도타기');const first=E('option','','일촌 파도타기 ▼');first.value='';wave.append(first);
   const list=me?Object.entries(m.ilchon).filter(([id])=>FR[id]).map(([id,n])=>[id,n]):f.ilchon.filter(([id])=>FR[id]);
+  if(me)waveLive(wave);
   for(const [id,n] of list){const o=E('option','',FR[id].name+' ('+n+')');o.value=id;wave.append(o)}if(!me){const o=E('option','','◀ 내 미니홈피로');o.value='me';wave.append(o)}
   wave.addEventListener('change',()=>{const v=wave.value;if(v)go(v,'home')});left.append(wave);
   if(!me)left.append(B('◀ 내 미니홈피로',()=>go('me','home'),'mh-btn small'));
+  if(me)leftLive(left);
   if(!me&&f.homepage&&X.navigate)left.append(B('개인 홈페이지 가기',()=>X.navigate({type:'home',portal:'w-hompy'}),'mh-btn small'));
   /* 오른쪽 메뉴 */
   const T=me?[['home','홈'],['profile','프로필'],['diary','다이어리'],['photo','사진첩'],['guest','방명록'],['room','미니룸'],['shop','선물가게']]:[['home','홈'],['profile','프로필'],['diary','다이어리'],['photo','사진첩'],['guest','방명록']];
-  for(const [id,label] of T)tabs.append(B(label,()=>{view.tab=id;view.sel=null;render()},'mh-tab'+(view.tab===id?' on':'')));
+  for(const [id,label] of T)tabs.append(B(label,()=>{view.tab=id;view.sel=null;if(me&&id==='guest'&&myHid())mq('read',{op:'gb',hid:myHid(),page:1});render()},'mh-tab'+(view.tab===id?' on':'')));
   /* BGM */
   const bgm=me?(m.bgm&&ITEM[m.bgm]?ITEM[m.bgm].name:''):f.bgm;const bar=E('div','mh-bgm');bar.append(E('b','','♬ BGM'),E('span','',bgm?bgm:'배경음악이 없어요 (선물가게에서 고를 수 있어요)'),E('i','mh-eq'));root.append(bar);
   if(me){const dot=E('div','mh-dotori');dot.append(E('b','','내 도토리 '+m.dotori+'개'),B('도토리 충전',()=>X.ui&&X.ui.dialog?X.ui.dialog({title:'도토리 충전',icon:'warn',text:'휴대폰 결제는 부모님 동의가 필요해요. PC방에서는 결제할 수 없어요 ㅠㅠ\n\n도토리는 파도타기로 처음 놀러 간 집(+1), 일촌 맺기(+2), 방명록 남기기(+1), 다이어리 쓰기(+1), 사진 올리기(+2)로 모을 수 있어요.'}):0,'mh-btn small'));root.append(dot)}
@@ -243,15 +318,16 @@ function attach(X){
  function homeTab(main,m,f){const me=!f;main.append(E('h3','mh-h','미니룸'));
   if(me)roomCanvas(main,{...m.room,night:m.room.wall==='night'},true);else roomCanvas(main,{...f.room,look:f.look,night:f.room.wall==='night'},false);
   const news=E('section','mh-box');news.append(E('h4','','최근 소식'));
-  if(me){const d=m.diary[m.diary.length-1],p=m.photos[m.photos.length-1];news.append(E('p','','다이어리 '+m.diary.length+'개 · 사진 '+m.photos.length+'장 · 방명록 '+((X.saved.guestbook||[]).length+m.gbMine.length)+'개'));if(d)news.append(E('p','mh-muted','최근 다이어리: '+d.t.slice(0,30)));if(p)news.append(E('p','mh-muted','최근 사진: '+p.cap));if(!d&&!p)news.append(E('p','mh-muted','아직 글이 없어요. 다이어리를 써 보세요!'))}
+  if(me){const d=m.diary[m.diary.length-1],p=m.photos[m.photos.length-1];news.append(E('p','','다이어리 '+m.diary.length+'개 · 사진 '+m.photos.length+'장 · 방명록 '+((X.saved.guestbook||[]).length+m.gbMine.length+(MN.me&&mready()?Number(MN.me.gbn)||0:0))+'개'));if(d)news.append(E('p','mh-muted','최근 다이어리: '+d.t.slice(0,30)));if(p)news.append(E('p','mh-muted','최근 사진: '+p.cap));if(!d&&!p)news.append(E('p','mh-muted','아직 글이 없어요. 다이어리를 써 보세요!'))}
   else{news.append(E('p','','다이어리 '+f.diary.length+'개 · 사진 '+f.photos.length+'장 · 방명록 '+(f.guest.length+(m.gbTo[f.id]||[]).length)+'개'),E('p','mh-muted','최근 다이어리: '+f.diary[0][2].slice(0,34)+'...'))}
   main.append(news);
+  if(me)liveBoxes(main);
   const says=E('section','mh-box mh-says');says.append(E('h4','','일촌평'));
-  if(me){const ids=Object.keys(m.ilchon).filter(id=>FR[id]);for(const id of ids)says.append(sayLine(FR[id].name,m.ilchon[id],FR[id].toMe));if(!ids.length)says.append(E('p','mh-muted','일촌을 맺으면 일촌평이 달려요.'))}
+  if(me){const live=MN.me&&mready()?MN.me.says||[]:[];for(const x of live)says.append(sayLine(x.n,x.nick,x.t,false,ago(x.at)));const ids=Object.keys(m.ilchon).filter(id=>FR[id]);for(const id of ids)says.append(sayLine(FR[id].name,m.ilchon[id],FR[id].toMe));if(!ids.length&&!live.length)says.append(E('p','mh-muted','일촌을 맺으면 일촌평이 달려요.'))}
   else{for(const [id,n,t] of f.says)says.append(sayLine(FR[id]?FR[id].name:id,n,t));const mine=m.says[f.id];if(mine)says.append(sayLine(nick(),m.ilchon[f.id]||'방문자',mine,true));
    if(m.ilchon[f.id]){const fm=E('form','mh-form'),inp=E('input');inp.maxLength=40;inp.placeholder='일촌평 한 줄 (40자)';inp.setAttribute('aria-label','일촌평');const sb=B('남기기',()=>{},'mh-btn small');sb.type='submit';fm.append(inp,sb);fm.addEventListener('submit',e=>{e.preventDefault&&e.preventDefault();const t=String(inp.value||'').trim().slice(0,40);if(!t)return;m.says[f.id]=t;X.save();render()});says.append(fm)}else says.append(E('p','mh-muted','일촌만 일촌평을 쓸 수 있어요.'))}
   main.append(says)}
- function sayLine(name,ilchon,text,mine){const p=E('p','mh-say'+(mine?' mine':''));p.append(E('b','','('+ilchon+') '+name),E('span','',' : '+text));return p}
+ function sayLine(name,ilchon,text,mine,when){const p=E('p','mh-say'+(mine?' mine':'')+(when?' live':''));p.append(E('b','','('+ilchon+') '+name),E('span','',' : '+text));if(when)p.append(E('small','mh-ago',' '+when));return p}
  function profileTab(main,m,f){const me=!f;main.append(E('h3','mh-h','프로필'));
   if(!me){const box=E('section','mh-box');for(const [a,b] of [['이름',f.name+(f.nick?' ('+f.nick+')':'')],['소개',f.info],['기분',moodFace(f.mood)],['배경음악',f.bgm],['일촌',f.ilchon.length+'명']]){const p=E('p','');p.append(E('b','',a+' '),E('span','',b));box.append(p)}box.append(E('p','mh-intro',f.intro));main.append(box);return}
   const box=E('form','mh-box mh-profile'),title=E('input'),intro=E('textarea'),mood=E('select'),cover=E('select');
@@ -260,19 +336,19 @@ function attach(X){
   const pics=X.shell&&X.shell.pics?X.shell.pics():[];const o0=E('option','','내 캐릭터 (기본)');o0.value='';cover.append(o0);for(const p of pics){const o=E('option','','내 그림: '+p.name);o.value=p.id;o.selected=p.id===m.cover;cover.append(o)}cover.value=m.cover||'';cover.setAttribute('aria-label','대문 사진');
   const lab=(t,n)=>{const l=E('label','mh-field');l.append(E('b','',t),n);return l};
   const sb=B('저장',()=>{},'mh-btn');sb.type='submit';box.append(lab('제목',title),lab('대문 글',intro),lab('기분',mood),lab('대문 사진',cover),E('p','mh-muted',pics.length?'대문 사진은 그림판에서 저장한 ‘내 그림’ 중에서 고를 수 있어요.':'그림판에서 그림을 저장하면 대문 사진으로 쓸 수 있어요.'),sb);
-  box.addEventListener('submit',e=>{e.preventDefault&&e.preventDefault();m.title=String(title.value||'').trim().slice(0,30);m.intro=String(intro.value||'').trim().slice(0,120);m.mood=MOODS.some(x=>x[0]===mood.value)?mood.value:'행복';m.cover=pics.some(p=>p.id===cover.value)?cover.value:'';X.save();toast('미니홈피','프로필을 저장했어요.');render()});main.append(box)}
+  box.addEventListener('submit',e=>{e.preventDefault&&e.preventDefault();m.title=String(title.value||'').trim().slice(0,30);m.intro=String(intro.value||'').trim().slice(0,120);m.mood=MOODS.some(x=>x[0]===mood.value)?mood.value:'행복';m.cover=pics.some(p=>p.id===cover.value)?cover.value:'';save();toast('미니홈피','프로필을 저장했어요.');render()});main.append(box)}
  function friendComment(list,cb,delay){const m=S(),ids=Object.keys(m.ilchon).filter(id=>FR[id]&&id!=='sora');const id=ids.length?ids[Math.floor(Math.random()*ids.length)]:'sujin';const f=FR[id];later(()=>{cb(f.name+'::'+f.cm[Math.floor(Math.random()*f.cm.length)]);X.save();render()},delay||1500)}
  function cmList(box,list){for(const t of list){const mm=/^([^:]{1,12})::(.*)$/.exec(t);const p=E('p','mh-cm'+(/^ㄴ/.test(t)?' nest':''));if(mm)p.append(E('b','',mm[1]),E('span','',' '+mm[2]));else p.append(E('span','',t));box.append(p)}}
  function diaryTab(main,m,f){const me=!f;main.append(E('h3','mh-h','다이어리'));
   const cal=E('div','mh-cal');cal.append(E('b','','2006년 5월'));for(let d=1;d<=31;d++){const has=me?(d===30&&m.diary.length):f.diary.some(x=>x[0].startsWith('2006.05.'+String(d).padStart(2,'0')));cal.append(E('span',(d===30?'today ':'')+(has?'has':''),String(d)))}main.append(cal);
   if(me){const fm=E('form','mh-box mh-write'),wea=E('select'),ta=E('textarea');for(const x of ['맑음','흐림','비','바람'])wea.append(Object.assign(E('option','',x),{value:x}));wea.setAttribute('aria-label','날씨');ta.maxLength=300;ta.placeholder='오늘 있었던 일을 적어 보세요 (300자)';ta.setAttribute('aria-label','다이어리');const sb=B('다이어리 쓰기',()=>{},'mh-btn');sb.type='submit';const head=E('p','');head.append(E('b','',TODAY+' '),wea);fm.append(head,ta,sb);
-   fm.addEventListener('submit',e=>{e.preventDefault&&e.preventDefault();const t=String(ta.value||'').trim().slice(0,300);if(!t)return;const entry={d:TODAY,w:wea.value||'맑음',t,cm:[]};m.diary=[...m.diary,entry].slice(-12);X.save();if(m.diary.length<=5)give(1,'다이어리 쓰기','diary-'+m.diary.length);friendComment(entry.cm,x=>entry.cm.push(x));render()});main.append(fm);
+   fm.addEventListener('submit',e=>{e.preventDefault&&e.preventDefault();const t=String(ta.value||'').trim().slice(0,300);if(!t)return;const entry={d:TODAY,w:wea.value||'맑음',t,cm:[]};m.diary=[...m.diary,entry].slice(-12);save();if(m.diary.length<=5)give(1,'다이어리 쓰기','diary-'+m.diary.length);friendComment(entry.cm,x=>entry.cm.push(x));render()});main.append(fm);
    for(const d of m.diary.slice().reverse()){const box=E('article','mh-box mh-entry');box.append(E('small','',d.d+' · 날씨 '+d.w),E('p','',d.t));const cm=E('div','mh-cms');cmList(cm,d.cm||[]);box.append(cm);main.append(box)}
    if(!m.diary.length)main.append(E('p','mh-muted','아직 다이어리가 없어요.'));return}
   for(const [d,wea,t] of f.diary){const box=E('article','mh-box mh-entry');box.append(E('small','',d+' · 날씨 '+wea),E('p','',t.replace('{seat}',String((X.options&&X.options.seat)||12))));main.append(box)}}
  function photoTab(main,m,f){const me=!f;main.append(E('h3','mh-h','사진첩'));
   if(me){const pics=X.shell&&X.shell.pics?X.shell.pics():[];const fm=E('form','mh-box mh-write'),sel=E('select'),cap=E('input');sel.setAttribute('aria-label','올릴 그림');for(const p of pics){const o=E('option','',p.name);o.value=p.id;sel.append(o)}cap.maxLength=40;cap.placeholder='사진 설명 (40자)';cap.setAttribute('aria-label','사진 설명');const sb=B('사진 올리기',()=>{},'mh-btn');sb.type='submit';
-   if(pics.length){fm.append(E('p','mh-muted','그림판에서 저장한 ‘내 그림’을 사진첩에 올릴 수 있어요.'),sel,cap,sb);fm.addEventListener('submit',e=>{e.preventDefault&&e.preventDefault();const pic=pics.find(p=>p.id===sel.value);if(!pic)return;const entry={pic:pic.id,cap:String(cap.value||'').trim().slice(0,40)||pic.name,cm:[]};m.photos=[...m.photos,entry].slice(-12);X.save();if(m.photos.length<=3)give(2,'사진 올리기','photo-'+m.photos.length);friendComment(entry.cm,x=>entry.cm.push(x),1800);render()})}
+   if(pics.length){fm.append(E('p','mh-muted','그림판에서 저장한 ‘내 그림’을 사진첩에 올릴 수 있어요.'),sel,cap,sb);fm.addEventListener('submit',e=>{e.preventDefault&&e.preventDefault();const pic=pics.find(p=>p.id===sel.value);if(!pic)return;const entry={pic:pic.id,cap:String(cap.value||'').trim().slice(0,40)||pic.name,cm:[]};m.photos=[...m.photos,entry].slice(-12);save();if(m.photos.length<=3)give(2,'사진 올리기','photo-'+m.photos.length);friendComment(entry.cm,x=>entry.cm.push(x),1800);render()})}
    else fm.append(E('p','mh-muted','올릴 그림이 없어요. 시작 메뉴의 그림판에서 그림을 그리고 ‘저장’하면 여기에 올릴 수 있어요.'),B('그림판 열기',()=>X.openApp('paint'),'mh-btn small'));main.append(fm);
    const grid=E('div','mh-photos');for(const p of m.photos.slice().reverse()){const card=E('figure','mh-photo');const pic=pics.find(x=>x.id===p.pic);if(pic){const im=E('img');im.src=pic.url;im.alt=p.cap;card.append(im)}else card.append(E('div','mh-xbox','×'));card.append(E('figcaption','',p.cap));const cm=E('div','mh-cms');cmList(cm,p.cm||[]);card.append(cm);grid.append(card)}main.append(grid);return}
   const grid=E('div','mh-photos');f.photos.forEach(([type,cap,date,cms],i)=>{const card=E('figure','mh-photo'),cv=E('canvas');cv.width=200;cv.height=140;const g=cv.getContext&&cv.getContext('2d');if(g)try{scene(g,type,200,140,i*31+f.id.length*7)}catch(_){}card.append(cv,E('figcaption','',cap),E('small','',date));const cm=E('div','mh-cms');cmList(cm,cms);card.append(cm);grid.append(card)});main.append(grid)}
@@ -281,31 +357,140 @@ function attach(X){
   fm.addEventListener('submit',e=>{e.preventDefault&&e.preventDefault();const t=String(ta.value||'').trim().slice(0,100);if(!t)return;
    if(me){X.saved.guestbook=[...(X.saved.guestbook||[]),t].slice(-15);X.save();render();return}
    const list=m.gbTo[f.id]=Array.isArray(m.gbTo[f.id])?m.gbTo[f.id]:[];const entry={t,r:''};list.push(entry);m.gbTo[f.id]=list.slice(-8);X.save();give(1,f.name+'님께 방명록 남기기','gb-'+f.id);
-   if(!f.away){later(()=>{entry.r=f.replies[(list.length-1)%f.replies.length];X.save();render()},1400);later(()=>{m.gbMine=[...m.gbMine,{who:f.name,t:f.visit[Math.floor(Math.random()*f.visit.length)],at:'2006.05.30 16:3'+Math.min(2,Math.floor(Math.random()*3))}].slice(-20);m.today+=1;X.save();toast('미니홈피','답방! '+f.name+'님이 내 방명록에 글을 남겼어요.')},3200)}
+   if(!f.away){later(()=>{entry.r=f.replies[(list.length-1)%f.replies.length];X.save();render()},1400);later(()=>{m.gbMine=[...m.gbMine,{who:f.name,t:f.visit[Math.floor(Math.random()*f.visit.length)],at:'2006.05.30 16:3'+Math.min(2,Math.floor(Math.random()*3))}].slice(-20);m.today+=1;save();toast('미니홈피','답방! '+f.name+'님이 내 방명록에 글을 남겼어요.')},3200)}
    render()});
-  if(me){const items=[...m.gbMine.map(x=>({who:x.who,at:x.at,t:x.t})).reverse(),...(X.saved.guestbook||[]).slice().reverse().map(t=>({who:nick(),at:'2006.05.30',t}))];for(const x of items){const p=E('div','mh-gb');p.append(E('b','',x.who),E('small','',' '+x.at),E('p','',x.t));main.append(p)}if(!items.length)main.append(E('p','mh-muted','아직 방명록이 없어요. 친구 미니홈피에 방명록을 남기면 답방이 와요!'));return}
+  if(me){const live=liveGuest(main,myHid(),true);const items=[...m.gbMine.map(x=>({who:x.who,at:x.at,t:x.t})).reverse(),...(X.saved.guestbook||[]).slice().reverse().map(t=>({who:nick(),at:'2006.05.30',t}))];for(const x of items){const p=E('div','mh-gb');p.append(E('b','',x.who),E('small','',' '+x.at),E('p','',x.t));main.append(p)}if(!items.length&&!live)main.append(E('p','mh-muted','아직 방명록이 없어요. 친구 미니홈피에 방명록을 남기면 답방이 와요!'));return}
   for(const x of (m.gbTo[f.id]||[]).slice().reverse()){const p=E('div','mh-gb mine');p.append(E('b','',nick()),E('small','',' 2006.05.30 16:32'),E('p','',x.t));if(x.r)p.append(E('p','mh-reply','ㄴ '+f.name+': '+x.r));else if(f.away)p.append(E('p','mh-reply muted','ㄴ (주인이 아직 답글을 달지 않았어요)'));main.append(p)}
   for(const [who,at,t,r] of f.guest){const p=E('div','mh-gb');p.append(E('b','',who),E('small','',' '+at),E('p','',t));if(r)p.append(E('p','mh-reply','ㄴ '+f.name+': '+r));main.append(p)}}
  function askIlchon(f){const m=S();const ask=name=>{name=String(name||'').trim().slice(0,8)||'친구';m.pending[f.id]=name;X.save();render();
    if(f.away){toast('일촌 신청','일촌 신청을 보냈어요. '+f.name+'님이 접속하면 확인할 거예요.');return}
    later(()=>{delete m.pending[f.id];m.ilchon[f.id]=f.accept||name;X.save();give(2,f.name+'님과 일촌이 되었어요 (일촌명: '+(f.accept||name)+')','ilchon-'+f.id);render()},2600)};
   if(X.ui&&X.ui.dialog){const inp=E('input');inp.maxLength=8;inp.value='친구';inp.setAttribute('aria-label','일촌명');const box=E('div','mh-ask');box.append(E('p','',f.name+'님께 일촌을 신청할까요? 서로 부를 일촌명을 적어 주세요.'),inp);X.ui.dialog({title:'일촌 신청',node:box,buttons:[['신청',()=>ask(inp.value)],['취소']]})}else ask('친구')}
+ /* ---------- A97: 같은 방 친구 미니홈피 ---------- */
+ const phAsked=new Map();
+ function drawLook(g,look,x,y,s,id){if(w.CHARART&&w.CHARART.drawRemote&&look){g.save();g.translate(x,y);g.scale(s,s);w.CHARART.drawRemote(g,look,0,0,1,'stand',id);g.restore()}else chibi(g,x,y,{hair:'#3a2418',shirt:'#3a7ad8'},s*.7)}
+ function liveBoxes(main){const box=E('section','mh-box mh-live');box.append(E('h4','','♥ 우리 방 친구 미니홈피 (실시간)'));
+  if(!mready()){box.append(E('p','mh-muted','함께 걷기 방에 들어가면 같은 방 친구들의 미니홈피가 여기에 떠요. 서로 놀러 가서 방명록과 일촌평을 남기고 일촌도 맺을 수 있어요.'));main.append(box);return}
+  const asks=MN.me&&Array.isArray(MN.me.asks)?MN.me.asks:[];
+  if(asks.length){const ab=E('div','mh-asks');ab.append(E('b','','일촌 신청이 왔어요!'));for(const a of asks){const row=E('p','mh-ask-row');row.append(E('span','',a.n+'님 (일촌명: '+a.nick+')'),B('수락',()=>answerAsk(a,true),'mh-btn small'),B('거절',()=>answerAsk(a,false),'mh-btn small'));ab.append(row)}box.append(ab)}
+  const rows=liveFriends();
+  if(!MN.me)box.append(E('p','mh-muted','내 미니홈피를 같은 방에 여는 중이에요...'));
+  else if(!rows.length)box.append(E('p','mh-muted','아직 같은 방에 미니홈피를 연 친구가 없어요. 친구가 방에 들어오면 바로 여기에 떠요.'));
+  for(const r of rows){const il=MN.me&&(MN.me.ilchon||[]).find(x=>x.hid===r.hid);const row=B('',()=>go('r:'+r.hid,'home'),'mh-live-row'+(r.on?' on':''));row.append(E('b','',r.n+(il?' ★':'')),E('span','',r.title||'♡ '+r.n+'님의 미니홈피 ♡'),E('small','',(r.on?'● ':'○ ')+whereOf(r)+' · TODAY '+r.today));box.append(row)}
+  main.append(box)}
+ function leftLive(left){if(!mready())return;const rows=liveFriends(),asks=MN.me&&Array.isArray(MN.me.asks)?MN.me.asks:[];const box=E('div','mh-left-live');box.append(E('b','','♥ 같은 방 친구 '+rows.length+'명'));
+  if(asks.length)box.append(B('일촌 신청 '+asks.length+'건 왔어요!',()=>{view.tab='home';render();try{const el=win.content.querySelector&&win.content.querySelector('.mh-live');if(el&&el.scrollIntoView)el.scrollIntoView({block:'nearest'})}catch(_){}},'mh-chip mh-ask-chip'));
+  for(const r of rows.slice(0,8))box.append(B((r.on?'● ':'○ ')+r.n,()=>go('r:'+r.hid,'home'),'mh-chip mh-live-chip'+(r.on?' on':'')));
+  if(!rows.length)box.append(E('small','mh-muted','친구가 방에 들어오면 여기에 떠요'));left.append(box)}
+ function waveLive(wave){if(!mready())return;const il=MN.me&&Array.isArray(MN.me.ilchon)?MN.me.ilchon:[],ids=new Set(il.map(x=>x.hid));
+  const add=(label,rows)=>{if(!rows.length)return;const g=E('optgroup');g.label=label;for(const [hid,text] of rows){const o=E('option','',text);o.value='r:'+hid;g.append(o)}wave.append(g)};
+  add('같은 방 일촌',il.map(x=>[x.hid,x.n+' ('+x.nick+')'+(x.on?' ●':'')]));add('같은 방 친구 (실시간)',liveFriends().filter(r=>!ids.has(r.hid)).map(r=>[r.hid,r.n+(r.on?' ●':'')]))}
+ function liveGuest(main,hid,own){if(!mready()||!hid)return 0;const g=MN.gb[hid];
+  if(!g){main.append(E('p','mh-muted','같은 방 친구들이 남긴 방명록을 불러오는 중...'));return 0}
+  const owner=own?(MN.me&&MN.me.n)||nick():(MN.homes[hid]&&MN.homes[hid].n)||'주인';
+  for(const x of g.list){const p=E('div','mh-gb live'+(x.mine?' mine':''));p.append(E('b','',x.n),E('small','',' '+ago(x.at)+(x.from?' · 같은 방 친구':'')),E('p','',x.t));
+   if(x.r)p.append(E('p','mh-reply','ㄴ '+owner+': '+x.r));
+   const tools=E('div','mh-gb-tools');
+   if(own){const fm=E('form','mh-form mh-rform'),inp=E('input');inp.maxLength=60;inp.placeholder=x.r?'답글 고치기 (60자)':'답글 달기 (60자)';inp.setAttribute('aria-label','답글');inp.setAttribute('data-keep','r'+x.id);const sb=B(x.r?'고치기':'답글',()=>{},'mh-btn small');sb.type='submit';fm.append(inp,sb);
+    fm.addEventListener('submit',e=>{e.preventDefault&&e.preventDefault();const t=String(inp.value||'').trim().slice(0,60);if(!t)return;inp.value='';mq('write',{op:'gbr',id:x.id,r:t,page:g.page})});tools.append(fm)}
+   if(own||x.mine)tools.append(B('삭제',()=>confirmDel(hid,x,g.page),'mh-btn small'));
+   if(tools.children.length)p.append(tools);main.append(p)}
+  if(g.pages>1){const pg=E('div','mh-pager');for(let i=1;i<=g.pages;i++)pg.append(B(String(i),()=>mq('read',{op:'gb',hid,page:i}),'mh-chip'+(i===g.page?' on':'')));main.append(pg)}
+  return g.list.length}
+ function confirmDel(hid,x,page){const del=()=>mq('write',{op:'gbd',hid,id:x.id,page});if(X.ui&&X.ui.dialog)X.ui.dialog({title:'방명록 지우기',icon:'warn',text:'‘'+String(x.t).slice(0,30)+'’ 글을 지울까요?',buttons:[['지우기',del],['취소']]});else del()}
+ function answerAsk(a,ok,direct){if(!ok){mq('write',{op:'ans',from:a.hid,ok:false});toast('일촌 신청',a.n+'님의 일촌 신청을 거절했어요.');return}
+  const done=nk=>mq('write',{op:'ans',from:a.hid,ok:true,nick:String(nk||'').trim().slice(0,8)||a.nick});
+  if(!direct&&X.ui&&X.ui.dialog){const inp=E('input');inp.maxLength=8;inp.value=a.nick;inp.setAttribute('aria-label','일촌명');const box=E('div','mh-ask');box.append(E('p','',a.n+'님의 일촌 신청을 받을까요? 서로 부를 일촌명을 고칠 수 있어요.'),inp);X.ui.dialog({title:'일촌 수락',node:box,buttons:[['수락',()=>done(inp.value)],['취소']]})}else done(a.nick)}
+ function offerAsk(n){if(!n.hid||!win||!X.windows.get('minihome')||!X.ui||!X.ui.dialog)return;const a={hid:n.hid,n:n.n,nick:n.nick};
+  X.ui.dialog({title:'일촌 신청',icon:'info',text:n.n+'님이 일촌을 신청했어요. (일촌명: '+n.nick+')\n지금 받을까요?',buttons:[['수락',()=>answerAsk(a,true,true)],['나중에'],['거절',()=>answerAsk(a,false)]]})}
+ function askReal(h){const ask=nk=>{nk=String(nk||'').trim().slice(0,8)||'친구';mq('write',{op:'ask',hid:h.hid,nick:nk})};
+  if(X.ui&&X.ui.dialog){const inp=E('input');inp.maxLength=8;inp.value='친구';inp.setAttribute('aria-label','일촌명');const box=E('div','mh-ask');box.append(E('p','',h.n+'님께 일촌을 신청할까요? 서로 부를 일촌명을 적어 주세요. 친구가 수락하면 일촌이 돼요.'),inp);X.ui.dialog({title:'일촌 신청',node:box,buttons:[['신청',()=>ask(inp.value)],['취소']]})}else ask('친구')}
+ function cutReal(h){const cut=()=>mq('write',{op:'cut',hid:h.hid});if(X.ui&&X.ui.dialog)X.ui.dialog({title:'일촌 끊기',icon:'warn',text:h.n+'님과 일촌을 끊을까요? 서로 남긴 일촌평도 사라져요.',buttons:[['끊기',cut],['취소']]});else cut()}
+ function needPhotos(h){for(const p of h.photos||[]){if(!p)continue;const key=h.hid+':'+p.i,c=MN.ph[key];if((!c||c.sig!==p.sig)&&phAsked.get(key)!==p.sig){phAsked.set(key,p.sig);mq('read',{op:'ph',hid:h.hid,i:p.i})}}}
+ function renderReal(){const hid=realHid(),h=MN.homes[hid],row=liveRow(hid),c=win.content;
+  if(!mready()){view.who='me';view.tab='home';return render()}
+  c.replaceChildren();
+  if(!h){const root=E('div','mh-root mh-real mh-skin-sky');root.append(E('p','mh-loading','♡ '+(row?row.n:'친구')+'님의 미니홈피를 여는 중이에요...'),B('◀ 내 미니홈피로',()=>go('me','home'),'mh-btn small'));c.append(root);win.caption.textContent=(row?row.n:'친구')+'님의 미니홈피 - Microsoft Internet Explorer';return}
+  const P=h.prof||{},skin=SKIN[P.skin]?P.skin:'sky';win.caption.textContent=h.n+'님의 미니홈피 (같은 방 친구) - Microsoft Internet Explorer';
+  const root=E('div','mh-root mh-real mh-skin-'+skin);c.append(root);
+  const top=E('div','mh-top'),cnt=E('span','mh-count');cnt.append(E('b','','TODAY '),E('span','',String(h.today)),E('b','',' | TOTAL '),E('span','',Number(h.total||0).toLocaleString('ko-KR')));
+  top.append(cnt,E('strong','mh-title',P.title||'♡ '+h.n+'님의 미니홈피 ♡'),E('em','mh-livebadge','같은 방 친구 · 실시간'));root.append(top);
+  const book=E('div','mh-book'),left=E('aside','mh-left'),main=E('main','mh-main'),tabs=E('nav','mh-tabs');book.append(left,main,tabs);root.append(book);
+  const cov=E('canvas','mh-cover');cov.width=170;cov.height=130;left.append(cov);const g=cov.getContext&&cov.getContext('2d');
+  if(g){try{scene(g,P.wall==='night'?'night':'sky',170,130,hid.length*13+7);drawLook(g,h.look,85,124,1.8,'mh-rcover-'+hid)}catch(_){}}
+  left.append(E('p','mh-intro',P.intro||'안녕하세요 ^^\n미니홈피 꾸미는 중이에요!'),E('p','mh-mood','오늘의 기분: '+moodFace(P.mood||'행복')));
+  const nm=E('p','mh-name');nm.append(E('b','',h.n),E('span','',' ♡'),E('small','',(h.on?'● ':'○ ')+whereOf(h)));left.append(nm);
+  const rel=h.rel||{};
+  if(rel.nick)left.append(E('p','mh-rel','★ 나와 일촌 (일촌명: '+rel.nick+')'));
+  else if(rel.asked)left.append(E('p','mh-rel','일촌 신청 중... (친구가 수락하면 일촌이 돼요)'));
+  else if(rel.askedMe){left.append(E('p','mh-rel','이 친구가 나에게 일촌을 신청했어요!'));const a=((MN.me&&MN.me.asks)||[]).find(x=>x.hid===hid);if(a)left.append(B('일촌 수락',()=>answerAsk(a,true),'mh-btn'))}
+  else{left.append(E('p','mh-rel','일촌이 아니에요'),B('일촌 신청',()=>askReal(h),'mh-btn'))}
+  const wave=E('select','mh-wave');wave.setAttribute('aria-label','일촌 파도타기');const first=E('option','','일촌 파도타기 ▼');first.value='';wave.append(first);
+  for(const x of h.ilchon||[]){if(x.hid===myHid())continue;const o=E('option','',x.n+' ('+x.nick+')'+(x.on?' ●':''));o.value='r:'+x.hid;wave.append(o)}
+  const back=E('option','','◀ 내 미니홈피로');back.value='me';wave.append(back);wave.addEventListener('change',()=>{const v=wave.value;if(v)go(v,'home')});left.append(wave);
+  left.append(B('◀ 내 미니홈피로',()=>go('me','home'),'mh-btn small'));if(rel.nick)left.append(B('일촌 끊기',()=>cutReal(h),'mh-btn small mh-cut'));
+  for(const [id,label] of [['home','홈'],['profile','프로필'],['diary','다이어리'],['photo','사진첩'],['guest','방명록']])tabs.append(B(label,()=>{view.tab=id;view.sel=null;if(id==='guest')mq('read',{op:'gb',hid,page:1});render()},'mh-tab'+(view.tab===id?' on':'')));
+  const bar=E('div','mh-bgm');bar.append(E('b','','♬ BGM'),E('span','',P.bgm||'배경음악이 없어요'),E('i','mh-eq'));root.append(bar);
+  if(view.tab==='profile')realProfile(main,h);else if(view.tab==='diary')realDiary(main,h);else if(view.tab==='photo')realPhotos(main,h);else if(view.tab==='guest')realGuest(main,h);else realHome(main,h)}
+ function realHome(main,h){const P=h.prof||{};main.append(E('h3','mh-h','미니룸'));
+  const cv=E('canvas','mh-room');cv.width=360;cv.height=210;main.append(cv);const g=cv.getContext&&cv.getContext('2d');
+  if(g){try{drawRoom(g,{wall:P.wall,floor:P.floor,slots:P.slots||{},night:P.wall==='night'},{draw(g){drawLook(g,h.look,178,204,1.25,'mh-rroom-'+h.hid)}})}catch(_){}}
+  const news=E('section','mh-box');news.append(E('h4','','최근 소식'),E('p','','다이어리 '+(h.diary||[]).length+'개 · 사진 '+(h.photos||[]).filter(Boolean).length+'장 · 방명록 '+(h.gbn||0)+'개'));
+  const d=(h.diary||[])[0];if(d)news.append(E('p','mh-muted','최근 다이어리: '+d.t.slice(0,34)+(d.t.length>34?'...':'')));main.append(news);
+  const says=E('section','mh-box mh-says');says.append(E('h4','','일촌평'));for(const x of h.says||[])says.append(sayLine(x.n,x.nick,x.t,x.hid===myHid(),ago(x.at)));if(!(h.says||[]).length)says.append(E('p','mh-muted','아직 일촌평이 없어요.'));
+  if(h.rel&&h.rel.nick){const fm=E('form','mh-form'),inp=E('input');inp.maxLength=40;inp.placeholder='일촌평 한 줄 (40자)';inp.setAttribute('aria-label','일촌평');const sb=B('남기기',()=>{},'mh-btn small');sb.type='submit';fm.append(inp,sb);
+   fm.addEventListener('submit',e=>{e.preventDefault&&e.preventDefault();const t=String(inp.value||'').trim().slice(0,40);if(!t)return;inp.value='';mq('write',{op:'say',hid:h.hid,t})});says.append(fm)}
+  else says.append(E('p','mh-muted','일촌만 일촌평을 쓸 수 있어요.'));main.append(says)}
+ function realProfile(main,h){const P=h.prof||{};main.append(E('h3','mh-h','프로필'));const box=E('section','mh-box');
+  for(const [a,b] of [['이름',h.n+' (같은 방 친구)'],['지금',h.on?whereOf(h):'방에 없어요'],['기분',moodFace(P.mood||'행복')],['배경음악',P.bgm||'없음'],['일촌',(h.ilchon||[]).length+'명']]){const p=E('p','');p.append(E('b','',a+' '),E('span','',b));box.append(p)}
+  box.append(E('p','mh-intro',P.intro||''));main.append(box)}
+ function realDiary(main,h){main.append(E('h3','mh-h','다이어리'));const list=h.diary||[];for(const d of list){const box=E('article','mh-box mh-entry');box.append(E('small','',d.d+' · 날씨 '+d.w),E('p','',d.t));main.append(box)}if(!list.length)main.append(E('p','mh-muted','아직 다이어리가 없어요.'))}
+ function realPhotos(main,h){main.append(E('h3','mh-h','사진첩'));const grid=E('div','mh-photos');let n=0;
+  for(const p of h.photos||[]){if(!p)continue;n++;const card=E('figure','mh-photo'),c=MN.ph[h.hid+':'+p.i];if(c&&c.sig===p.sig&&c.data){const im=E('img');im.src=c.data;im.alt=p.cap||'사진';card.append(im)}else card.append(E('div','mh-xbox','…'));card.append(E('figcaption','',p.cap||'(설명 없음)'));grid.append(card)}
+  main.append(grid);if(!n)main.append(E('p','mh-muted','아직 올린 사진이 없어요.'));needPhotos(h)}
+ function realGuest(main,h){main.append(E('h3','mh-h','방명록'));const fm=E('form','mh-box mh-write'),ta=E('input');ta.maxLength=100;ta.placeholder='방명록 남기기 (100자) · 친구에게 바로 보여요';ta.setAttribute('aria-label','방명록');const sb=B('남기기',()=>{},'mh-btn');sb.type='submit';fm.append(ta,sb);main.append(fm);
+  fm.addEventListener('submit',e=>{e.preventDefault&&e.preventDefault();const t=String(ta.value||'').trim().slice(0,100);if(!t)return;ta.value='';if(mq('write',{op:'gbw',hid:h.hid,t}))give(1,h.n+'님께 방명록 남기기 (같은 방 친구)','gb-r-'+h.hid)});
+  const n=liveGuest(main,h.hid,false);if(!n&&MN.gb[h.hid])main.append(E('p','mh-muted','아직 방명록이 없어요. 첫 글을 남겨 보세요!'))}
+ /* 서버에서 온 소식. 고쳐 쓰던 칸의 글과 커서는 다시 그려도 남긴다 */
+ function rerender(){if(!win||!X.windows.get('minihome'))return;
+  if(view.who==='me'&&['profile','diary','photo','room','shop'].includes(view.tab)){countNow();return}
+  const c=win.content,keep=[];let focus='',scroll=0;const fields=()=>c.querySelectorAll?[...c.querySelectorAll('input,textarea')]:[];const keyOf=el=>el.getAttribute('data-keep')||el.getAttribute('aria-label')||'';
+  try{for(const el of fields()){const k=keyOf(el);if(k&&el.value)keep.push([k,el.value]);if(w.document&&w.document.activeElement===el)focus=k}const mm=c.querySelector&&c.querySelector('.mh-main');scroll=mm?mm.scrollTop:0}catch(_){}
+  render();
+  try{const now=fields();for(const [k,v] of keep){const el=now.find(x=>keyOf(x)===k&&!x.value);if(el)el.value=v}if(focus){const el=now.find(x=>keyOf(x)===focus);if(el&&el.focus){el.focus();try{el.setSelectionRange(el.value.length,el.value.length)}catch(_){}}}const mm=c.querySelector&&c.querySelector('.mh-main');if(mm)mm.scrollTop=scroll}catch(_){}}
+ function countNow(){const cnt=win&&win.content&&win.content.querySelector?win.content.querySelector('.mh-count'):null;if(!cnt||view.who!=='me')return;const m=S(),real=MN.me&&mready()?Number(MN.me.real)||0:0;cnt.replaceChildren(E('b','','TODAY '),E('span','',String(m.today+real)),E('b','',' | TOTAL '),E('span','',(2006+m.today+real).toLocaleString('ko-KR')))}
+ function onMini(m){if(!alive)return;
+  if(m.type==='welcome'){later(rerender,900);return}
+  if(m.type==='network_close'){if(isReal(view.who)){view.who='me';view.tab='home'}rerender();return}
+  if(m.type!=='mini')return;const hid=realHid();
+  switch(m.op){
+   case 'list':{if(hid){const r=liveRow(hid),h=MN.homes[hid];if(r&&h&&h.v!==r.v){mq('read',{op:'get',hid});if(view.tab==='guest')mq('read',{op:'gb',hid,page:(MN.gb[hid]&&MN.gb[hid].page)||1})}}rerender();break}
+   case 'me':{const n=noteOf(m);if(n){toast('미니홈피',NOTE[n.k](n));if(n.k==='ilchon'&&n.hid)give(2,n.n+'님과 일촌이 되었어요 (같은 방 친구)','ilchon-r-'+n.hid);if(n.k==='ask')offerAsk(n)}
+    if(view.who==='me'&&view.tab==='guest'){const g=MN.gb[m.hid];if(!g||g.v!==m.v)mq('read',{op:'gb',hid:m.hid,page:(g&&g.page)||1})}
+    if(hid&&n&&n.hid===hid)mq('read',{op:'get',hid});rerender();break}
+   case 'note':{const n=noteOf(m);if(n)toast('미니홈피',NOTE[n.k](n));if(hid&&hid===m.hid&&view.tab==='guest')mq('read',{op:'gb',hid,page:1});break}
+   case 'home':case 'gb':case 'ph':rerender();break;
+   case 'askok':toast('일촌 신청','일촌 신청을 보냈어요. 친구가 수락하면 일촌이 돼요.');if(hid)mq('read',{op:'get',hid});break;
+   case 'gone':if(hid&&hid===m.hid){toast('미니홈피','친구의 미니홈피를 찾을 수 없어요.');view.who='me';view.tab='home'}rerender();break;
+   case 'error':toast('미니홈피',String(m.message||'잠시 뒤에 다시 해 주세요.').slice(0,60));break}}
  function roomTab(main,m){main.append(E('h3','mh-h','미니룸 꾸미기'));const cv=roomCanvas(main,{...m.room,night:m.room.wall==='night'},true);
   const help=E('p','mh-muted',view.sel?'‘'+ITEM[view.sel].name+'’을(를) 놓을 자리를 고르세요 (방 그림을 눌러도 돼요).':'가진 물건을 고른 다음 놓을 자리를 누르세요. 물건은 선물가게에서 도토리로 살 수 있어요.');main.append(help);
-  const place=slot=>{const it=view.sel&&ITEM[view.sel];if(!it)return;const isWall=slot[0]==='W';if((it.slot==='wall')!==isWall){toast('미니룸',it.slot==='wall'?'벽에 거는 물건이에요.':'바닥에 놓는 물건이에요.');return}for(const k of Object.keys(m.room.slots))if(m.room.slots[k]===it.id&&k!==slot)delete m.room.slots[k];m.room.slots[slot]=it.id;view.sel=null;X.save();render()};
+  const place=slot=>{const it=view.sel&&ITEM[view.sel];if(!it)return;const isWall=slot[0]==='W';if((it.slot==='wall')!==isWall){toast('미니룸',it.slot==='wall'?'벽에 거는 물건이에요.':'바닥에 놓는 물건이에요.');return}for(const k of Object.keys(m.room.slots))if(m.room.slots[k]===it.id&&k!==slot)delete m.room.slots[k];m.room.slots[slot]=it.id;view.sel=null;save();render()};
   cv.addEventListener('pointerdown',e=>{if(!view.sel)return;const r=cv.getBoundingClientRect?cv.getBoundingClientRect():{left:0,top:0,width:360,height:210};const x=(e.clientX-r.left)*360/(r.width||360),y=(e.clientY-r.top)*210/(r.height||210);const it=ITEM[view.sel];let best=null,bd=1e9;for(const [k,[sx,sy]] of Object.entries(SLOTS)){if((k[0]==='W')!==(it.slot==='wall'))continue;const d=Math.hypot(x-sx,y-sy);if(d<bd){bd=d;best=k}}if(best)place(best)});
-  const slots=E('div','mh-slots');for(const k of Object.keys(SLOTS)){const cur=m.room.slots[k];slots.append(B((k[0]==='W'?'벽 ':'바닥 ')+(Number(k[1])+1)+': '+(cur?ITEM[cur]?ITEM[cur].name:cur:'비어 있음'),()=>{if(view.sel)place(k);else if(cur){delete m.room.slots[k];X.save();render()}},'mh-slot'+(cur?' full':'')))}main.append(slots,E('p','mh-muted','물건이 놓인 자리를 그냥 누르면 물건을 치워요.'));
+  const slots=E('div','mh-slots');for(const k of Object.keys(SLOTS)){const cur=m.room.slots[k];slots.append(B((k[0]==='W'?'벽 ':'바닥 ')+(Number(k[1])+1)+': '+(cur?ITEM[cur]?ITEM[cur].name:cur:'비어 있음'),()=>{if(view.sel)place(k);else if(cur){delete m.room.slots[k];save();render()}},'mh-slot'+(cur?' full':'')))}main.append(slots,E('p','mh-muted','물건이 놓인 자리를 그냥 누르면 물건을 치워요.'));
   const mine=E('div','mh-own');mine.append(E('b','','내 물건'));for(const id of m.items){const it=ITEM[id];if(!it||!['floor','wall'].includes(it.slot))continue;mine.append(B(it.name,()=>{view.sel=view.sel===id?null:id;render()},'mh-chip'+(view.sel===id?' on':'')))}main.append(mine);
   const deco=E('div','mh-own');deco.append(E('b','','벽지 · 바닥 · 스킨 · BGM'));for(const id of m.items){const it=ITEM[id];if(!it||!['wallpaper','flooring','skin','bgm'].includes(it.slot))continue;const on=(it.slot==='wallpaper'&&m.room.wall===id.slice(3))||(it.slot==='flooring'&&m.room.floor===id.slice(3))||(it.slot==='skin'&&m.skin===id.slice(3))||(it.slot==='bgm'&&m.bgm===id);deco.append(B(it.name+(on?' ✓':''),()=>apply(it),'mh-chip'+(on?' on':'')))}
-  if(m.skin!=='sky')deco.append(B('기본 스킨으로',()=>{m.skin='sky';X.save();render()},'mh-chip'));main.append(deco)}
- function apply(it){const m=S();if(it.slot==='wallpaper')m.room.wall=it.id.slice(3);else if(it.slot==='flooring')m.room.floor=it.id.slice(3);else if(it.slot==='skin')m.skin=it.id.slice(3);else if(it.slot==='bgm')m.bgm=m.bgm===it.id?'':it.id;X.save();render()}
+  if(m.skin!=='sky')deco.append(B('기본 스킨으로',()=>{m.skin='sky';save();render()},'mh-chip'));main.append(deco)}
+ function apply(it){const m=S();if(it.slot==='wallpaper')m.room.wall=it.id.slice(3);else if(it.slot==='flooring')m.room.floor=it.id.slice(3);else if(it.slot==='skin')m.skin=it.id.slice(3);else if(it.slot==='bgm')m.bgm=m.bgm===it.id?'':it.id;save();render()}
  function buy(it){const m=S();if(m.items.includes(it.id))return false;if(m.dotori<it.price){toast('선물가게','도토리가 '+(it.price-m.dotori)+'개 모자라요.');return false}m.dotori-=it.price;m.items.push(it.id);X.save();toast('선물가게','‘'+it.name+'’을(를) 샀어요! (남은 도토리 '+m.dotori+'개)');if(['wallpaper','flooring','skin','bgm'].includes(it.slot))apply(it);else render();return true}
  function shopTab(main,m){main.append(E('h3','mh-h','선물가게'));main.append(E('p','mh-muted','도토리로 미니룸 물건, 벽지, 스킨, 배경음악을 살 수 있어요. 산 물건은 ‘미니룸’에서 놓아 보세요.'));
   for(const [slot,label] of [['floor','가구 · 소품'],['wall','벽 장식'],['wallpaper','벽지'],['flooring','바닥'],['skin','미니홈피 스킨'],['bgm','배경음악']]){const box=E('section','mh-box mh-shop');box.append(E('h4','',label));for(const it of SHOP.filter(x=>x.slot===slot)){const own=m.items.includes(it.id);const row=E('div','mh-item');if(['floor','wall'].includes(slot)){const cv=E('canvas','mh-thumb');cv.width=70;cv.height=60;const g=cv.getContext&&cv.getContext('2d');if(g)try{rect(g,0,0,70,60,slot==='wall'?'#cfe8ff':'#f4ead8');drawItem(g,it.id,35,slot==='wall'?30:56)}catch(_){}row.append(cv)}
    row.append(E('b','',it.name),E('span','mh-price','도토리 '+it.price+'개'),own?E('em','','보유 중'):B('사기',()=>buy(it),'mh-btn small'));box.append(row)}main.append(box)}}
  const api={ids:['minihome'],has:id=>id==='minihome',open,go,state:()=>({...S(),view:{...view}}),
   buy:id=>ITEM[id]?buy(ITEM[id]):false,
-  reset(){view.who='me';view.tab='home';view.sel=null;seen.clear()},destroy(){alive=false;for(const t of timers)w.clearTimeout(t);timers.clear()}};
+  reset(){view.who='me';view.tab='home';view.sel=null;seen.clear();seenReal.clear();phAsked.clear()},destroy(){alive=false;for(const t of timers)w.clearTimeout(t);timers.clear();if(MN.active===onMini){MN.active=null;MN.src=null}},
+  live:{list:()=>MN.list.map(r=>({...r})),me:()=>MN.me,home:hid=>MN.homes[hid]||null,guest:hid=>MN.gb[hid]||null,receive:mReceive,publish:()=>publish(true),uid:()=>myUid(),payload:()=>pubPayload(S()),photos:()=>photoJobs(S(),X.shell&&X.shell.pics?X.shell.pics():[])}};
+ MN.src=()=>({m:S(),pics:X.shell&&X.shell.pics?X.shell.pics():[]});MN.active=onMini;mEnsure();if(mready())publish(true);
  return api}
-w.MiniHome={attach,FRIENDS,SHOP,SLOTS,MOODS,drawItem,drawRoom,scene,chibi,version:'A95'};
+w.MiniHome={attach,FRIENDS,SHOP,SLOTS,MOODS,drawItem,drawRoom,scene,chibi,live:MN,pubPayload,photoJobs,version:'A97'};
 })(window);

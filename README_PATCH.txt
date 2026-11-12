@@ -1,25 +1,29 @@
-2006 A96 패치 · 버디버디로 같은 방 친구와 진짜 대화, 폰 화면 다듬기
-버전 0.96.0 · 2026-11-09 22:03 (한국시간)
-기준: 이미 적용한 A95 패치 위에 덮어씌우는 패치입니다. (A86부터 A95까지 순서대로 적용한 소스가 기준입니다.)
+2006_A97 덮어쓰기 패치 (버전 0.97.0, 2026-11-12 19:08 한국시간)
 
-적용 방법
-1. 압축을 풀어 나온 파일을 소스 폴더(index.html이 있는 곳)에 그대로 덮어씌우세요.
-2. 서버 파일(server.js)이 바뀌었습니다. 켜 둔 서버가 있으면 껐다가 node server.js 로 다시 켜세요. 운영 서버(Render)에서 친구들과 쓰려면 거기에도 새 server.js가 올라가야 합니다.
-3. 브라우저에서 예전 화면이 보이면 Ctrl+F5로 새로 고침하세요. 폰은 새로 고침을 한 번 해 주세요.
+이 압축 파일에는 A96에서 바뀌거나 새로 생긴 파일 20개만 들어 있습니다.
+A96 게임 폴더(2006_A85 폴더) 맨 위에 그대로 풀어서 덮어쓰면 A97이 됩니다.
 
-무엇을 보면 되나
-- 친구와 같은 ‘함께 걷기’ 방에 들어간 뒤 둘 다 PC방 컴퓨터를 켜고 버디버디를 여세요. 맨 위 ‘같은 방 친구’에 친구 이름이 뜹니다. 이름을 누르면 대화, 흔들기가 됩니다.
-- ‘우리 방 전체 대화’는 동네 채팅과 같아서 PC를 안 켠 친구도 보고, 말풍선도 뜹니다.
-- 폰: 동네 화면 아래 ‘가방’ 단추, 음식을 들면 ‘먹기’ 단추. PC방 컴퓨터에서는 창이 화면에 꽉 차고 손가락으로 스크롤됩니다.
+[꼭 할 일]
+- 서버 파일이 바뀌었습니다(server.js 고침, server_minihome.js 새로 생김).
+  켜 둔 서버(node server.js)를 껐다가 다시 켜야 미니홈피 실시간 연동이 됩니다.
+- 운영 서버(Render)에서 친구들과 같이 하려면 이 두 서버 파일이 함께 올라가야 합니다.
+  저는 운영 서버에 올리지 않았습니다.
+- 브라우저는 새로 고침 한 번이면 됩니다(바뀐 파일마다 새 버전 표시를 달아 두었습니다).
 
-바뀐 파일 (10개)
-- 새 파일: tests/test_buddy_mobile_a96.cjs, RELEASE_A96.md
-- 고친 파일: server.js, src/xp-messenger.js, index.html, assets/pc-desktop/pc-fun.css, tests/test_pc_fun_a95.cjs, package.json, README.md, tools/source-files.json
+[제가 정해 둔 것] (앞서 여쭤본 두 가지는 제가 권한 대로 정했습니다)
+- 미니홈피 사진: 사진첩 최근 세 장을 작게 줄여서(가로세로 160칸 안쪽) 올립니다.
+- 기록 보관: 우리동네 아지트처럼 서버 메모리에만 두고, 방에 아무도 없게 된 뒤 6시간이 지나면
+  (또는 서버를 다시 켜면) 지워집니다. 내 브라우저에 있는 미니홈피 원래 내용은 그대로 남아서
+  방에 다시 들어가면 다시 올라갑니다.
 
-참고
-- 월드맵, 캐릭터, 이동키, 오락기 입력, 배경음악은 건드리지 않았습니다. 기존 멀티플레이(움직임, 동네 채팅, 아지트, 놀이터)는 그대로이고, 서버에는 버디버디 말 전달만 더했습니다. 서버는 대화를 저장하지 않습니다.
-- 운영 서버(깃허브, Render)에는 올리지 않았습니다.
-- 자세한 내용은 RELEASE_A96.md를 보세요.
+[새 파일 7개]
+server_minihome.js, src/web-town.js, src/kids-extra.js, assets/pc-desktop/web-town.css,
+tests/test_minihome_a97.cjs, tests/test_web_town_a97.cjs, RELEASE_A97.md
 
-되돌리는 방법
-- A95 패치를 다시 덮어씌우고 서버를 다시 켜세요.
+[고친 파일 13개]
+server.js, src/xp-minihome.js, src/portal-boards.js, src/kids-data.js, src/kids-more.js,
+assets/pc-desktop/pc-fun.css, index.html, tests/test_pc_fun_a95.cjs, tests/test_buddy_mobile_a96.cjs,
+package.json, README.md, tools/runtime-files.json, tools/source-files.json
+
+그림 파일과 소리 파일은 새로 넣거나 고치지 않았습니다.
+자세한 내용은 RELEASE_A97.md를 보세요.

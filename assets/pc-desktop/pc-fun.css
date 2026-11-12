@@ -66,6 +66,18 @@
 .mh-dotori{display:flex;align-items:center;gap:8px;margin-top:6px;padding:4px 10px;background:#fff8e0;border:1px solid #e8c870;border-radius:12px;width:max-content;max-width:100%}.mh-dotori b{color:#8a5a00}
 .mh-profile .mh-field{display:flex;gap:8px;align-items:flex-start;margin:0 0 6px}.mh-field b{width:62px;flex:none;color:#36c;padding-top:3px}.mh-field input,.mh-field textarea,.mh-field select{flex:1;padding:4px;border:1px solid #9ab;font:12px Dotum,Gulim,sans-serif}.mh-field textarea{min-height:52px}
 .mh-ask input{width:100%;padding:4px;margin-top:6px;border:1px solid #9ab}
+/* A97 (2026-11-12 KST): 같은 방 친구 미니홈피 (실시간) */
+.mh-live{border-color:#f5b7cf;background:#fff8fb}.mh-live h4{color:#e0287a}
+.mh-live-row{display:grid;grid-template-columns:minmax(64px,auto) minmax(0,1fr);gap:1px 8px;width:100%;margin:3px 0;padding:5px 8px;border:1px solid #e7c6d6;border-radius:6px;background:#fff;text-align:left;font:12px Dotum,Gulim,sans-serif;color:#333;cursor:pointer}
+.mh-live-row b{color:#36c}.mh-live-row span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#445}.mh-live-row small{grid-column:1/-1;color:#99a}.mh-live-row.on small{color:#2a9a3a}.mh-live-row:hover{background:#fff3c8}
+.mh-asks{margin:2px 0 6px;padding:6px 8px;border:1px dashed #f07ab0;border-radius:6px;background:#fff0f6}.mh-asks>b{color:#e0287a}.mh-ask-row{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin:4px 0}.mh-ask-row span{flex:1;min-width:120px}
+.mh-say.live b{color:#e0287a}.mh-ago{color:#aab;font-size:10px}
+.mh-gb.live{border-color:#f0c8da}.mh-gb.live.mine{background:#fff7fb}.mh-gb-tools{display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-top:4px}.mh-rform{flex:1;min-width:160px}.mh-rform input{min-width:90px}
+.mh-pager{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;margin:6px 0}
+.mh-livebadge{flex:none;padding:2px 8px;border-radius:10px;background:#ff4f9a;color:#fff;font:bold 11px Dotum,Gulim,sans-serif;font-style:normal}
+.mh-loading{margin:40px 0 14px;text-align:center;color:#245;font-weight:bold}
+.mh-cut{color:#a33}
+.mh-left-live{display:flex;flex-wrap:wrap;gap:3px;padding:6px;border:1px dashed #f0a8c8;border-radius:6px;background:#fff8fb}.mh-left-live>b{width:100%;color:#e0287a;font-size:11px}.mh-live-chip{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.mh-live-chip.on{color:#1a7a2a;border-color:#8cc89a}.mh-ask-chip{width:100%;background:#ffe3ef;border-color:#f07ab0;color:#c0186a;font-weight:bold}
 @media (max-width:720px){.mh-book{grid-template-columns:1fr}.mh-left{margin:0 0 8px}.mh-tabs{flex-direction:row;flex-wrap:wrap;padding:6px 0 0}.mh-tab{border-left:1px solid #6a96c8;border-radius:6px}.mh-main{max-height:none}}
 /* ---- 메일함 ---- */
 .ml-root{font:12px Dotum,Gulim,sans-serif;color:#222;background:#fff;border:1px solid #c8d0dc}
@@ -97,6 +109,7 @@
  .xp79-task{min-height:30px;max-width:42vw}
  .xp79-shortcut{min-height:64px}
  .mh-main{max-height:none}.mh-book{min-height:0}
+ .mh-top{flex-wrap:wrap;gap:6px}.mh-title{min-width:60%}.mh-live-row{padding:8px}.mh-ask-row .mh-btn,.mh-gb-tools .mh-btn{min-height:30px}
  .pg-head{padding:8px 10px}.pg-title strong{font-size:16px}.pg-body{padding:8px}.pg-start{min-width:0;width:90%}
  .pg-rooms{grid-template-columns:24px minmax(0,1fr) 46px;font-size:11px}.pg-rooms>:nth-child(5n+3),.pg-rooms>:nth-child(5n+4){display:none}
  .pg-pad .pg-btn{min-width:60px;min-height:44px;font-size:18px}

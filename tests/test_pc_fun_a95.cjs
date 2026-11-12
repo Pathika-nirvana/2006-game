@@ -239,7 +239,7 @@ api.destroy();log('kids ok');
  for(const f of ['pc-games','xp-minihome','pc-mail','web-fun','kids-more']){const body=read(f).replace(/\/\*[\s\S]*?\*\//g,'');for(const b of [...BAD,'인생샷','집사','덕질','최애','혼밥'])assert.ok(!body.includes(b),'시대에 안 맞는 말 '+b+' in '+f);assert.ok(!/ordersWin|사장님 호출|음식 주문|order-row|PCCounter/.test(body),'음식 주문 코드 없음 '+f);assert.ok(!body.includes(String.fromCharCode(0x2014)),'줄표 '+f)}
  for(const f of ['assets/pc-desktop/pc-fun.css','assets/pc-desktop/web-fun.css'])assert.ok(!fs.readFileSync(path.join(__dirname,'..',f),'utf8').includes(String.fromCharCode(0x2014)),'줄표 '+f);
  const P=w.WebSites.pairStrokes;assert.equal(P('김철수','이영희').pc,57,'획수 궁합 계산');assert.equal(P('ab','가'),null);
- const html=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8');for(const f of ['pc-games','xp-minihome','pc-mail','web-fun','kids-more'])assert.ok(html.includes('src/'+f+'.js?v=A95'),'index '+f);assert.ok(/pc-fun\.css\?v=A9[5-9]/.test(html)&&html.includes('web-fun.css?v=A95'));
+ const html=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8');for(const f of ['pc-games','xp-minihome','pc-mail','web-fun','kids-more'])assert.ok(new RegExp('src/'+f+'\\.js\\?v=A9[5-9]').test(html),'index '+f);assert.ok(/pc-fun\.css\?v=A9[5-9]/.test(html)&&/web-fun\.css\?v=A9[5-9]/.test(html)); /* A97: 고친 파일은 새 버전 표시를 단다 */
  assert.ok(!html.includes('src/pc-counter.js'),'음식 주문 파일 없음');
  assert.ok(html.indexOf('src/web-sites.js')<html.indexOf('src/web-fun.js')&&html.indexOf('src/kids-portal.js')<html.indexOf('src/kids-more.js'),'읽는 순서');}
 console.log('A95 PC fun tests passed');process.exit(0);

@@ -71,7 +71,7 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
  const html=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8');
  assert.ok(/<button data-key="KeyF" class="t-eat" hidden>먹기<\/button><button data-key="KeyI" class="t-bag">가방<\/button>/.test(html),'먹기, 가방 단추');
  assert.ok(html.includes("eat.hidden=!on")&&html.includes('window.SHOPS&&window.SHOPS.held'),'음식을 들 때만 먹기 단추');
- assert.ok(html.includes('src/xp-messenger.js?v=A96')&&html.includes('pc-fun.css?v=A96'),'캐시 번호');
+ assert.ok(/src\/xp-messenger\.js\?v=A9[6-9]/.test(html)&&/pc-fun\.css\?v=A9[6-9]/.test(html),'캐시 번호'); /* A97: 고친 파일은 새 버전 표시를 단다 */
  const css=fs.readFileSync(path.join(__dirname,'../assets/pc-desktop/pc-fun.css'),'utf8');assert.ok(/@media \(max-width:760px\),\(max-height:520px\)\{[\s\S]*\.xp79-window-content\{overflow:auto!important/.test(css),'폰에서 창 안 스크롤');
  {const sv=fs.readFileSync(path.join(__dirname,'../server.js'),'utf8');const a=sv.indexOf('/* A96'),b=sv.indexOf('function buddyMessage');assert.ok(a>0&&!sv.slice(a,b+2000).includes(String.fromCharCode(0x2014)),'줄표 server')}
  for(const f of ['src/xp-messenger.js','assets/pc-desktop/pc-fun.css'])assert.ok(!fs.readFileSync(path.join(__dirname,'..',f),'utf8').includes(String.fromCharCode(0x2014)),'줄표 '+f);
