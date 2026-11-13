@@ -51,6 +51,12 @@ assert.equal(api.state.windowCount>=4,true,'귀신 창이 세 개 뜸');assert.o
 WG.stop();
 /* 5. 놀라게 하지 않는 쪽 */
 api.navigate({type:'home',portal:'w-cute'});assert.equal(WG.active(),null,'귀여운 사진 첫 화면에서는 안 뜸');
+for(const [i,name] of ['baby','yawn','ribbon'].entries()){
+ api.navigate({type:'home',portal:'w-cute',id:String(i)});
+ const im=find(n=>n.tagName==='IMG'&&n.classList.contains('ct-photo'));
+ assert.equal(im.src,'assets/pc-desktop/minihome/cute-'+name+'.webp');
+ assert.equal(fs.readFileSync(path.join(__dirname,'..',im.src)).toString('ascii',8,12),'WEBP');
+}
 /* 6. 글 남기기는 저장되고 길이가 제한됨 */
 api.navigate({type:'guestbook',portal:'w-hompy'});{const f=find(n=>n.tagName==='FORM'&&n.classList.contains('ws-form'));const [nick,txt]=f.children;nick.value='손님';txt.value='가'.repeat(300);f.emit('submit');assert.ok(saved().web.gb.hompy[0].length<=100,'방명록 길이 제한');assert.ok(has('['))}
 /* 7. 채팅방 도배는 쫓겨남 */

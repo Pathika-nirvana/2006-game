@@ -8,10 +8,10 @@ const ROOT=path.join(__dirname,'..'),read=f=>fs.readFileSync(path.join(ROOT,f),'
 
 /* 1. 파일과 순서 */
 const html=read('index.html');
-const at=f=>html.indexOf('<script src="'+f+'?v=A100"></script>');
+const at=f=>html.search(new RegExp('<script src="'+f+'[?]v=A10[01]"></script>'));
 assert.ok(at('src/anycall-lcd.js')>0&&at('src/anycall-nate.js')>at('src/anycall-lcd.js')&&at('src/anycall-phone.js')>at('src/anycall-nate.js'),'읽는 순서: 액정 → NATE → 몸체');
 assert.ok(html.includes('assets/phone/anycall-phone.css?v=A100'));
-for(const f of ['src/anycall-nate.js','src/anycall-lcd.js','src/anycall-phone.js','assets/phone/anycall-phone.css','server_phone.js']){const s=read(f);assert.ok(s.includes('A100')&&s.includes('2026-11-13'),'버전과 날짜 '+f);assert.ok(!s.includes(String.fromCharCode(0x2014)),'긴 줄표 없음 '+f)}
+for(const f of ['src/anycall-nate.js','src/anycall-lcd.js','src/anycall-phone.js','assets/phone/anycall-phone.css','server_phone.js']){const s=read(f);assert.ok(/A10[01]/.test(s)&&s.includes('2026-11-13'),'버전과 날짜 '+f);assert.ok(!s.includes(String.fromCharCode(0x2014)),'긴 줄표 없음 '+f)}
 assert.ok(/send:\(kind,o\)=>/.test(read('src/xp-minihome.js')),'미니홈피 보내기 내보냄');
 const SP=require(path.join(ROOT,'server_phone.js'));
 {const a={id:'a',name:'철수'},b={id:'b',name:'영희'};const r=SP.relay(b,{op:'tone',to:'a',call:'c9',ring:'r3<x>'},[a,b],1e6);assert.equal(r[0][1].ring,'r3 x');assert.equal(r[0][1].call,'c9')}
@@ -53,7 +53,7 @@ for(const f of ['src/web-town.js']){const WT=read(f);vm.runInContext(WT.match(/f
 vm.runInContext(read('src/portal-news.js'),w);vm.runInContext(read('src/portal-comics.js'),w);
 vm.runInContext(read('src/anycall-lcd.js'),w);vm.runInContext(read('src/anycall-nate.js'),w);vm.runInContext(read('src/anycall-phone.js'),w);
 const A=w.AnycallPhone,T=A._test,LC=w.AnycallLCD,L=()=>A.lcd,NB=()=>L().nate,BS=()=>NB().state;let now=1000;T.setClock(()=>now);
-assert.equal(A.version,'A100');assert.equal(LC.version,'A100');assert.equal(w.AnycallNate.version,'A100');
+assert.equal(A.version,'A101');assert.equal(LC.version,'A101');assert.equal(w.AnycallNate.version,'A100');
 const net$=m=>{for(const f of subs)f(m)};const flush=()=>{for(const t of timers.splice(0))t.f()};
 const press=(...ks)=>{for(const k of ks){A.press(k);now+=30;T.step(now)}};
 const run=ms=>{const end=now+ms;while(now<end){now+=50;T.step(now)}};
@@ -125,4 +125,20 @@ const anchors=[];const mk=doc.createElement;doc.createElement=t=>{const n=mk(t);
 press('menu','4');press('3','3');assert.equal(L().state.cam.z,2);press('right','right','down');assert.ok(L().state.cam.px>0&&L().state.cam.py>0,'조준 옮김');press('0');assert.equal(L().state.cam.px,0);press('ok');
 press('menu','menu','3');assert.ok(anchors.some(a=>/^anycall_photo_20060530_\d{4}_\d+\.jpg$/.test(a.download)&&String(a.href).startsWith('data:image/jpeg')),'파일로 내려받기');assert.ok(L().state.pop.text.includes('내 컴퓨터에 저장'));
 doc.createElement=mk;
-console.log('PASS test_anycall_a100');
+/* A101: short press, canceled hold, and an uninterrupted power cycle. */
+const end=T.front.find(b=>b.id==='end'),stage=A.geometry.stage,cv=T.canvas;
+const event={clientX:(end.cx-stage.x)*A.state.cssW/stage.w,clientY:(end.cy-stage.y)*A.state.cssH/stage.h};
+press('end','5');assert.equal(L().dial,'5');
+cv.emit('pointerdown',event);run(200);assert.equal(L().dial,'5');cv.emit('pointerup',event);
+assert.equal(L().dial,'');assert.equal(A.state.power,'on');
+cv.emit('pointerdown',event);cv.emit('pointercancel',event);run(1000);assert.equal(A.state.power,'on');
+cv.emit('pointerdown',event);run(850);assert.equal(A.state.power,'stopping');
+run(1100);assert.equal(A.state.power,'off');assert.equal(A.press('5'),false);
+assert.equal(JSON.parse(memory.get('2006_anycall_ui_v1')).powerOn,false);
+cv.emit('pointerup',event);assert.equal(A.state.power,'off');
+net$({type:'phone',op:'ring',from:'p2',call:'off-ring'});
+assert.equal(lastSent('decline').call,'off-ring');assert.equal(L().state.call,null);
+cv.emit('pointerdown',event);run(850);assert.equal(A.state.power,'booting');
+cv.emit('pointerup',event);run(1500);assert.equal(A.state.power,'on');assert.equal(L().screen,'idle');
+assert.equal(JSON.parse(memory.get('2006_anycall_ui_v1')).powerOn,true);
+console.log('PASS test_anycall_a100 and A101 power cycle');

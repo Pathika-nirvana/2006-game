@@ -1,4 +1,4 @@
-/* A100 애니콜 액정 화면 (버전 A100 · 2026-11-13 KST)
+/* A101 애니콜 액정 화면 (버전 A101 · 2026-11-13 KST)
    A100: NATE를 2006년 무선 인터넷처럼 따로 만든 브라우저(src/anycall-nate.js)로 바꿈. 카메라 조준과 파일 저장, 메뉴 색 테마,
          배경 화면 받기, 숫자 바로가기(번호를 누르고 NATE), 컬러링(친구가 나에게 걸 때 연결음 대신 노래).
    휴대폰 몸체(src/anycall-phone.js)와 떨어져 있는 화면 내용. 가로 150 × 세로 184 칸을 기준으로 그린다.
@@ -258,7 +258,9 @@ function create(host){
   S.call=c;S.dial='';S.stack=[];S.scr='call';S.sel=0;S.ed=null;afterNav();dirty()}
  function endCall(msg){const c=S.call;if(!c||c.phase==='ended')return;stopTune();if(c.talk0)charge('sec',Math.round((now()-c.talk0)/1000));c.phase='ended';c.endAt=now()+1400;c.endMsg=msg||'통화 종료';S.ed=null;afterNav();dirty()}
  function hang(msg){const c=S.call;if(!c)return;if(c.real&&c.phase!=='ended')NET.send('hang',{to:c.who.peer,call:c.cid});endCall(msg)}
- function incoming(m){const who={n:m.name||'친구',num:fakeNum(m.from),peer:m.from,friend:true};
+ function incoming(m){
+  if(host.powered===false){NET.send('decline',{to:m.from,call:m.call});return}
+  const who={n:m.name||'친구',num:fakeNum(m.from),peer:m.from,friend:true};
   if(S.call&&S.call.phase!=='ended'){NET.send('busy',{to:m.from,call:m.call});D.calls.unshift({t:'miss',n:who.n,num:who.num,time:nowStr(),peer:m.from});save();return}
   if(D.coloring&&allRings().some(r=>r[0]===D.coloring))NET.send('tone',{to:m.from,call:m.call,ring:D.coloring});
   S.call={who,cid:m.call,real:true,incoming:true,phase:'ring',t0:now(),lines:[],talk0:0};S.dial='';S.stack=[];S.scr='call';S.sel=0;S.ed=null;afterNav();
@@ -274,6 +276,7 @@ function create(host){
   const rules=(w.WebTown?.CONTACTS||[]).find(c=>c[0]===to.id);let reply=null;if(rules)reply=(rules[2].find(([re])=>re.test(text))||[null,rules[3]])[1];else if(OWN_REPLY[to.id])reply=OWN_REPLY[to.id];
   if(reply&&to.id!=='home')later(()=>receive({from:to.n,fromId:to.id,text:reply}),2600+Math.round(Math.random()*1800));return 'local'}
  function receive(m){D.inbox.unshift({id:'r'+(++D.n),from:m.from,fromId:m.fromId||null,fromPeer:m.fromPeer||null,text:m.text,photo:m.photo||null,time:nowStr(),read:false});D.inbox=D.inbox.slice(0,30);save();syncLabel();
+  if(host.powered===false)return;
   notifyAlert('sms',(m.photo?'포토 메일 · ':'문자 · ')+m.from);if(host.shown&&!S.call)pop((m.photo?'포토 메일 왔숑~\n':'문자 왔숑~\n')+m.from,2200);dirty()}
  function contactOf(m){if(m.fromPeer){const f=friends().find(x=>x.peer===m.fromPeer);return f||null}return BOOK.find(b=>b.id===m.fromId)||null}
 
@@ -650,7 +653,14 @@ function create(host){
  function needs(t){let n=S.dirty;if(S.pop&&t>=S.pop.until){S.pop=null;n=true}if(S.scr==='idle'&&Math.floor(t/600)!==S.blink)n=true;if(host.hintActive(t)!==S.hinted){S.hinted=host.hintActive(t);n=true}
   if(S.ed&&Math.floor(t/500)!==S.edBlink){S.edBlink=Math.floor(t/500);n=true}
   const sc=cur();if(sc?.needs&&sc.needs.call(sc,t,api))n=true;if(S.call&&S.scr!=='call'&&SCR.call.needs.call(SCR.call,t,api))n=true;return n}
- function event(type,v){if(type==='slide'&&!v&&S.scr==='idle'&&S.dial)S.dial='';if(type==='hide'&&!S.call)stopTune();if(type==='show')syncLabel();dirty()}
+ function event(type,v){
+  if(type==='poweroff'){
+   if(S.call?.phase==='ring')decline(true);else if(S.call)hang();
+   S.call=null;S.dial='';S.pop=null;S.ack=null;
+   if(S.scr==='nate'&&NB)NB.exit(true);
+   home();S.pop=null;
+  }
+  if(type==='slide'&&!v&&S.scr==='idle'&&S.dial)S.dial='';if(type==='hide'&&!S.call)stopTune();if(type==='show')syncLabel();dirty()}
  function ownsSound(id){const sc=cur();return!!(sc?.ownsSound&&sc.ownsSound(id))}
  /* ---------- NATE 브라우저(src/anycall-nate.js)에 주는 도구 ---------- */
  const kit={W,H,TOP,BOT,TITLE,R,T,grad,rr,circ,fit,wrap,fnt,clamp,ICON,host,D,now,save,charge,has,rings,allRings,ringById,playRing,stopTune,pop,ask,nowStr,
@@ -665,5 +675,5 @@ function create(host){
  syncLabel();
  return api}
 
-w.AnycallLCD={version:'A100',THEMES,W,H,create,registerApp,apps:APPS,book:BOOK,phrases:PHRASES,Editor,composeJamo,fakeNum,placeOf};
+w.AnycallLCD={version:'A101',THEMES,W,H,create,registerApp,apps:APPS,book:BOOK,phrases:PHRASES,Editor,composeJamo,fakeNum,placeOf};
 })(window);

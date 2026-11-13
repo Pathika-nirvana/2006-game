@@ -132,7 +132,8 @@ const J=x=>JSON.stringify(x);
  const ME='aaaaaaaaaaaa',YH='bbbbbbbbbbbb';
  emit({type:'mini',op:'me',hid:ME,n:'철수',today:3,total:2009,real:0,v:1,gbn:0,ph:['','',''],asks:[],ilchon:[],says:[]});
  emit({type:'mini',op:'list',list:[{hid:ME,n:'철수',title:'',mood:'행복',today:3,total:2009,on:true,pc:true,id:'me1',v:1,np:0},{hid:YH,n:'영희',title:'<img src=x onerror=alert(1)> 영희 방',mood:'신남',today:7,total:2013,on:true,pc:true,id:'p2',v:3,np:1}]});
- M.open();assert.ok(mh().textContent.includes('우리 방 친구 미니홈피'),'같은 방 친구 칸');
+ M.open();
+ assert.ok(mh().textContent.includes('우리 방 친구 미니홈피'),'같은 방 친구 칸');
  {const left=cls('mh-left-live')[0];assert.ok(left&&left.textContent.includes('같은 방 친구 1명')&&left.textContent.includes('● 영희'),'왼쪽 목록: 들어오자마자 보이는 같은 방 친구')}
  const row=cls('mh-live-row')[0];assert.ok(row&&row.textContent.includes('영희')&&row.textContent.includes('PC방에서 접속 중')&&row.textContent.includes('TODAY 7'),'친구 줄: '+(row&&row.textContent));
  assert.ok(!cls('mh-live-row').some(r=>r.textContent.includes('철수')),'나는 목록에 없다');
@@ -188,6 +189,25 @@ const J=x=>JSON.stringify(x);
  /* 방에서 나오면 실시간 칸은 안내로 바뀌고 친구 홈은 닫힌다 */
  ready=false;emit({type:'network_close'});btn('홈').click();assert.ok(mh().textContent.includes('함께 걷기 방에 들어가면'),'방 밖 안내');
  out.length=0;M.go('r:'+YH,'home');await sleep(20);assert.equal(sent('get').length,0,'방 밖에서는 보내지 않는다');assert.ok(!mh().textContent.includes('같은 방 친구 · 실시간'));
+ const verifyArt=(node,file)=>{
+  assert.equal(node.src,'assets/pc-desktop/minihome/'+file+'.webp');
+  const bytes=fs.readFileSync(path.join(__dirname,'..',node.src));
+  assert.equal(bytes.toString('ascii',8,12),'WEBP');
+ };
+ const npcAlbums={sujin:['selca','food','stage'],minho:['pc','trophy'],haneul:['sky','cake'],
+  dalli:['ball','track'],junho:['book'],taehyun:['army','food'],jieun:['flower','cat','sky'],
+  nabi:['cat'],boss:['pc','ramen'],grandma:['garden']};
+ for(const [id,album] of Object.entries(npcAlbums)){
+  M.go(id,'home');verifyArt(cls('mh-npc-room')[0],id+'-room');
+  if(id==='sujin'||id==='nabi')verifyArt(cls('mh-npc-cover')[0],id+'-'+album[0]);
+  M.go(id,'photo');const photos=cls('mh-npc-photo');
+  assert.equal(photos.length,album.length);
+  photos.forEach((im,i)=>verifyArt(im,id+'-'+album[i]));
+ }
+ M.go('me','shop');
+ assert.equal(cls('mh-thumb').length,32);
+ for(const im of cls('mh-thumb'))verifyArt(im,im.src.split('/').at(-1).replace('.webp',''));
+ M.go('me','home');
  api.destroy();
  /* 15. 시대, 글쓰기 규칙 */
  for(const f of ['server_minihome.js','src/xp-minihome.js']){const body=fs.readFileSync(path.join(__dirname,'..',f),'utf8');assert.ok(!body.includes(String.fromCharCode(0x2014)),'줄표 '+f);for(const b of ['카톡','스마트폰','인스타','페이스북','유튜브'])assert.ok(!body.includes(b),b+' '+f)}

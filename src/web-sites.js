@@ -358,15 +358,19 @@ PAGE.links=function(page,env){
  const tips=E('section','lk-box');tips.append(E('h3','','이용 안내'));for(const t of d.tips)tips.append(E('p','',t));body.append(tips)};
 /* ============ 10. 귀여운 동물 사진방 ============ */
 PAGE.cute=function(page,env){
- const {E,B,go,r}=env,d=D().cute,G=w.WebGhost;
+ const {E,B,go,r}=env,d=D().cute;
  const head=E('header','ct-head');head.append(B('귀여운 동물 사진방',()=>go({type:'home'}),'ct-logo'),E('span','','보기만 해도 기분이 좋아지는 곳 ♡'));page.append(head);
  let i=Math.max(0,Math.min(3,parseInt(r.id,10)||0));
- const cv=E('canvas','ct-photo');cv.width=360;cv.height=260;const g=cv.getContext?cv.getContext('2d'):null;if(g&&G&&i<3){try{G.kitten(g,360,260,i)}catch(_){}}
+ const cv=E(i<3?'img':'canvas','ct-photo');cv.width=360;
+ if(i<3){
+  const file=['baby','yawn','ribbon'][i];cv.src='assets/pc-desktop/minihome/cute-'+file+'.webp';cv.alt=d.slides[i];
+ }else{
+  cv.height=260;const g=cv.getContext?.('2d');if(g){g.fillStyle='#fdf2f6';g.fillRect(0,0,360,260)}
+ }
  const cap=E('p','ct-cap',d.slides[i]),no=E('p','ct-no',(i+1)+' / 4');
  page.append(cv,cap,no);
  if(i<3){page.append(B('다음 사진 ▶',()=>go({type:'home',id:String(i+1)}),'ct-next'))}
  else{
-  if(g){g.fillStyle='#fdf2f6';g.fillRect(0,0,360,260)}
   const out=E('p','ct-end','');page.append(out);
   later(()=>{trap(env,{kind:'child',text:'귀엽죠?',after:()=>{out.textContent='...사진이 사라졌습니다. 처음부터 다시 보세요.';page.append(B('처음으로',()=>go({type:'home'}),'ct-next'))}})},500)}};
 /* ---------- 공개 ---------- */

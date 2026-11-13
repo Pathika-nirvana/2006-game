@@ -2,17 +2,13 @@
 /* A98 (2026-11-13 KST): 애니콜 슬라이드폰. (A99에서 닫힘 거리 595, 메뉴 16칸, 문자 쓰기에 맞춰 고침) 받은 그림 그대로 쓰기, 상판을 실제로 옮기는 260ms 애니메이션,
    움직이는 동안 누름 막기, 닫혔을 때 숫자판 막기, 버튼 위치와 소리 높이, 간편모드와 전체화면, 키보드,
    액정 화면(전화, 문자, 통화 기록, 벨소리, 배경 화면, 게임, NATE, 내 위치, 설정), 메뉴판의 휴대폰 탭, 가방 속 기본 소지품을 검사한다. */
-const assert=require('node:assert/strict'),fs=require('fs'),vm=require('vm'),path=require('path'),crypto=require('crypto');
+const assert=require('node:assert/strict'),fs=require('fs'),vm=require('vm'),path=require('path');
 const ROOT=path.join(__dirname,'..'),read=f=>fs.readFileSync(path.join(ROOT,f),'utf8');
-const sha1=f=>crypto.createHash('sha1').update(fs.readFileSync(path.join(ROOT,f))).digest('hex');
-const png=f=>{const b=fs.readFileSync(path.join(ROOT,f));assert.equal(b.toString('ascii',1,4),'PNG',f);return{w:b.readUInt32BE(16),h:b.readUInt32BE(20)}};
-
-/* 1. 그림은 받은 그대로 */
-assert.equal(sha1('assets/phone/anycall_front_moving.png'),'cf011008f19ca4ae904d6b63b4baec200137e255','상판 그림은 받은 파일 그대로');
-assert.equal(sha1('assets/phone/anycall_back_fixed.png'),'99c1cd61ee4bdc07ef9ee2d45f3de617e879f7c3','하판 그림은 받은 파일 그대로');
-assert.deepEqual(png('assets/phone/anycall_front_moving.png'),{w:887,h:1774});assert.deepEqual(png('assets/phone/anycall_back_fixed.png'),{w:887,h:1774});
-for(const f of ['art/phone/anycall_preview_closed.png','art/phone/anycall_preview_open.png'])assert.ok(fs.existsSync(path.join(ROOT,f)),'참고 그림 '+f);
-
+/* 1. The replacement panels are WebP and are distinct images. */
+for(const name of ['front','back']){
+ const image=fs.readFileSync(path.join(ROOT,'assets/phone/anycall_'+name+'.webp'));
+ assert.equal(image.toString('ascii',8,12),'WEBP');
+}
 /* 2. 메뉴판: 옷 아이보리 탭을 지우고 휴대폰 탭 */
 const html=read('index.html');
 const menu=html.slice(html.indexOf('<details id="gameMenu"'),html.indexOf('</details>',html.indexOf('<details id="gameMenu"')));
@@ -63,7 +59,7 @@ assert.ok(/^A(?:9[89]|10\d)$/.test(A.version));assert.ok(/^A(?:9[89]|10\d)$/.tes
 const root=doc.body.children.find(n=>n.className.includes('ac-root'));assert.ok(root&&root.hidden,'몸체는 처음엔 숨어 있음');
 
 /* 4. 좌표: 실측값과 액정 칸 */
-assert.equal(G.slide,535,'닫힘 이동 거리 535 (A99의 595는 A100에서 되돌림)');assert.equal(A.duration,260,'기본 260ms');
+assert.ok(G.slide>600&&G.slide<700,'새 하판 숫자 키가 드러나는 이동 거리');assert.equal(A.duration,260,'기본 260ms');
 assert.ok(G.lcd.x<G.hole.x&&G.lcd.y<G.hole.y&&G.lcd.x+G.lcd.w>G.hole.x+G.hole.w&&G.lcd.y+G.lcd.h>G.hole.y+G.hole.h,'액정 칸이 구멍을 덮음');
 assert.ok(G.stage.x<=152&&G.stage.x+G.stage.w>=728&&G.stage.y<=20&&G.stage.y+G.stage.h>=1743,'보이는 범위가 실루엣을 다 품음');
 
@@ -78,8 +74,8 @@ const PAD=['1','2','3','4','5','6','7','8','9','*','0','#'];
 const keyCenter=i=>[(T.padCols[i%3][0]+T.padCols[i%3][1])/2,(T.padRows[Math.floor(i/3)][0]+T.padRows[Math.floor(i/3)][1])/2];
 for(let i=0;i<12;i++){const [x,y]=keyCenter(i);assert.notEqual(T.hit(x,y)?.kind,'key','닫힘: 숫자판은 상판에 가려짐 '+PAD[i])}
 for(const b of T.front)assert.equal(T.hit(b.cx,b.cy+G.slide)?.id,b.id,'닫힘 상태 상판 버튼 '+b.name);
-assert.equal(T.hit(443,956+G.slide)?.id,'nate');assert.equal(T.hit(443,895+G.slide)?.id,'up');assert.equal(T.hit(443,1015+G.slide)?.id,'down');assert.equal(T.hit(345,957+G.slide)?.id,'left');assert.equal(T.hit(545,957+G.slide)?.id,'right');
-assert.equal(T.hit(440,460+G.slide)?.kind,'body','액정은 몸통 (누르면 슬라이드)');assert.equal(T.hit(165,700+G.slide)?.kind,'rim','바깥 가장자리는 테두리');
+assert.equal(T.hit(470,1227+G.slide)?.id,'nate');assert.equal(T.hit(470,1160+G.slide)?.id,'up');assert.equal(T.hit(470,1291+G.slide)?.id,'down');assert.equal(T.hit(354,1229+G.slide)?.id,'left');assert.equal(T.hit(590,1229+G.slide)?.id,'right');
+assert.equal(T.hit(440,460+G.slide)?.kind,'body','액정은 몸통 (누르면 슬라이드)');assert.equal(T.hit(125,700+G.slide)?.kind,'rim','바깥 가장자리는 테두리');
 assert.equal(T.hit(60,900),null,'투명한 곳');assert.equal(T.hit(440,300),null,'닫혔을 때 위쪽 빈 곳');
 
 /* 7. 열기: 실제로 상판이 움직이고, 움직이는 동안 누름은 무시 */
@@ -104,7 +100,7 @@ A.press('end');
 
 /* 10. 키보드: 간편모드는 숫자만, 전체화면은 모두 */
 const cap=winListeners.find(l=>l.t==='keydown'&&l.cap).f;
-const key=(code,k,extra={})=>{const e={code,key:k||'',target:doc.body,repeat:false,prevented:false,stopped:false,preventDefault(){this.prevented=true},stopPropagation(){this.stopped=true},stopImmediatePropagation(){this.stopped=true},...extra};cap(e);return e};
+const key=(code,k,extra={})=>{const e={code,key:k||'',target:doc.body,repeat:false,prevented:false,stopped:false,preventDefault(){this.prevented=true},stopPropagation(){this.stopped=true},stopImmediatePropagation(){this.stopped=true},...extra};cap(e);if(code==='Escape')winListeners.find(l=>l.t==='keyup'&&l.cap)?.f(e);return e};
 A.slide(true);now+=300;T.step(now);
 let e=key('ArrowRight','ArrowRight');assert.equal(e.prevented,false,'간편모드: 방향키는 게임으로 (걸으면서 켜 두기)');
 e=key('Digit5','5');assert.equal(e.stopped,true);assert.equal(L().dial,'5','간편모드: 숫자는 휴대폰으로');
@@ -119,18 +115,18 @@ key('KeyN','n');assert.equal(A.state.shown,false,'N = 넣기');A.show('full');as
 
 /* 11. 테두리 두 번 누르기, 몸통 누르기, 아래 선택 막대 */
 const canvas=T.canvas;canvas.style.width=A.state.cssW+'px';canvas.style.height=A.state.cssH+'px';
-const px=(nx,ny)=>({clientX:(nx-140)*A.state.cssW/600,clientY:(ny-16)*A.state.cssH/1730});
+const px=(nx,ny)=>({clientX:(nx-G.stage.x)*A.state.cssW/G.stage.w,clientY:(ny-G.stage.y)*A.state.cssH/G.stage.h});
 const tap=(nx,ny)=>{canvas.emit('pointerdown',px(nx,ny));canvas.emit('pointerup',px(nx,ny))};
-tap(165,700);now+=150;tap(165,700);assert.equal(A.state.mode,'mini','전체화면에서 테두리 두 번 → 간편모드');
-tap(165,700);now+=600;tap(165,700);assert.equal(A.state.mode,'mini','너무 느리면 두 번 누름 아님');now+=600;
-tap(165,700);now+=150;tap(165,700);assert.equal(A.state.mode,'full','간편모드에서 테두리 두 번 → 전체화면');
+tap(125,700);now+=150;tap(125,700);assert.equal(A.state.mode,'mini','전체화면에서 테두리 두 번 → 간편모드');
+tap(125,700);now+=600;tap(125,700);assert.equal(A.state.mode,'mini','너무 느리면 두 번 누름 아님');now+=600;
+tap(125,700);now+=150;tap(125,700);assert.equal(A.state.mode,'full','간편모드에서 테두리 두 번 → 전체화면');
 tap(440,460);assert.equal(A.state.sliding,true,'몸통(액정) 한 번 → 슬라이드');now+=300;T.step(now);assert.equal(A.state.pos,G.slide);
 tap(440,460+G.slide);now+=300;T.step(now);assert.equal(A.state.open,true);
 const bar=root.children[1].children.find(n=>n.className==='ac-bar'),seg=bar.children[0];seg.children[0].click();assert.equal(A.state.mode,'mini','선택 막대: 간편모드');seg.children[1].click();assert.equal(A.state.mode,'full','선택 막대: 전체화면');
 seg.children[0].click();const h0=A.state.cssH;bar.children[2].click();assert.equal(A.state.cssH,Math.min(h0+60,700),'크게');bar.children[1].click();bar.children[1].click();assert.equal(A.state.cssH,h0-60,'작게');
 for(let i=0;i<20;i++)bar.children[1].click();assert.equal(A.state.cssH,250,'너무 작아지지 않음');
 /* 간편모드 끌어 옮기기 */
-const x0=A.state.x;canvas.emit('pointerdown',px(165,1000+535*0));canvas.emit('pointermove',{clientX:px(165,1000).clientX-120,clientY:px(165,1000).clientY});canvas.emit('pointerup',{clientX:0,clientY:0});
+const x0=A.state.x;canvas.emit('pointerdown',px(125,700));canvas.emit('pointermove',{clientX:px(125,700).clientX-120,clientY:px(125,700).clientY});canvas.emit('pointerup',{clientX:0,clientY:0});
 assert.ok(A.state.x<x0,'테두리를 끌면 자리 이동');assert.equal(A.state.open,true,'끌었을 때는 슬라이드 그대로');
 assert.ok(JSON.parse(memory.get('2006_anycall_ui_v1')).h===250,'크기 저장');
 

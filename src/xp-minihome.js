@@ -94,7 +94,7 @@ const FRIENDS=[
 {id:'boss',name:'오정수',sex:'♂',info:'동네 PC방 사장',title:'동네 PC방 사장의 미니홈피',intro:'2층 동네 PC방 사장입니다\n컵라면 물은 정확히 선까지\n학생들은 10시 전에 집에 가세요 ^^',mood:'바쁨',today:19,total:4404,cover:'pc',skin:'paper',bgm:'라디오 - 오후의 음악 편지',
  look:{hair:'#2a2a2a',shirt:'#e8e8e8',style:'short'},room:{wall:'check',floor:'tile',slots:{W1:'clock',F1:'desk',F2:'desk',F3:'fridge',F4:'plant'}},
  diary:[['2006.05.30 (화)','맑음','오후 4시. 학생들 몰려오기 시작. {seat}번 자리 손님은 오늘도 미니홈피 꾸미는 중인 듯 ^^'],['2006.05.27 (토)','흐림','월드컵 때 PC방에서 단체 응원 할까 고민 중. 프로젝터를 빌려야 하나.'],['2006.05.20 (토)','맑음','컵라면 하루에 47개 팔았다. 신기록. 물 붓다가 하루가 갔다.']],
- photos:[['pc','새로 바꾼 17인치 LCD 모니터','2006.05.10',['민호::사장님 의자도 바꿔 주세요','PC방사장님::의자는 다음 달에...']],['ramen','오늘의 인기 메뉴','2006.05.20',['수진::사장님 떡볶이도 팔아 주세요!']]],
+ photos:[['pc','PC방 새 모니터랑 본체','2006.05.10',['민호::사장님 의자도 바꿔 주세요','PC방사장님::의자는 다음 달에...']],['ramen','오늘의 인기 메뉴','2006.05.20',['수진::사장님 떡볶이도 팔아 주세요!']]],
  guest:[['민호','2006.05.30 15:40','사장님 제 자리 키보드 ㅁ 키가 잘 안 눌려요','내일 바꿔 줄게 ^^'],['동네 아주머니','2006.05.29 20:30','우리 아들 거기 있으면 집에 보내 주세요','네 어머님 ^^;']],
  says:[['minho','단골손님','사장님 컵라면 서비스 ㄳ']],
  ilchon:[['minho','단골손님']],
@@ -109,6 +109,15 @@ const FRIENDS=[
  accept:'손주친구',toMe:'반갑다밥은먹엇니',replies:['고맙구나밥은먹엇니','우리수진이친구구나반갑다'],visit:['할머니다놀러왓다'],cm:['좋구나','장하다']}
 ];
 const FR={};for(const f of FRIENDS)FR[f.id]=f;
+const ART='assets/pc-desktop/minihome/';
+const NPC_ART={
+ sujin:{profile:'sujin-selca',album:['selca','food','stage']},
+ minho:{album:['pc','trophy']},haneul:{album:['sky','cake']},
+ dalli:{album:['ball','track']},junho:{album:['book']},taehyun:{album:['army','food']},
+ jieun:{album:['flower','cat','sky']},nabi:{profile:'nabi-cat',album:['cat']},
+ boss:{album:['pc','ramen']},grandma:{album:['garden']}
+};
+const artUrl=id=>ART+id+'.webp';
 /* 선물가게. slot: floor(바닥) | wall(벽) | wallpaper | flooring | bgm | skin */
 const SHOP=[
  ['bed','포근한 침대','floor',6],['desk','책상과 컴퓨터','floor',8],['sofa','푹신한 소파','floor',5],['shelf','책장','floor',4],['tv','텔레비전','floor',7],['plant','화분','floor',2],['teddy','곰 인형','floor',3],['guitar','통기타','floor',4],['fish','어항','floor',5],['piano','피아노','floor',10],['scope','망원경','floor',6],['ball','축구공','floor',2],['basket','고양이 바구니','floor',3],['fridge','작은 냉장고','floor',4],
@@ -129,36 +138,52 @@ const COVER_LABEL={stage:'공연 무대',sky:'노을',sea:'바다',night:'밤하
 function circ(g,x,y,r,c){g.fillStyle=c;g.beginPath();g.arc(x,y,Math.max(.5,r),0,Math.PI*2);g.fill()}
 function rect(g,x,y,w0,h0,c){g.fillStyle=c;g.fillRect(x,y,w0,h0)}
 function txt(g,s,x,y,c,size,al){g.fillStyle=c;g.font='bold '+(size||11)+'px Dotum,Gulim,sans-serif';g.textAlign=al||'center';g.fillText(s,x,y)}
-function drawItem(g,id,x,y){
- switch(id){
-  case 'bed':rect(g,x-34,y-26,68,20,'#a0703a');rect(g,x-32,y-30,64,12,'#fff');rect(g,x-10,y-30,42,14,'#ff9ac0');rect(g,x-30,y-36,16,9,'#fff');rect(g,x-36,y-40,6,34,'#8a5a2a');rect(g,x-34,y-6,4,6,'#6a4a2a');rect(g,x+30,y-6,4,6,'#6a4a2a');break;
-  case 'desk':rect(g,x-30,y-30,60,6,'#a0703a');rect(g,x-28,y-24,4,24,'#8a5a2a');rect(g,x+24,y-24,4,24,'#8a5a2a');rect(g,x-14,y-54,28,22,'#e8e4d8');rect(g,x-11,y-51,22,15,'#3a6fd8');rect(g,x-4,y-32,8,3,'#ccc');rect(g,x-16,y-29,24,2,'#555');break;
-  case 'sofa':rect(g,x-34,y-30,68,16,'#e86a5a');rect(g,x-34,y-16,68,12,'#d85a4a');rect(g,x-38,y-24,8,20,'#c84a3a');rect(g,x+30,y-24,8,20,'#c84a3a');rect(g,x-32,y-4,4,4,'#5a3a2a');rect(g,x+28,y-4,4,4,'#5a3a2a');break;
-  case 'shelf':rect(g,x-18,y-62,36,62,'#8a5a2a');for(let i=0;i<3;i++){rect(g,x-15,y-58+i*19,30,15,'#5a3a1a');['#e84d4d','#3a6fd8','#ffd23f','#5aab4a','#a05ab0'].forEach((c,j)=>rect(g,x-14+j*6,y-56+i*19+(j%2),5,13-(j%2),c))}break;
-  case 'tv':rect(g,x-20,y-14,40,14,'#6a4a2a');rect(g,x-18,y-44,36,30,'#333');rect(g,x-14,y-40,26,22,'#6ab0e0');rect(g,x+13,y-38,3,3,'#e84d4d');rect(g,x+13,y-32,3,3,'#ccc');break;
-  case 'plant':rect(g,x-9,y-14,18,14,'#c8653a');for(const [a,b] of [[-8,-26],[0,-32],[8,-26],[-4,-20],[5,-21]])circ(g,x+a,y+b,7,'#4f9a3f');break;
-  case 'teddy':circ(g,x,y-12,11,'#c08a4a');circ(g,x,y-30,9,'#c08a4a');circ(g,x-7,y-37,4,'#c08a4a');circ(g,x+7,y-37,4,'#c08a4a');circ(g,x,y-28,3,'#e8c89a');circ(g,x-3,y-32,1.3,'#111');circ(g,x+3,y-32,1.3,'#111');break;
-  case 'guitar':g.save&&g.save();if(g.translate){g.translate(x,y-26);g.rotate(-.3)}circ(g,0,10,10,'#d08a3a');circ(g,0,-2,8,'#d08a3a');circ(g,0,6,3,'#5a3a1a');rect(g,-2,-30,4,26,'#6a4a2a');g.restore&&g.restore();break;
-  case 'fish':rect(g,x-22,y-12,44,12,'#6a4a2a');rect(g,x-20,y-38,40,26,'rgba(120,200,255,.75)');circ(g,x-6,y-26,4,'#ff9a2a');circ(g,x+8,y-20,3,'#ffd23f');rect(g,x-20,y-40,40,3,'#d8eef8');break;
-  case 'piano':rect(g,x-30,y-46,60,46,'#2a1a14');rect(g,x-28,y-24,56,7,'#fff');for(let i=0;i<9;i++)rect(g,x-26+i*6.2,y-24,2,4,'#111');rect(g,x-28,y-44,56,4,'#4a3020');break;
-  case 'scope':rect(g,x-1,y-26,2,26,'#555');rect(g,x-10,y-2,20,2,'#555');if(g.save){g.save();g.translate(x,y-30);g.rotate(-.6);rect(g,-14,-4,30,8,'#e8e8f0');rect(g,14,-5,4,10,'#3a3a48');g.restore()}break;
-  case 'ball':circ(g,x,y-9,9,'#fff');circ(g,x,y-9,3.5,'#222');circ(g,x-6,y-13,2,'#222');circ(g,x+6,y-6,2,'#222');break;
-  case 'basket':rect(g,x-22,y-12,44,12,'#c89a5a');rect(g,x-20,y-16,40,5,'#ffb0c8');circ(g,x,y-20,8,'#f2b46a');circ(g,x-5,y-27,3,'#f2b46a');circ(g,x+5,y-27,3,'#f2b46a');break;
-  case 'fridge':rect(g,x-14,y-44,28,44,'#e8eef4');rect(g,x-14,y-30,28,2,'#a8b0b8');rect(g,x+8,y-40,2,8,'#888');rect(g,x+8,y-24,2,10,'#888');break;
-  case 'window':rect(g,x-26,y-20,52,40,'#fff');rect(g,x-23,y-17,46,34,'#9fd6ff');rect(g,x-1,y-17,2,34,'#fff');rect(g,x-23,y-1,46,2,'#fff');circ(g,x+12,y-8,5,'#fff');break;
-  case 'poster':rect(g,x-18,y-24,36,48,'#ff9ac0');circ(g,x,y-6,9,'#ffdcb8');rect(g,x-9,y-16,18,5,'#3a2418');txt(g,'별빛소녀',x,y+18,'#fff',8);break;
-  case 'clock':circ(g,x,y,13,'#fff');circ(g,x,y,11,'#ffe8a0');rect(g,x-1,y-8,2,8,'#333');rect(g,x,y-1,7,2,'#333');break;
-  case 'frame':rect(g,x-22,y-16,44,32,'#a0703a');rect(g,x-18,y-12,36,24,'#9fd6ff');rect(g,x-18,y+2,36,10,'#7cc35a');circ(g,x+8,y-5,4,'#ffd23f');break;
-  case 'flag':rect(g,x-26,y-17,52,34,'#fff');circ(g,x,y,8,'#e84d4d');g.fillStyle='#3a6fd8';g.beginPath();g.arc(x,y,8,0,Math.PI);g.fill();for(const [a,b] of [[-18,-10],[14,-10],[-18,6],[14,6]])rect(g,x+a,y+b,5,4,'#111');break;
-  case 'dday':rect(g,x-18,y-20,36,40,'#fff');rect(g,x-18,y-20,36,10,'#e84d4d');txt(g,'수능',x,y-12,'#fff',8);txt(g,'D-170',x,y+8,'#e84d4d',11);break;
-  default:circ(g,x,y-8,8,'#ccc')}}
-function drawRoom(g,room,me){const W0=360,H0=210,wp=WALL[room.wall]||WALL.sky,fl=FLOOR[room.floor]||FLOOR.wood;
- rect(g,0,0,W0,H0,'#000');rect(g,0,0,W0,130,wp[0]);for(let x=8;x<W0;x+=24)for(let y=8;y<126;y+=24)rect(g,x+(y%48?12:0),y,3,3,wp[1]);
- g.fillStyle=fl[0];g.beginPath();g.moveTo(0,130);g.lineTo(W0,130);g.lineTo(W0,H0);g.lineTo(0,H0);g.fill();for(let i=0;i<9;i++){g.strokeStyle=fl[1];g.lineWidth=1;g.beginPath();g.moveTo(i*45,130);g.lineTo(i*45-(i-4)*18,H0);g.stroke()}
- rect(g,0,126,W0,6,'rgba(0,0,0,.18)');
- const slots=room.slots||{};for(const k of ['W0','W1','W2'])if(slots[k])drawItem(g,slots[k],SLOTS[k][0],SLOTS[k][1]);
- const fl2=['F0','F1','F2','F3','F4'].sort((a,b)=>SLOTS[a][1]-SLOTS[b][1]);for(const k of fl2)if(slots[k])drawItem(g,slots[k],SLOTS[k][0],SLOTS[k][1]);
- if(me&&me.draw)me.draw(g);if(room.night){rect(g,0,0,W0,H0,'rgba(10,20,60,.18)')}}
+/* Keep the saved item IDs and their existing placement anchors. */
+const SIZE={
+ bed:[88,63],desk:[78,70],sofa:[86,56],shelf:[53,72],tv:[58,58],plant:[40,52],
+ teddy:[39,40],guitar:[40,56],fish:[55,49],piano:[73,63],scope:[52,59],
+ ball:[24,24],basket:[48,39],fridge:[43,60],window:[72,60],poster:[50,54],
+ clock:[34,34],frame:[52,43],flag:[54,42],dday:[40,50]
+};
+const roomArt=new Map();
+function art(id){
+ if(!w.Image)return null;
+ if(!roomArt.has(id)){const im=new w.Image();im.src=artUrl(id);roomArt.set(id,im)}
+ return roomArt.get(id);
+}
+function drawItem(g,id,x,y,maxW=Infinity,maxH=Infinity){
+ const size=SIZE[id];if(!size)return;
+ const im=art(id);if(!im?.complete||!im.naturalWidth)return;
+ const scale=Math.min(size[0]/im.naturalWidth,size[1]/im.naturalHeight,maxW/im.naturalWidth,maxH/im.naturalHeight);
+ const width=Math.round(im.naturalWidth*scale),height=Math.round(im.naturalHeight*scale);
+ g.drawImage(im,Math.round(x-width/2),Math.round(y-height*(ITEM[id].slot==='wall'?.5:1)),width,height);
+}
+function redrawWhenReady(canvas,ids,draw){
+ draw();
+ for(const id of new Set(ids)){
+  const im=art(id);
+  if(im&&!im.complete)im.addEventListener('load',()=>{if(canvas.isConnected)draw()},{once:true});
+ }
+}
+function paintSurface(g,id,x,y,width,height,fallback){
+ rect(g,x,y,width,height,fallback);
+ const im=art(id);if(!im?.complete||!im.naturalWidth)return;
+ if(id.startsWith('fl-')){g.drawImage(im,x,y,width,height);return}
+ const tile=g.createPattern(im,'repeat');if(!tile)return;
+ g.save();g.translate(x,y);g.scale(.4,.4);g.fillStyle=tile;g.fillRect(0,0,width/.4,height/.4);g.restore();
+}
+function drawRoom(g,room,me){
+ const wall=WALL[room.wall]?room.wall:'sky',floor=FLOOR[room.floor]?room.floor:'wood',slots=room.slots||{};
+ redrawWhenReady(g.canvas,['wp-'+wall,'fl-'+floor,...Object.values(slots).filter(id=>SIZE[id])],()=>{
+  g.imageSmoothingEnabled=true;
+  paintSurface(g,'wp-'+wall,0,0,360,130,WALL[wall][0]);
+  paintSurface(g,'fl-'+floor,0,130,360,80,FLOOR[floor][0]);
+  rect(g,0,126,360,5,'rgba(0,0,0,.18)');
+  const order=['W0','W1','W2','F4','F2','F0','F1','F3'];
+  for(const k of order)if(slots[k]&&SIZE[slots[k]])drawItem(g,slots[k],...SLOTS[k]);
+  if(me?.draw)me.draw(g);
+ });
+}
 function chibi(g,x,y,look,s){s=s||1;if(g.save){g.save();g.translate(x,y);g.scale(s,s)}const L=look||{};
  if(L.style==='cat'){circ(g,0,-14,13,L.hair);circ(g,0,-32,12,L.hair);g.fillStyle=L.hair;g.beginPath();g.moveTo(-10,-40);g.lineTo(-12,-52);g.lineTo(-3,-43);g.fill();g.beginPath();g.moveTo(10,-40);g.lineTo(12,-52);g.lineTo(3,-43);g.fill();circ(g,-4,-33,1.8,'#111');circ(g,4,-33,1.8,'#111');rect(g,12,-12,14,4,L.hair)}
  else{rect(g,-6,-10,5,10,'#333');rect(g,1,-10,5,10,'#333');rect(g,-9,-26,18,17,L.shirt||'#3a7ad8');circ(g,0,-36,13,'#ffdcb8');
@@ -289,8 +314,12 @@ function attach(X){
   top.append(cnt,E('strong','mh-title',me?(m.title||'♡ '+nick()+'님의 미니홈피 ♡'):f.title));root.append(top);
   const book=E('div','mh-book'),left=E('aside','mh-left'),main=E('main','mh-main'),tabs=E('nav','mh-tabs');book.append(left,main,tabs);root.append(book);
   /* 왼쪽: 대문 사진과 프로필 */
+  const artSet=f&&NPC_ART[f.id],profile=artSet&&(artSet.profile||(artSet.album.includes(f.cover)&&f.id+'-'+f.cover));
+  if(profile)left.append(artImage(profile,'mh-cover mh-npc-cover',f.name+'의 프로필 사진'));
+  else{
   const cov=E('canvas','mh-cover');cov.width=170;cov.height=130;left.append(cov);const g=cov.getContext&&cov.getContext('2d');
   if(g){try{if(me){const pic=m.cover&&X.shell&&X.shell.pics?X.shell.pics().find(p=>p.id===m.cover):null;if(pic&&w.Image){const im=new w.Image();im.onload=()=>{g.drawImage(im,0,0,170,130)};im.src=pic.url;rect(g,0,0,170,130,'#eee')}else{scene(g,'sky',170,130,7);if(w.CHARART&&w.CHARART.drawRemote){g.save();g.translate(85,124);g.scale(1.8,1.8);w.CHARART.drawRemote(g,w.CHARART.selected,0,0,1,'stand','mh-cover');g.restore()}}}else{scene(g,f.cover,170,130,f.id.length*97);}}catch(_){}}
+  }
   left.append(E('p','mh-intro',me?(m.intro||'안녕하세요 ^^\n미니홈피 꾸미는 중이에요!\n일촌 신청 환영~'):f.intro));
   const mood=E('p','mh-mood','오늘의 기분: '+moodFace(me?m.mood:f.mood));left.append(mood);
   const nm=E('p','mh-name');nm.append(E('b','',me?nick():f.name+(f.nick?' ('+f.nick+')':'')),E('span','',me?' ♡':' '+f.sex),E('small','',me?'동네 PC방에서 접속 중':f.info));left.append(nm);
@@ -313,10 +342,13 @@ function attach(X){
   if(me){const dot=E('div','mh-dotori');dot.append(E('b','','내 도토리 '+m.dotori+'개'),B('도토리 충전',()=>X.ui&&X.ui.dialog?X.ui.dialog({title:'도토리 충전',icon:'warn',text:'휴대폰 결제는 부모님 동의가 필요해요. PC방에서는 결제할 수 없어요 ㅠㅠ\n\n도토리는 파도타기로 처음 놀러 간 집(+1), 일촌 맺기(+2), 방명록 남기기(+1), 다이어리 쓰기(+1), 사진 올리기(+2)로 모을 수 있어요.'}):0,'mh-btn small'));root.append(dot)}
   const tab=me&&['room','shop'].includes(view.tab)?view.tab:view.tab;
   if(tab==='home')homeTab(main,m,f);else if(tab==='profile')profileTab(main,m,f);else if(tab==='diary')diaryTab(main,m,f);else if(tab==='photo')photoTab(main,m,f);else if(tab==='guest')guestTab(main,m,f);else if(tab==='room'&&me)roomTab(main,m);else if(tab==='shop'&&me)shopTab(main,m);else homeTab(main,m,f)}
+ function artImage(id,cls,alt){
+  const im=E('img',cls);im.src=artUrl(id);im.alt=alt;im.decoding='async';return im;
+ }
  function roomCanvas(parent,room,me){const cv=E('canvas','mh-room');cv.width=360;cv.height=210;parent.append(cv);const g=cv.getContext&&cv.getContext('2d');if(!g)return cv;
-  try{drawRoom(g,room,{draw(g){if(me){if(w.CHARART&&w.CHARART.drawRemote){g.save();g.translate(178,204);g.scale(1.25,1.25);w.CHARART.drawRemote(g,w.CHARART.selected,0,0,1,'stand','mh-room');g.restore()}else chibi(g,178,204,{hair:'#3a2418',shirt:'#3a7ad8'})}else if(me===false){}}});if(me===false&&room.look)chibi(g,178,204,room.look,1.1)}catch(_){}return cv}
+  try{drawRoom(g,room,{draw(g){if(me){if(w.CHARART&&w.CHARART.drawRemote){g.save();g.translate(178,204);g.scale(1.25,1.25);w.CHARART.drawRemote(g,w.CHARART.selected,0,0,1,'stand','mh-room');g.restore()}else chibi(g,178,204,{hair:'#3a2418',shirt:'#3a7ad8'})}else if(room.look)chibi(g,178,204,room.look,1.1)}})}catch(_){}return cv}
  function homeTab(main,m,f){const me=!f;main.append(E('h3','mh-h','미니룸'));
-  if(me)roomCanvas(main,{...m.room,night:m.room.wall==='night'},true);else roomCanvas(main,{...f.room,look:f.look,night:f.room.wall==='night'},false);
+  if(me)roomCanvas(main,{...m.room,night:m.room.wall==='night'},true);else if(NPC_ART[f.id])main.append(artImage(f.id+'-room','mh-room mh-npc-room',f.name+'의 미니룸'));else roomCanvas(main,{...f.room,look:f.look},false);
   const news=E('section','mh-box');news.append(E('h4','','최근 소식'));
   if(me){const d=m.diary[m.diary.length-1],p=m.photos[m.photos.length-1];news.append(E('p','','다이어리 '+m.diary.length+'개 · 사진 '+m.photos.length+'장 · 방명록 '+((X.saved.guestbook||[]).length+m.gbMine.length+(MN.me&&mready()?Number(MN.me.gbn)||0:0))+'개'));if(d)news.append(E('p','mh-muted','최근 다이어리: '+d.t.slice(0,30)));if(p)news.append(E('p','mh-muted','최근 사진: '+p.cap));if(!d&&!p)news.append(E('p','mh-muted','아직 글이 없어요. 다이어리를 써 보세요!'))}
   else{news.append(E('p','','다이어리 '+f.diary.length+'개 · 사진 '+f.photos.length+'장 · 방명록 '+(f.guest.length+(m.gbTo[f.id]||[]).length)+'개'),E('p','mh-muted','최근 다이어리: '+f.diary[0][2].slice(0,34)+'...'))}
@@ -351,7 +383,15 @@ function attach(X){
    if(pics.length){fm.append(E('p','mh-muted','그림판에서 저장한 ‘내 그림’을 사진첩에 올릴 수 있어요.'),sel,cap,sb);fm.addEventListener('submit',e=>{e.preventDefault&&e.preventDefault();const pic=pics.find(p=>p.id===sel.value);if(!pic)return;const entry={pic:pic.id,cap:String(cap.value||'').trim().slice(0,40)||pic.name,cm:[]};m.photos=[...m.photos,entry].slice(-12);save();if(m.photos.length<=3)give(2,'사진 올리기','photo-'+m.photos.length);friendComment(entry.cm,x=>entry.cm.push(x),1800);render()})}
    else fm.append(E('p','mh-muted','올릴 그림이 없어요. 시작 메뉴의 그림판에서 그림을 그리고 ‘저장’하면 여기에 올릴 수 있어요.'),B('그림판 열기',()=>X.openApp('paint'),'mh-btn small'));main.append(fm);
    const grid=E('div','mh-photos');for(const p of m.photos.slice().reverse()){const card=E('figure','mh-photo');const pic=pics.find(x=>x.id===p.pic);if(pic){const im=E('img');im.src=pic.url;im.alt=p.cap;card.append(im)}else card.append(E('div','mh-xbox','×'));card.append(E('figcaption','',p.cap));const cm=E('div','mh-cms');cmList(cm,p.cm||[]);card.append(cm);grid.append(card)}main.append(grid);return}
-  const grid=E('div','mh-photos');f.photos.forEach(([type,cap,date,cms],i)=>{const card=E('figure','mh-photo'),cv=E('canvas');cv.width=200;cv.height=140;const g=cv.getContext&&cv.getContext('2d');if(g)try{scene(g,type,200,140,i*31+f.id.length*7)}catch(_){}card.append(cv,E('figcaption','',cap),E('small','',date));const cm=E('div','mh-cms');cmList(cm,cms);card.append(cm);grid.append(card)});main.append(grid)}
+  const grid=E('div','mh-photos'),art=NPC_ART[f.id],photos=art?art.album.map(id=>f.photos.find(p=>p[0]===id)).filter(Boolean):f.photos;
+  photos.forEach(([type,cap,date,cms],i)=>{
+   const card=E('figure','mh-photo');
+   if(art)card.append(artImage(f.id+'-'+type,'mh-npc-photo',cap));
+   else{const cv=E('canvas');cv.width=200;cv.height=140;const g=cv.getContext?.('2d');if(g)scene(g,type,200,140,i*31+f.id.length*7);card.append(cv)}
+   card.append(E('figcaption','',cap),E('small','',date));
+   const cm=E('div','mh-cms');cmList(cm,cms);card.append(cm);grid.append(card);
+  });main.append(grid)}
+
  function guestTab(main,m,f){const me=!f;main.append(E('h3','mh-h','방명록'));
   const fm=E('form','mh-box mh-write'),ta=E('input');ta.maxLength=100;ta.placeholder=me?'다녀간 흔적 한 줄 (100자)':'방명록 남기기 (100자)';ta.setAttribute('aria-label','방명록');const sb=B('남기기',()=>{},'mh-btn');sb.type='submit';fm.append(ta,sb);main.append(fm);
   fm.addEventListener('submit',e=>{e.preventDefault&&e.preventDefault();const t=String(ta.value||'').trim().slice(0,100);if(!t)return;
@@ -484,7 +524,7 @@ function attach(X){
  function apply(it){const m=S();if(it.slot==='wallpaper')m.room.wall=it.id.slice(3);else if(it.slot==='flooring')m.room.floor=it.id.slice(3);else if(it.slot==='skin')m.skin=it.id.slice(3);else if(it.slot==='bgm')m.bgm=m.bgm===it.id?'':it.id;save();render()}
  function buy(it){const m=S();if(m.items.includes(it.id))return false;if(m.dotori<it.price){toast('선물가게','도토리가 '+(it.price-m.dotori)+'개 모자라요.');return false}m.dotori-=it.price;m.items.push(it.id);X.save();toast('선물가게','‘'+it.name+'’을(를) 샀어요! (남은 도토리 '+m.dotori+'개)');if(['wallpaper','flooring','skin','bgm'].includes(it.slot))apply(it);else render();return true}
  function shopTab(main,m){main.append(E('h3','mh-h','선물가게'));main.append(E('p','mh-muted','도토리로 미니룸 물건, 벽지, 스킨, 배경음악을 살 수 있어요. 산 물건은 ‘미니룸’에서 놓아 보세요.'));
-  for(const [slot,label] of [['floor','가구 · 소품'],['wall','벽 장식'],['wallpaper','벽지'],['flooring','바닥'],['skin','미니홈피 스킨'],['bgm','배경음악']]){const box=E('section','mh-box mh-shop');box.append(E('h4','',label));for(const it of SHOP.filter(x=>x.slot===slot)){const own=m.items.includes(it.id);const row=E('div','mh-item');if(['floor','wall'].includes(slot)){const cv=E('canvas','mh-thumb');cv.width=70;cv.height=60;const g=cv.getContext&&cv.getContext('2d');if(g)try{rect(g,0,0,70,60,slot==='wall'?'#cfe8ff':'#f4ead8');drawItem(g,it.id,35,slot==='wall'?30:56)}catch(_){}row.append(cv)}
+  for(const [slot,label] of [['floor','가구 · 소품'],['wall','벽 장식'],['wallpaper','벽지'],['flooring','바닥'],['skin','미니홈피 스킨'],['bgm','배경음악']]){const box=E('section','mh-box mh-shop');box.append(E('h4','',label));for(const it of SHOP.filter(x=>x.slot===slot)){const own=m.items.includes(it.id);const row=E('div','mh-item');if(slot!=='bgm')row.append(artImage(it.id,'mh-thumb',it.name));
    row.append(E('b','',it.name),E('span','mh-price','도토리 '+it.price+'개'),own?E('em','','보유 중'):B('사기',()=>buy(it),'mh-btn small'));box.append(row)}main.append(box)}}
  const api={ids:['minihome'],has:id=>id==='minihome',open,go,state:()=>({...S(),view:{...view}}),
   buy:id=>ITEM[id]?buy(ITEM[id]):false,

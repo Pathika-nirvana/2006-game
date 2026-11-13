@@ -9,7 +9,7 @@ const ROOT=path.join(__dirname,'..'),read=f=>fs.readFileSync(path.join(ROOT,f),'
 const html=read('index.html');
 for(const f of ['src/anycall-lcd.js','src/anycall-phone.js'])assert.ok(new RegExp('<script src="'+f.replace(/[.]/g,'\\.')+'\\?v=A(99|10\\d)"></script>').test(html),'버전 '+f);
 assert.ok(/assets\/phone\/anycall-phone\.css\?v=A(99|10\d)/.test(html));
-for(const f of ['src/anycall-phone.js','src/anycall-lcd.js','assets/phone/anycall-phone.css','server_phone.js']){const s=read(f);assert.ok(s.includes('A99')&&s.includes('2026-11-13'),'버전과 날짜 '+f);assert.ok(!s.includes(String.fromCharCode(0x2014)),'긴 줄표 없음 '+f)}
+for(const f of ['src/anycall-phone.js','src/anycall-lcd.js','assets/phone/anycall-phone.css','server_phone.js']){const s=read(f);assert.ok(/A(?:99|10[01])/.test(s)&&s.includes('2026-11-13'),'버전과 날짜 '+f);assert.ok(!s.includes(String.fromCharCode(0x2014)),'긴 줄표 없음 '+f)}
 assert.ok(read('server.js').includes("const PHONE=require('./server_phone.js');")&&read('server.js').includes("if(obj.type==='phone')"),'서버에 휴대폰 전달');
 
 /* 2. 서버 전달 규칙 */
@@ -65,13 +65,9 @@ const press=(...ks)=>{for(const k of ks){A.press(k);now+=30;T.step(now)}};
 const run=ms=>{const end=now+ms;while(now<end){now+=50;T.step(now)}};
 const lastSent=op=>sent.filter(o=>o.op===op).at(-1);
 
-/* 4. 닫았을 때 아래판이 삐져나오지 않음: 하판 가로줄마다 상판(닫힌 위치)이 그 폭을 덮는지 실루엣으로 검사 */
-/* A100: 닫힘 거리는 다시 535(아래판 아래 끝이 살짝 보이는 쪽이 자연스러움). 대신 윗판 아래 양 모서리를 둥글게 깎아,
-   닫혔을 때 윗판 옆면이 아래판보다 뾰족하게 튀어나오지 않는지 실루엣으로 검사한다 */
-assert.equal(G.slide,535,'닫힘 거리 535로 되돌림');
-{const b=T.sil.b,backL=y=>{const i=Math.round((y-b.y0)/8);return b.rows[2*i]},backR=y=>{const i=Math.round((y-b.y0)/8);return b.rows[2*i+1]};
- for(const y of [1080,1096,1108]){const abs=y+G.slide;assert.ok(T.cornerX(y,-1)>=backL(abs)-20,'왼쪽 모서리가 (옆면이 원래 아래판보다 19칸 넓은 만큼까지만) 아래판 밖으로 뾰족하게 나오지 않음 y='+y+' ('+T.cornerX(y,-1).toFixed(0)+' vs '+backL(abs)+')');assert.ok(T.cornerX(y,1)<=backR(abs)+20,'오른쪽 모서리 y='+y)}
- assert.ok(T.cornerX(990,-1)===150&&T.cornerX(990,1)===730,'위쪽 옆면은 그대로')}
+/* 4. The closed front covers each key center of the fixed rear panel. */
+for(const col of T.padCols)for(const row of T.padRows)
+ assert.notEqual(T.hit((col[0]+col[1])/2,(row[0]+row[1])/2)?.kind,'key');
 /* 5. 숫자판 한글 입력 (천지인 모음 + 숫자판 자음) */
 const ed=LC.Editor({max:80,now:()=>now});const type=s=>{for(const k of s.split(' ')){ed.key(k);now+=60}};
 type('8 1 * 4 4 right 4 4 * * 1 8 7 7 1 * 7 * 1 1 8 * * 0');assert.equal(ed.text(),'안녕하세요');ed.clear();

@@ -115,3 +115,17 @@
  .pg-pad .pg-btn{min-width:60px;min-height:44px;font-size:18px}
  .xp-toasts{width:min(260px,calc(100% - 12px))}
 }
+
+/* A101 · 미니홈피 이미지 */
+.mh-npc-cover{display:block;object-fit:contain;background:#fff}
+.mh-room.mh-npc-room{max-width:none;aspect-ratio:auto;cursor:default}
+.mh-photo .mh-npc-photo{height:auto;object-fit:contain}
+.mh-thumb{object-fit:contain;background:#f4f0e7}
+.mh-skin-pink{--mh-frame:url("minihome/sk-pink.webp")}
+.mh-skin-star{--mh-frame:url("minihome/sk-star.webp")}
+.mh-skin-green{--mh-frame:url("minihome/sk-green.webp")}
+.mh-skin-paper{--mh-frame:url("minihome/sk-paper.webp")}
+.mh-skin-pink .mh-book,.mh-skin-star .mh-book,.mh-skin-green .mh-book,.mh-skin-paper .mh-book{
+ border:solid transparent;border-width:28px 18px 20px;
+ border-image:var(--mh-frame) 31% 13% 24% 13% fill stretch;
+}
