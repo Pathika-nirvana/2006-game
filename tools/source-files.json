@@ -478,6 +478,13 @@
   "assets/pc-desktop/pc-fun.css",
   "assets/pc-desktop/web-fun.css",
   "assets/pc-desktop/web-town.css",
+  "src/anycall-lcd.js",
+  "src/anycall-phone.js",
+  "assets/phone/anycall-phone.css",
+  "assets/phone/anycall_front_moving.png",
+  "assets/phone/anycall_back_fixed.png",
+  "art/phone/anycall_preview_closed.png",
+  "art/phone/anycall_preview_open.png",
   "tests/test_web_sites_a91.cjs",
   "RELEASE_A91.md",
   "assets/pc-desktop/icons/buddy.webp",
@@ -498,8 +505,10 @@
   "tests/test_buddy_mobile_a96.cjs",
   "tests/test_minihome_a97.cjs",
   "tests/test_web_town_a97.cjs",
+  "tests/test_anycall_a98.cjs",
   "RELEASE_A94.md",
   "RELEASE_A95.md",
   "RELEASE_A96.md",
-  "RELEASE_A97.md"
+  "RELEASE_A97.md",
+  "RELEASE_A98.md"
 ]

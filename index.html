@@ -375,6 +375,7 @@ body.playing-a5 #bgmControls{position:fixed;z-index:1100;bottom:0;left:0;right:0
 <link rel="stylesheet" href="assets/pc-desktop/pc-fun.css?v=A97">
 <link rel="stylesheet" href="assets/pc-desktop/web-fun.css?v=A95">
 <link rel="stylesheet" href="assets/pc-desktop/web-town.css?v=A97">
+<link rel="stylesheet" href="assets/phone/anycall-phone.css?v=A98">
 <link rel="stylesheet" href="assets/pc-desktop/boot.css">
 </head>
 <body>
@@ -406,7 +407,7 @@ body.playing-a5 #bgmControls{position:fixed;z-index:1100;bottom:0;left:0;right:0
  <div class="right-tools"><span class="top-wallet">동전 <span id="coinCount">3,000원</span></span><button id="bagBtn">가방 <span id="bagCount">0개</span></button><button id="charBtn" type="button">꾸미기</button>
  <details id="soundSettings" class="quick-menu"><summary>소리</summary><div id="soundOptions" class="menu-popover sound-popover"></div></details>
  <details id="gameMenu" class="quick-menu"><summary>메뉴</summary><div class="menu-popover">
- <button id="mapBtn">길 안내 (M)</button><button id="memoBtn">수첩 (J)</button><button id="helpBtn">조작법</button><button id="outfitBtn">옷 <span id="outfitLabel">아이보리</span></button><button id="soundBtn">환경음 <span id="soundLabel">소리 켜기</span></button><button id="timeBtn">시간 <span id="timeLabel">늦은 오후</span></button><button id="weatherBtn">날씨 <span id="weatherLabel">맑음</span></button>
+ <button id="mapBtn">길 안내 (M)</button><button id="memoBtn">수첩 (J)</button><button id="helpBtn">조작법</button><button id="phoneBtn" type="button">휴대폰 <span id="phoneLabel">애니콜</span></button><button id="soundBtn">환경음 <span id="soundLabel">소리 켜기</span></button><button id="timeBtn">시간 <span id="timeLabel">늦은 오후</span></button><button id="weatherBtn">날씨 <span id="weatherLabel">맑음</span></button>
  <details class="extra-menu"><summary>이동·기타</summary><button type="button" id="a22Visit">옥상 감상으로</button><button type="button" id="a20Go">놀이터로</button><button id="newAllowance" title="가상 용돈과 가방 초기화">용돈·가방 초기화</button><button type="button" id="a13Btn" aria-pressed="false">배치 편집</button></details>
  </div></details></div>
 </div>
@@ -2061,7 +2062,8 @@ function handleKey(k){
 }
 function openBag(){mode='bag';selected=null;overlay.classList.remove('is-snackbar');grid.classList.remove('vintage-menu');openOverlay();header.textContent='책가방 속';sub.textContent='학교가 끝난 오후, 오늘 산 것들.';grid.innerHTML='';grid.classList.remove('shelf-board');detail.innerHTML='';footer.textContent=held?'손에 들고 있는 것: '+findItem(held)?.name+' · F로 먹기':'가방은 게임을 다시 열어도 남아 있어.';
  const found=Object.keys(inventory).filter(k=>inventory[k]>0).map(k=>[...stock.stationery,...retiredStationery,...stock.snackbar,broth].find(i=>i.id===k)).filter(Boolean);
- if(!found.length){grid.innerHTML='<div class="empty-bag">아직 아무것도 없네. 문방구에 들러볼까?</div>';return}
+ const phone=window.AnycallPhone?.bagCard?.();if(phone){phone.addEventListener('click',()=>{detail.innerHTML='';detail.append(window.AnycallPhone.bagDetail(()=>{close();window.AnycallPhone.show()}))});grid.append(phone)}
+ if(!found.length){grid.insertAdjacentHTML('beforeend','<div class="empty-bag">아직 아무것도 없네. 문방구에 들러볼까?</div>');return}
  for(let item of found){let btn=makeCard(item,()=>renderBagSelected(item)),num=document.createElement('span');num.className='count-pill';num.textContent='×'+inventory[item.id];btn.append(num);grid.append(btn)}
  renderBagSelected(found[0]);
 }
@@ -3251,7 +3253,7 @@ window.A12ART={retouch,retouchRoute,dynamic,get enabled(){return enabled},set en
 })();
 
 /* END src/16_pilot_art.js */
-</script><script src="assets/maps/after-school/manifest.js"></script><script src="src/after-school-map.js"></script><script src="src/playground-space.js"></script><script src="src/side-alley-map.js"></script><script src="src/apartment-path-map.js"></script><script src="src/back-alley-map.js"></script><script src="src/narrow-alley-map.js"></script><script src="src/stationery-interior.js"></script><script src="src/supermarket-map.js"></script><script src="src/courtyard-map.js"></script><script src="src/pcroom-map.js"></script><script src="src/portal-comics.js?v=A89"></script><script src="src/portal-news.js?v=A94"></script><script src="src/portal-boards.js?v=A97"></script><script src="src/portal-pages.js?v=A95"></script><script src="src/pc-system.js?v=A89"></script><script src="src/club-seed.js?v=A88"></script><script src="src/club-core.js?v=A88"></script><script src="src/club.js?v=A88"></script><script src="src/kids-data.js?v=A97"></script><script src="src/kids-games.js?v=A95"></script><script src="src/kids-portal.js?v=A95"></script><script src="src/kids-more.js?v=A97"></script><script src="src/kids-extra.js?v=A97"></script><script src="src/desk-smash.js?v=A89"></script><script src="src/xp-shell.js?v=A94"></script><script src="src/xp-setup.js?v=A94"></script><script src="src/xp-apps.js?v=A94"></script><script src="src/xp-messenger.js?v=A96"></script><script src="src/xp-net.js?v=A94"></script><script src="src/web-data.js?v=A94"></script><script src="src/web-stories.js?v=A94"></script><script src="src/web-ghost.js?v=A94"></script><script src="src/web-flash.js?v=A94"></script><script src="src/web-sites.js?v=A95"></script><script src="src/web-more.js?v=A94"></script><script src="src/web-fun.js?v=A95"></script><script src="src/web-town.js?v=A97"></script><script src="src/pc-games.js?v=A95"></script><script src="src/xp-minihome.js?v=A97"></script><script src="src/pc-mail.js?v=A95"></script><script src="src/xp-desktop.js?v=A95"></script><script src="src/block104.js"></script><script src="src/commercial-road.js"></script><script>
+</script><script src="assets/maps/after-school/manifest.js"></script><script src="src/after-school-map.js"></script><script src="src/playground-space.js"></script><script src="src/side-alley-map.js"></script><script src="src/apartment-path-map.js"></script><script src="src/back-alley-map.js"></script><script src="src/narrow-alley-map.js"></script><script src="src/stationery-interior.js"></script><script src="src/supermarket-map.js"></script><script src="src/courtyard-map.js"></script><script src="src/pcroom-map.js"></script><script src="src/portal-comics.js?v=A89"></script><script src="src/portal-news.js?v=A94"></script><script src="src/portal-boards.js?v=A97"></script><script src="src/portal-pages.js?v=A95"></script><script src="src/pc-system.js?v=A89"></script><script src="src/club-seed.js?v=A88"></script><script src="src/club-core.js?v=A88"></script><script src="src/club.js?v=A88"></script><script src="src/kids-data.js?v=A97"></script><script src="src/kids-games.js?v=A95"></script><script src="src/kids-portal.js?v=A95"></script><script src="src/kids-more.js?v=A97"></script><script src="src/kids-extra.js?v=A97"></script><script src="src/desk-smash.js?v=A89"></script><script src="src/xp-shell.js?v=A94"></script><script src="src/xp-setup.js?v=A94"></script><script src="src/xp-apps.js?v=A94"></script><script src="src/xp-messenger.js?v=A96"></script><script src="src/xp-net.js?v=A94"></script><script src="src/web-data.js?v=A94"></script><script src="src/web-stories.js?v=A94"></script><script src="src/web-ghost.js?v=A94"></script><script src="src/web-flash.js?v=A94"></script><script src="src/web-sites.js?v=A95"></script><script src="src/web-more.js?v=A94"></script><script src="src/web-fun.js?v=A95"></script><script src="src/web-town.js?v=A98"></script><script src="src/pc-games.js?v=A95"></script><script src="src/xp-minihome.js?v=A97"></script><script src="src/pc-mail.js?v=A95"></script><script src="src/xp-desktop.js?v=A95"></script><script src="src/block104.js"></script><script src="src/commercial-road.js"></script><script>
 /* BEGIN src/13_game_core.js */
 
 /* 《2006년.. 90년대생의 회상》 ART STAGE 10 (everyday neighborhood detours + A8 routines)
@@ -3311,11 +3313,11 @@ function sceneWidth(){if(player.scene==='supermarket')return window.SupermarketM
 function uiClick(id,fn){el(id).addEventListener('click',fn)}
 function start(){window.GameAudio?.unlock();window.BGM?.start();running=true;D.intro.classList.add('hidden');D.start.blur();toast('화살표 이동 · E 상호작용 · Enter 채팅',4)}
 uiClick('startBtn',start);uiClick('dialogClose',closeDialog);uiClick('mapBtn',()=>ROUTES.toggleMap());
-uiClick('helpBtn',()=>showDialog('조작법','화살표키 이동 · Enter 채팅 · SPACE 점프 · ↑ ↓ 사다리 · E 주변 살펴보기/가게/정류장/주택·아파트 계단 · C 앉기 · X 인사 · V 옷 바꾸기 · T 시간대 · R 비 내리기/그치기 · F 간식 먹기 · J 수첩. 정류장에선 E를 눌러 버스를 기다리고, 버스가 서면 다시 E를 눌러 탈 수 있어. M은 동네 길 안내도야. 주택가 샛길과 아파트 산책길은 큰길 대신 이어지는 우회로야.','✿'));
-uiClick('timeBtn',changeTime);uiClick('weatherBtn',changeWeather);uiClick('soundBtn',toggleSound);uiClick('outfitBtn',changeOutfit);
+uiClick('helpBtn',()=>showDialog('조작법','화살표키 이동 · Enter 채팅 · SPACE 점프 · ↑ ↓ 사다리 · E 주변 살펴보기/가게/정류장/주택·아파트 계단 · C 앉기 · X 인사 · V 옷 바꾸기 · N 휴대폰 꺼내기/넣기 · T 시간대 · R 비 내리기/그치기 · F 간식 먹기 · J 수첩. 정류장에선 E를 눌러 버스를 기다리고, 버스가 서면 다시 E를 눌러 탈 수 있어. M은 동네 길 안내도야. 주택가 샛길과 아파트 산책길은 큰길 대신 이어지는 우회로야.','✿'));
+uiClick('timeBtn',changeTime);uiClick('weatherBtn',changeWeather);uiClick('soundBtn',toggleSound);uiClick('phoneBtn',()=>window.AnycallPhone?.toggle());
 function changeTime(){phase=(phase+1)%3;D.time.textContent=['늦은 오후','해 질 무렵','저녁'][phase];D.clock.textContent=['오후 4:32','오후 6:24','오후 7:38'][phase];MEMO.add(['학교 끝난 시간','저녁이 다가온다','골목의 불빛'][phase],['교문 앞으로 나온 아이들이 흩어진다.','그림자가 길어지고 저녁 준비하는 소리가 들린다.','집집마다 불이 켜지고 골목이 조용해진다.'][phase],phase);toast(['하굣길의 햇빛이 따뜻하다.','골목에 노을이 내려앉는다.','창문에 불빛이 하나둘 켜진다.'][phase]);}
 function changeWeather(){weather=1-weather;el('weatherLabel').textContent=weather?'비 내림':'맑음';MEMO.add(weather?'비가 내리기 시작했다':'비가 그쳤다',weather?'낡은 차양 끝에서 빗물이 떨어진다.':'조금씩 마르는 보도블록 위로 오후가 돌아왔다.',phase);toast(weather?'비가 내린다. 골목길에서 우산을 쓴 사람들이 보인다.':'빗줄기가 그쳤다. 물웅덩이만 조금 남았다.',3.3)}
-function changeOutfit(){shirtIndex=(shirtIndex+1)%shirts.length;player.shirt=shirts[shirtIndex].c;D.outfit.textContent=['아이보리','파랑','주황','연두'][shirtIndex];toast(shirts[shirtIndex].name+'로 갈아입었다.');}
+function changeOutfit(){shirtIndex=(shirtIndex+1)%shirts.length;player.shirt=shirts[shirtIndex].c;if(D.outfit)D.outfit.textContent=['아이보리','파랑','주황','연두'][shirtIndex];toast(shirts[shirtIndex].name+'로 갈아입었다.');}
 function toast(msg,s=2.6){D.hint.textContent=msg;D.hint.classList.add('show');toastTimer=s}
 function closeDialog(){openDialog=false;D.dialog.classList.add('hidden')}
 function showDialog(title,msg,icon='✿'){D.title.textContent=title;D.text.textContent=msg;D.icon.textContent=icon;D.dialog.classList.remove('hidden');openDialog=true}
@@ -3457,7 +3459,7 @@ function keydown(e){const k=e.code;const target=e.target||document.activeElement
  if(running&&player.scene==='back_alley'&&k==='Space'){window.BackAlleyMap?.jump(player);closeDialog();return;}
  if(running&&player.scene==='apartment_path'&&k==='Space'){window.ApartmentPathMap?.jump(player);closeDialog();return;}
  if(k==='Enter'&&!running){start();return}if(!running)return;
- if(k==='KeyM'){ROUTES.toggleMap();return}if(k==='KeyR'){changeWeather();return}if(k==='KeyI'){SHOPS.openBag();return}if(k==='KeyJ'){MEMO.show();return}if(k==='KeyF'){takeBite();return}if(k==='KeyE'){interact();return}if(k==='KeyC'){sit();return}if(k==='KeyT'){changeTime();return}if(k==='KeyX'){wave();return}if(k==='KeyV'){changeOutfit();return}
+ if(k==='KeyM'){ROUTES.toggleMap();return}if(k==='KeyR'){changeWeather();return}if(k==='KeyI'){SHOPS.openBag();return}if(k==='KeyJ'){MEMO.show();return}if(k==='KeyF'){takeBite();return}if(k==='KeyE'){interact();return}if(k==='KeyC'){sit();return}if(k==='KeyT'){changeTime();return}if(k==='KeyX'){wave();return}if(k==='KeyV'){changeOutfit();return}if(k==='KeyN'){window.AnycallPhone?.toggle();return}
  if(k==='Escape'&&openDialog){closeDialog();return}
  if(k==='Space'&&player.pose!=='eat'){
   if(player.pose==='climb'){player.pose='jump';player.onGround=false;player.vy=-130;return}
@@ -4123,5 +4125,7 @@ window.A26NET={get snapshot(){return snapshot},get ready(){return connected()},p
 <script src="src/background-music.js"></script>
 <script src="src/interface.js"></script>
 <script src="src/world-audio.js?v=A94"></script>
+<script src="src/anycall-lcd.js?v=A98"></script>
+<script src="src/anycall-phone.js?v=A98"></script>
 </body>
 </html>

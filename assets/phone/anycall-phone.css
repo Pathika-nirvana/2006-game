@@ -1,0 +1,32 @@
+/* A98 애니콜 슬라이드폰 (버전 A98 · 2026-11-13 KST)
+   간편모드: 게임 위에 떠 있는 작은 휴대폰. 빈 곳은 누름이 게임으로 지나간다.
+   전체화면: 어두운 바탕 위 가운데. */
+.ac-root{position:fixed;inset:0;z-index:4000;pointer-events:none;font-family:'Malgun Gothic','Apple SD Gothic Neo','NanumGothic',sans-serif}
+.ac-root[hidden]{display:none}
+.ac-backdrop{position:absolute;inset:0;background:rgba(8,12,22,.78);display:none;pointer-events:auto}
+.ac-root.ac-full .ac-backdrop{display:block}
+.ac-win{position:absolute;display:flex;flex-direction:column;align-items:center;pointer-events:none}
+.ac-canvas{display:block;pointer-events:auto;touch-action:none;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+.ac-bar{pointer-events:auto;display:flex;align-items:center;justify-content:center;gap:4px;height:32px;margin-top:6px;padding:0 6px;background:rgba(18,22,32,.92);border:1px solid #4a5468;border-radius:8px;color:#e9eef8;font-size:11px;line-height:1;box-shadow:0 2px 8px rgba(0,0,0,.35);white-space:nowrap;touch-action:none;user-select:none;-webkit-user-select:none}
+.ac-root.ac-mini .ac-bar{cursor:move}
+.ac-bar button{font:inherit;font-size:11px;color:#e9eef8;background:#2c3446;border:1px solid #56617a;border-radius:5px;height:24px;padding:0 7px;cursor:pointer}
+.ac-bar button:hover{background:#3a4560}
+.ac-bar button:focus-visible{outline:2px solid #ffb35a;outline-offset:1px}
+.ac-seg{display:flex}
+.ac-seg button{border-radius:0}
+.ac-seg button:first-child{border-radius:5px 0 0 5px}
+.ac-seg button:last-child{border-radius:0 5px 5px 0;border-left:0}
+.ac-seg button[aria-pressed="true"]{background:#e8742a;border-color:#ff9a4a;color:#fff;font-weight:bold}
+.ac-bar .ac-size{width:24px;padding:0;font-weight:bold}
+.ac-tip{opacity:.78;font-size:10px;padding:0 4px}
+.ac-root.ac-mini .ac-tip{display:none}
+.ac-root.ac-full .ac-size,.ac-root.ac-full .ac-grip{display:none}
+.ac-grip{flex:0 0 14px;width:14px;height:14px;margin-left:2px;cursor:nwse-resize;touch-action:none;background:linear-gradient(135deg,transparent 45%,#9aa6bf 45%,#9aa6bf 55%,transparent 55%,transparent 68%,#9aa6bf 68%,#9aa6bf 78%,transparent 78%)}
+.ac-root.ac-full .ac-bar{font-size:12px;height:36px}
+.ac-root.ac-full .ac-bar button{font-size:12px;height:28px;padding:0 10px}
+/* 가방 속 기본 소지품 칸 */
+.ac-bag-card .ac-thumb{width:28px;height:48px;display:block;margin:0 auto}
+.ac-bag-detail{display:flex;flex-direction:column;align-items:center;gap:8px}
+.ac-bag-detail .ac-thumb.big{width:56px;height:96px}
+.ac-bag-detail .bag-description{text-align:center}
+@media(max-width:520px){.ac-bar{gap:3px;padding:0 4px}.ac-bar button{padding:0 5px}.ac-root.ac-full .ac-tip{display:none}}

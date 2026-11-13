@@ -1,4 +1,5 @@
-/* A97 (2026-11-12 KST): 새 사이트 네 곳. web-fun.js 다음에 읽혀 WebSites.register()로 붙는다.
+/* A98 (2026-11-13 KST): 배경 화면 그리기(drawWall)를 밖으로 내보내 애니콜 휴대폰 배경 화면에도 쓴다.
+   A97 (2026-11-12 KST): 새 사이트 네 곳. web-fun.js 다음에 읽혀 WebSites.register()로 붙는다.
    우리동네 소식통: 동네 약도(누르면 가게 정보), 가게 이야기(별점과 후기, 내 후기 쓰기), 동네 게시판(분실물, 나눔, 칭찬, 질문), 은하아파트 관리사무소 알림, 동네 투표.
    동일초등학교: 학교 소개와 교가, 가정통신문, 5월 급식표(날짜를 누르면 차림표), 5학년 2반 알림장(숙제 체크), 자유게시판, 학교 앨범.
    폰꾸미기 천국: 벨소리 미리 듣기(화음), 휴대폰 배경 화면(내 그림으로 저장), 80바이트 무료 문자(답장이 온다), 특수문자 문자 그림.
@@ -335,5 +336,5 @@ WS.register('w-town',{key:'town',domain:'www.uridongne.co.kr',caption:'우리동
 WS.register('w-dongil',{key:'dongil',domain:'www.dongil.es.kr',caption:'동일초등학교 - 꿈을 키우는 즐거운 배움터',name:'동일초등학교',types:['home','about','notice','meal','board','post','album'],linkCat:'우리 동네',desc:'가정통신문, 5월 급식표, 알림장, 자유게시판',star:3,tags:'동일초 동일초등학교 학교 홈페이지 급식 급식표 식단 가정통신문 알림장 숙제 교가 체육대회',fav:true,isNew:true},dongilPage);
 WS.register('w-phone',{key:'phone',domain:'www.phonedeco.co.kr',caption:'폰꾸미기 천국 - 벨소리 · 배경 화면 · 문자 꾸미기',name:'폰꾸미기 천국',types:['home','bell','wall','sms','art'],linkCat:'재미있는 곳',desc:'64화음 벨소리 미리 듣기, 배경 화면, 무료 문자',star:5,tags:'벨소리 화음 배경화면 배경 화면 휴대폰 핸드폰 폰꾸미기 문자 무료 문자 특수문자 문자 그림 폴더폰',fav:true,isNew:true},phonePage);
 WS.register('w-music',{key:'music',domain:'www.musicbox.co.kr',caption:'뮤직박스 - 음악이 있는 곳',name:'뮤직박스',types:['home','chart','album','lyrics'],linkCat:'재미있는 곳',desc:'실시간 음악 차트와 1분 미리 듣기, 가사',star:4,tags:'음악 노래 차트 가요 미리듣기 미리 듣기 가사 음반 앨범 CD 카세트 뮤직박스 별빛소녀 한여름 밴드 배경음악 BGM',fav:true,isNew:true},musicPage);
-w.WebTown={PLACES,TOWN_BOARD,TOWN_NOTICE,POLLS,DG_NOTICE,DG_MEAL,DG_OFF,DG_BOARD,DG_HOMEWORK,RINGS,PHONE_WALLS,CONTACTS,SMS_ART,SONGS,BGM_OF,MB_NEWS,smsBytes,parseTune,tuneBeats,freq,synthPlay,synthStop,drawTown,version:'A97'};
+w.WebTown={PLACES,TOWN_BOARD,TOWN_NOTICE,POLLS,DG_NOTICE,DG_MEAL,DG_OFF,DG_BOARD,DG_HOMEWORK,RINGS,PHONE_WALLS,drawWall,CONTACTS,SMS_ART,SONGS,BGM_OF,MB_NEWS,smsBytes,parseTune,tuneBeats,freq,synthPlay,synthStop,drawTown,version:'A97'};
 })(window);
