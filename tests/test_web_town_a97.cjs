@@ -78,7 +78,7 @@ api.navigate({type:'item',id:'jr-s8',portal:'jr'});assert.ok(root.textContent.in
 /* 9. 읽는 순서, 버전 표시, 줄표와 시대에 안 맞는 말 */
 assert.ok(html.indexOf('src/web-fun.js')<html.indexOf('src/web-town.js')&&html.indexOf('src/web-town.js')<html.indexOf('src/xp-desktop.js'),'사이트 읽는 순서');
 assert.ok(html.indexOf('src/kids-more.js')<html.indexOf('src/kids-extra.js')&&html.indexOf('src/kids-extra.js')<html.indexOf('src/xp-desktop.js'),'어린이 글 읽는 순서');
-for(const f of ['web-town','kids-extra','kids-data','kids-more','portal-boards','xp-minihome'])assert.ok(new RegExp('src/'+f+'\\.js\\?v=A9[7-9]').test(html),'버전 '+f);assert.ok(html.includes('web-town.css?v=A97')&&html.includes('pc-fun.css?v=A97'));
+for(const f of ['web-town','kids-extra','kids-data','kids-more','portal-boards','xp-minihome'])assert.ok(new RegExp('src/'+f+'\\.js\\?v=A(9[7-9]|1\\d\\d)').test(html),'버전 '+f);assert.ok(html.includes('web-town.css?v=A97')&&html.includes('pc-fun.css?v=A97'));
 const BAD=[String.fromCharCode(0x2014),'병맛','힐링','먹방','고인물','흑역사','귀요미','치맥','멘붕','킹왕짱','엄친아','된장녀','와이파이','스마트폰','카톡','카카오','페북','페이스북','트위터','유튜브','인스타','넷플릭스','인생샷','갓생','꿀잼','노잼','레전드','인싸','실화냐','개이득','지못미','국룰','꿀팁','최애','덕질','혼밥'];
 for(const f of ['src/web-town.js','src/kids-extra.js','server_minihome.js','assets/pc-desktop/web-town.css']){const body=read(f).replace(/\/\*[\s\S]*?\*\//g,'');for(const b of BAD)assert.ok(!body.includes(b),b+' in '+f)}
 assert.ok(!/사장님 호출|음식 주문/.test(read('src/web-town.js')),'PC방 음식 주문은 다시 넣지 않는다');

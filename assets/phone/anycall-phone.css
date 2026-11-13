@@ -1,4 +1,4 @@
-/* A98 애니콜 슬라이드폰 (버전 A98 · 2026-11-13 KST)
+/* A98 애니콜 슬라이드폰 (버전 A98 · 2026-11-13 KST), A99 · A100 고침 (2026-11-13 KST)
    간편모드: 게임 위에 떠 있는 작은 휴대폰. 빈 곳은 누름이 게임으로 지나간다.
    전체화면: 어두운 바탕 위 가운데. */
 .ac-root{position:fixed;inset:0;z-index:4000;pointer-events:none;font-family:'Malgun Gothic','Apple SD Gothic Neo','NanumGothic',sans-serif}
@@ -30,3 +30,18 @@
 .ac-bag-detail .ac-thumb.big{width:56px;height:96px}
 .ac-bag-detail .bag-description{text-align:center}
 @media(max-width:520px){.ac-bar{gap:3px;padding:0 4px}.ac-bar button{padding:0 5px}.ac-root.ac-full .ac-tip{display:none}}
+/* A99 (2026-11-13 KST): 글 쓰는 화면의 자판 입력 칸, 문자와 전화가 올 때 진동 */
+.ac-type{pointer-events:auto;display:flex;gap:4px;align-items:center;height:32px;margin-top:6px;padding:0 4px;background:rgba(18,22,32,.92);border:1px solid #4a5468;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.35)}
+.ac-type[hidden]{display:none}
+.ac-type input{flex:1;min-width:0;height:24px;border:1px solid #8090ac;border-radius:4px;padding:0 6px;font:13px 'Malgun Gothic','Apple SD Gothic Neo','NanumGothic',sans-serif;background:#fffef6;color:#16202e}
+.ac-type input:focus{outline:2px solid #ffb35a;outline-offset:0}
+.ac-type button{font:inherit;font-size:11px;color:#fff;background:#e8742a;border:1px solid #ff9a4a;border-radius:5px;height:24px;padding:0 8px;cursor:pointer;font-family:'Malgun Gothic','Apple SD Gothic Neo','NanumGothic',sans-serif}
+@keyframes ac-buzz{0%,100%{transform:translate(0,0) rotate(0)}10%,50%,90%{transform:translate(-3px,0) rotate(-1.2deg)}30%,70%{transform:translate(3px,0) rotate(1.2deg)}}
+.ac-canvas.ac-buzz{animation:ac-buzz .25s linear 3}
+/* A100 (2026-11-13 KST): 카메라 조준 틀 (게임 화면 위) */
+.ac-aim{position:absolute;z-index:30;pointer-events:none;border:2px dashed rgba(255,255,255,.95);box-shadow:0 0 0 1px rgba(0,0,0,.45),inset 0 0 0 1px rgba(0,0,0,.35);border-radius:3px}
+.ac-aim[hidden]{display:none}
+.ac-aim::before,.ac-aim::after{content:'';position:absolute;left:50%;top:50%;background:rgba(255,80,60,.95)}
+.ac-aim::before{width:14px;height:2px;margin:-1px 0 0 -7px}
+.ac-aim::after{width:2px;height:14px;margin:-7px 0 0 -1px}
+.ac-aim span{position:absolute;left:0;top:-18px;font:bold 11px 'Malgun Gothic','Apple SD Gothic Neo','NanumGothic',sans-serif;color:#fff;background:rgba(232,116,42,.92);padding:1px 5px;border-radius:3px;white-space:nowrap}

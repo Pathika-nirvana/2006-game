@@ -492,5 +492,6 @@ function attach(X){
   live:{list:()=>MN.list.map(r=>({...r})),me:()=>MN.me,home:hid=>MN.homes[hid]||null,guest:hid=>MN.gb[hid]||null,receive:mReceive,publish:()=>publish(true),uid:()=>myUid(),payload:()=>pubPayload(S()),photos:()=>photoJobs(S(),X.shell&&X.shell.pics?X.shell.pics():[])}};
  MN.src=()=>({m:S(),pics:X.shell&&X.shell.pics?X.shell.pics():[]});MN.active=onMini;mEnsure();if(mready())publish(true);
  return api}
-w.MiniHome={attach,FRIENDS,SHOP,SLOTS,MOODS,drawItem,drawRoom,scene,chibi,live:MN,pubPayload,photoJobs,version:'A97'};
+/* A100: 휴대폰 NATE의 싸이월드 모바일이 같은 줄 세우기로 방명록 읽기, 쓰기, 놀러 가기를 보낼 수 있게 send 를 내보낸다 */
+w.MiniHome={attach,FRIENDS,SHOP,SLOTS,MOODS,drawItem,drawRoom,scene,chibi,live:MN,pubPayload,photoJobs,send:(kind,o)=>(mEnsure(),['read','visit','write'].includes(kind)&&o&&typeof o==='object'?mq(kind,o):false),version:'A97'};
 })(window);

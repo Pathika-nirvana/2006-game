@@ -1,4 +1,9 @@
-/* A98 애니콜 슬라이드폰 몸체 (버전 A98 · 2026-11-13 KST)
+/* A100 애니콜 슬라이드폰 몸체 (버전 A100 · 2026-11-13 KST)
+   A100: 닫힘 거리를 다시 535로(아래판 끝이 살짝 보이는 쪽이 자연스러움). 닫혔을 때 윗판 아래 양 모서리가 뾰족하게 튀어나와
+        보이던 것은, 닫힐수록 그 모서리를 둥글게 깎아 그려서 아래판의 둥근 끝과 이어지게 했다(그림 파일은 그대로).
+        카메라 조준 틀을 게임 화면 위에 보여 주고, 찍은 사진을 내 컴퓨터 파일로 내려받을 수 있다.
+   A99: 닫힘 거리 595(A100에서 되돌림).
+        글 쓰는 화면에서는 휴대폰 아래에 자판 입력 칸이 생긴다. 문자와 전화가 오면 진동(흔들림)과 알림.
    - 받은 그림 두 장을 그대로 쓴다: 하판(숫자 키패드, 고정)과 상판(액정과 조작 버튼, 움직임).
    - 그림을 바꿔 끼우지 않는다. 하판을 먼저 그리고, 액정 화면, 그 위에 상판을 겹친 뒤 상판의 세로 위치만 바꾼다.
    - 열기와 닫기는 기본 260ms, 끝에서 부드럽게 멈춘다. 움직이는 동안 들어온 누름은 무시한다.
@@ -7,18 +12,19 @@
    - 전체화면: 테두리를 두 번 누르거나 아래 선택 막대에서 고른다.
    좌표는 모두 원본 그림(887×1774) 기준이고, 화면 크기에 맞춰 같은 비율로 줄인다. */
 (function(w){'use strict';
-const doc=w.document,VERSION='A98';
+const doc=w.document,VERSION='A100';
 const SRC={front:'assets/phone/anycall_front_moving.png?v=A98',back:'assets/phone/anycall_back_fixed.png?v=A98'};
 /* 원본 그림 실측값
    stage: 양옆 바깥(알파 1 이하의 잡티뿐)을 뺀, 실제로 보이는 범위
-   slide: 닫힌 상태에서 상판이 아래로 내려가 있는 거리 (미리보기 두 장과 맞춰 본 값)
+   slide: 닫힌 상태에서 상판이 아래로 내려가 있는 거리. 미리보기 두 장과 맞춘 535(하판 아래 끝이 상판 밑으로 살짝 보임).
+          A99에서 595로 바꿨다가, 아래 끝이 보이는 쪽이 자연스럽다고 해서 A100에서 되돌렸다.
    front/back: 각 그림에서 실제로 쓰는 위아래 범위
    hole: 상판 액정 구멍 (투명한 부분 252~629 × 231~694)
    lcd: 액정 화면을 그리는 칸. 구멍보다 사방 4픽셀 넓어서 가장자리가 상판 테두리 밑에 숨는다. */
 const G=Object.freeze({imgW:887,imgH:1774,stage:Object.freeze({x:140,y:16,w:600,h:1730}),slide:535,
  front:Object.freeze({y:16,h:1140}),back:Object.freeze({y:944,h:802}),
  hole:Object.freeze({x:252,y:231,w:377,h:463}),lcd:Object.freeze({x:248,y:227,w:385,h:471}),rim:34});
-const DUR=260,BAR=40,MIN_H=250;
+const DUR=260,BAR=40,TYPE_H=38,MIN_H=250;
 const easeOut=t=>1-Math.pow(1-t,3);
 /* 실루엣: 알파 128 이상인 범위를 8픽셀 간격으로 잰 값 (가로줄마다 왼쪽 오른쪽, 세로줄마다 위 아래).
    눌린 곳이 휴대폰 몸인지, 테두리인지 가리는 데 쓴다. file:// 로 열어도 그림 픽셀을 읽을 필요가 없다. */
@@ -73,8 +79,8 @@ function slideSound(open){if(!prefs.slideTone)return;const v=.05+.05*prefs.keyVo
 const P={built:false,ready:false,loading:false,shown:false,mode:prefs.mode,pos:G.slide,open:false,anim:null,press:null,dirty:true,lcdDirty:true,k:0,cssW:0,cssH:0,raf:0,hint:null,gesture:null,lastRim:null,resize:null};
 let clock=()=>(w.performance?.now?w.performance.now():Date.now());
 const IMG={front:null,back:null};
-const C={front:null,back:null,lcd:null,lcdG:null,k:0};
-let root,win,canvas,g,bar,segMini,segFull,lcd=null;
+const C={front:null,corner:null,back:null,lcd:null,lcdG:null,k:0};
+let root,win,canvas,g,bar,segMini,segFull,typ,typIn,lcd=null;
 
 function E(tag,cls,text){const e=doc.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e}
 function canvasOf(wd,ht){const c=doc.createElement('canvas');c.width=Math.max(1,wd);c.height=Math.max(1,ht);return c}
@@ -92,11 +98,18 @@ function build(){if(P.built||!doc?.body)return;P.built=true;
  minus.type=plus.type=close.type='button';minus.title='작게';plus.title='크게';close.title='휴대폰을 가방에 넣기 (N)';minus.setAttribute('aria-label','휴대폰 작게');plus.setAttribute('aria-label','휴대폰 크게');
  const grip=E('span','ac-grip');grip.title='끌어서 크기 조절';grip.setAttribute('aria-hidden','true');
  bar.append(seg,minus,plus,tip,close,grip);
+ typ=E('div','ac-type');typ.hidden=true;typIn=E('input');typIn.type='text';typIn.setAttribute('aria-label','휴대폰 글 자판으로 쓰기');typIn.autocomplete='off';typIn.spellcheck=false;
+ const typGo=E('button','','보내기');typGo.type='button';typ.append(typIn,typGo);
+ typIn.addEventListener('input',e=>{const c=P.typing;if(!c)return;c.onInput?.(typIn.value);if(!e.isComposing){const v=c.get?.();if(v!=null&&v!==typIn.value)typIn.value=v}});
+ typIn.addEventListener('compositionend',()=>{const c=P.typing;if(!c)return;c.onInput?.(typIn.value)});
+ typIn.addEventListener('keydown',e=>{if(e.isComposing||e.keyCode===229)return;if(e.key==='Enter'){e.preventDefault();P.typing?.onEnter?.();const v=P.typing?.get?.();if(v!=null)typIn.value=v}else if(e.key==='Escape'){e.preventDefault();typIn.blur();doc.getElementById('game')?.focus?.()}});
+ typGo.addEventListener('pointerdown',e=>e.stopPropagation());typGo.addEventListener('click',e=>{e.preventDefault();P.typing?.onEnter?.();const v=P.typing?.get?.();if(v!=null)typIn.value=v});
+ typ.addEventListener('pointerdown',e=>e.stopPropagation());
  const click=(b,fn)=>b.addEventListener('click',e=>{e.preventDefault();fn();b.blur?.()});
  click(segMini,()=>setMode('mini'));click(segFull,()=>setMode('full'));click(minus,()=>resizeBy(-60));click(plus,()=>resizeBy(60));click(close,()=>hide());
  for(const b of [segMini,segFull,minus,plus,close])b.addEventListener('pointerdown',e=>e.stopPropagation());
  bar.addEventListener('pointerdown',barDown);grip.addEventListener('pointerdown',gripDown);
- win.append(canvas,bar);root.append(back,win);doc.body.append(root);
+ win.append(canvas,typ,bar);root.append(back,win);doc.body.append(root);
  canvas.addEventListener('pointerdown',down);canvas.addEventListener('pointermove',move);canvas.addEventListener('pointerup',up);canvas.addEventListener('pointercancel',()=>{P.gesture=null});
  canvas.addEventListener('contextmenu',e=>e.preventDefault());
  w.addEventListener('resize',()=>{if(P.shown)layout()});
@@ -120,7 +133,7 @@ function layout(){if(!P.built)return;const {vw,vh}=vp();let H;
  const cssW=Math.round(H*G.stage.w/G.stage.h),dpr=Math.min(3,Math.max(1,w.devicePixelRatio||1)),pw=Math.round(cssW*dpr),ph=Math.round(H*dpr);
  canvas.style.width=cssW+'px';canvas.style.height=H+'px';if(canvas.width!==pw||canvas.height!==ph){canvas.width=pw;canvas.height=ph}
  P.cssW=cssW;P.cssH=H;P.k=ph/G.stage.h;if(C.k!==P.k)buildCache();
- const winW=Math.max(cssW,P.mode==='full'?Math.min(vw-16,430):214),winH=H+BAR;win.style.width=winW+'px';
+ const winW=Math.max(cssW,P.mode==='full'?Math.min(vw-16,430):214),winH=H+BAR+(P.typing?TYPE_H:0);win.style.width=winW+'px';typ.style.width=Math.min(winW,Math.max(cssW+40,230))+'px';
  if(P.mode==='full'){win.style.left=Math.round((vw-winW)/2)+'px';win.style.top=Math.max(4,Math.round((vh-winH)/2))+'px'}
  else{if(prefs.x==null||prefs.y==null){const fr=frameRect(),right=fr?Math.min(vw,fr.right):vw,bottom=fr?Math.min(vh,fr.bottom):vh;prefs.x=right-winW-8+(fr&&!frameRoom(H)?8:0);prefs.y=fr&&!frameRoom(H)?bottom+6:bottom-winH-8}
   prefs.x=clamp(prefs.x,4-Math.round((winW-cssW)/2),vw-winW-4+Math.round((winW-cssW)/2));prefs.y=clamp(prefs.y,4,vh-winH-4);
@@ -129,9 +142,19 @@ function layout(){if(!P.built)return;const {vw,vh}=vp();let H;
  segMini.setAttribute('aria-pressed',String(P.mode!=='full'));segFull.setAttribute('aria-pressed',String(P.mode==='full'));
  P.dirty=P.lcdDirty=true;schedule()}
 /* 그림은 크기가 바뀔 때만 한 번 줄여 두고, 매 장면에는 좌표만 바꿔서 붙인다 */
+/* 윗판 아래 모서리를 깎는 선 (원본 좌표). 옆면(x=150,730)에서 내려오다 아래 가장자리 x=200, 686에서 만난다 */
+const CORNER={y0:1000,yb:1116,lx:200,rx:686,p:2.2};
+function cornerX(y,side){const c=CORNER,t=Math.max(0,(y-c.y0)/(c.yb-c.y0)),e=Math.pow(t,c.p);return side<0?150+(c.lx-150)*e:730-(730-c.rx)*e}
+function cornerPath(x,k,ox,oy){x.beginPath();for(const side of [-1,1]){const edge=side<0?ox-10:ox+G.stage.w+10;x.moveTo((edge-ox)*k,(CORNER.y0-oy)*k);
+ for(let y=CORNER.y0;y<=1160;y+=4)x.lineTo((cornerX(y,side)-ox)*k,(y-oy)*k);x.lineTo((edge-ox)*k,(1160-oy)*k);x.closePath()}}
+function cornerEdge(x,k,ox,oy){x.beginPath();for(const side of [-1,1]){x.moveTo((cornerX(CORNER.y0,side)-ox)*k,(CORNER.y0-oy)*k);for(let y=CORNER.y0;y<=1112;y+=4)x.lineTo((cornerX(y,side)-ox)*k,(y-oy)*k)}}
 function buildCache(){const k=P.k;C.k=k;if(!P.ready||!g)return;const sw=G.stage.w,sx=G.stage.x;
  const mk=(im,y,h)=>{const c=canvasOf(Math.round(sw*k),Math.round(h*k)),x=c.getContext('2d');x.imageSmoothingEnabled=true;x.imageSmoothingQuality='high';x.drawImage(im,sx,y,sw,h,0,0,c.width,c.height);return c};
  C.front=mk(IMG.front,G.front.y,G.front.h);C.back=mk(IMG.back,G.back.y,G.back.h);
+ /* 윗판 아래 양 모서리: 깎아 낸 모양(C.front)과 원래 모양(C.corner)을 따로 둔다. 열렸을 때는 원래 모양, 닫힐수록 깎은 모양으로 천천히 바뀐다 */
+ C.corner=mk(IMG.front,G.front.y,G.front.h);
+ const fc=C.front.getContext('2d');fc.globalCompositeOperation='destination-out';cornerPath(fc,k,G.stage.x,G.front.y);fc.fill();
+ fc.globalCompositeOperation='source-atop';fc.strokeStyle='rgba(120,128,142,.55)';fc.lineWidth=Math.max(1,2.2*k);cornerEdge(fc,k,G.stage.x,G.front.y);fc.stroke();fc.globalCompositeOperation='source-over';
  C.lcd=canvasOf(Math.round(G.lcd.w*k),Math.round(G.lcd.h*k));C.lcdG=C.lcd.getContext('2d');P.lcdDirty=true}
 
 /* ---------- 그리기 ---------- */
@@ -142,7 +165,7 @@ function paint(now){if(!g||!P.ready||!C.front)return;if(P.lcdDirty){P.lcdDirty=f
  const k=P.k,off=Math.round(P.pos*k);g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,canvas.width,canvas.height);
  g.drawImage(C.back,0,Math.round((G.back.y-G.stage.y)*k));
  g.drawImage(C.lcd,Math.round((G.lcd.x-G.stage.x)*k),Math.round((G.lcd.y-G.stage.y)*k)+off);
- g.drawImage(C.front,0,off);
+ {const t=Math.min(1,Math.max(0,P.pos/G.slide)),a=C.corner?1-t*t*(3-2*t):0;if(a>.995)g.drawImage(C.corner,0,off);else{g.drawImage(C.front,0,off);if(a>.005){g.globalAlpha=a;g.drawImage(C.corner,0,off);g.globalAlpha=1}}}
  if(P.press&&now<P.press.until){const p=P.press,x=(p.cx-G.stage.x)*k,y=(p.cy-G.stage.y+(p.layer==='f'?P.pos:0))*k,r=(p.r||44)*k,a=.42*(1-Math.max(0,(now-p.t0)/(p.until-p.t0))*.6);
   const gr=g.createRadialGradient(x,y,0,x,y,r);gr.addColorStop(0,'rgba(200,232,255,'+a.toFixed(3)+')');gr.addColorStop(1,'rgba(200,232,255,0)');g.fillStyle=gr;g.beginPath();g.arc(x,y,r,0,Math.PI*2);g.fill()}
  /* 비어 있는 윗부분(닫혔을 때 상판 위쪽)은 누름이 게임으로 지나가게 잘라 둔다 */
@@ -168,7 +191,7 @@ function press(id,src){if(!PAD.includes(id)&&!TONE[id])return false;if(P.anim)re
  else if(NAV_GLOW[id])glow={layer:'f',cx:NAV_GLOW[id][0],cy:NAV_GLOW[id][1],r:id==='nate'?52:40};
  else{const b=FRONT.find(x=>x.id===id);if(b)glow={layer:'f',cx:b.cx,cy:b.cy,r:50}}
  if(glow)P.press={...glow,id,t0:now,until:now+140};
- keyBeep(id);try{lcd?.key?.(id,src)}catch(err){w.console?.error?.(err)}P.lcdDirty=P.dirty=true;schedule();return true}
+ if(!lcd?.ownsSound?.(id))keyBeep(id);try{lcd?.key?.(id,src)}catch(err){w.console?.error?.(err)}P.lcdDirty=P.dirty=true;schedule();return true}
 /* 원본 좌표로 무엇이 눌렸는지 */
 function hit(nx,ny){const fy=ny-P.pos,df=silAt(SIL.f,nx,fy);
  if(df!=null){
@@ -181,7 +204,7 @@ function hit(nx,ny){const fy=ny-P.pos,df=silAt(SIL.f,nx,fy);
   return{kind:db<G.rim?'rim':'body',layer:'b'}}
  return null}
 function toNative(e){const r=canvas.getBoundingClientRect();return{x:G.stage.x+(e.clientX-r.left)*G.stage.w/Math.max(1,r.width),y:G.stage.y+(e.clientY-r.top)*G.stage.h/Math.max(1,r.height)}}
-function down(e){if(e.button>0)return;const n=toNative(e),h=hit(n.x,n.y);e.preventDefault();w.GameAudio?.unlock?.();
+function down(e){if(e.button>0)return;const n=toNative(e),h=hit(n.x,n.y);e.preventDefault();w.GameAudio?.unlock?.();if(typIn&&doc.activeElement===typIn)typIn.blur();
  if(!h){P.gesture=null;return}
  if(h.kind==='btn'||h.kind==='key'){P.gesture=null;press(h.id,'pointer');return}
  P.gesture={kind:h.kind,x:e.clientX,y:e.clientY,ox:prefs.x,oy:prefs.y,drag:false,id:e.pointerId};try{canvas.setPointerCapture(e.pointerId)}catch(_){}}
@@ -215,15 +238,16 @@ w.addEventListener('keydown',onKey,true);
 /* ---------- 보이기 ---------- */
 function setMode(m){P.mode=m==='full'?'full':'mini';prefs.mode=P.mode;savePrefs();if(P.mode==='full')w.__GAME_DEBUG__?.clearInput?.();if(P.shown)layout()}
 function show(mode){build();if(!root)return;if(mode)P.mode=prefs.mode=mode==='full'?'full':'mini';load();root.hidden=false;P.shown=true;doc.body.classList.add('ac-phone-on');lcd?.event?.('show');if(P.ready)layout();else schedule();savePrefs()}
-function hide(){if(!root)return;root.hidden=true;P.shown=false;P.gesture=null;doc.body.classList.remove('ac-phone-on');if(P.raf&&w.cancelAnimationFrame)w.cancelAnimationFrame(P.raf);P.raf=0;lcd?.event?.('hide');doc.getElementById('game')?.focus?.()}
+function hide(){if(!root)return;root.hidden=true;P.shown=false;if(P.aim)P.aim.hidden=true;P.gesture=null;doc.body.classList.remove('ac-phone-on');if(P.raf&&w.cancelAnimationFrame)w.cancelAnimationFrame(P.raf);P.raf=0;lcd?.event?.('hide');doc.getElementById('game')?.focus?.()}
 function toggle(mode){if(P.shown&&(!mode||mode===P.mode))hide();else show(mode)}
 
 /* ---------- 가방 속 기본 소지품 ---------- */
 const thumbs=new Set();
-function drawThumb(c){const x=c.getContext?.('2d');if(!x||!P.ready)return;const s=c.height/(1743-551+8);x.clearRect(0,0,c.width,c.height);x.imageSmoothingQuality='high';
- const ox=(c.width-G.stage.w*s)/2;x.drawImage(IMG.back,G.stage.x,944,G.stage.w,802,ox,(944-547)*s,G.stage.w*s,802*s);
- x.fillStyle='#0b1a33';x.fillRect(ox+(G.hole.x-G.stage.x)*s,(G.hole.y+G.slide-547)*s,G.hole.w*s,G.hole.h*s);
- x.drawImage(IMG.front,G.stage.x,16,G.stage.w,1140,ox,(16+G.slide-547)*s,G.stage.w*s,1140*s)}
+function drawThumb(c){const x=c.getContext?.('2d');if(!x||!P.ready)return;const top=G.slide+14,bottom=G.slide+1156,s=c.height/(bottom-top);x.clearRect(0,0,c.width,c.height);x.imageSmoothingQuality='high';
+ const ox=(c.width-G.stage.w*s)/2;x.drawImage(IMG.back,G.stage.x,944,G.stage.w,802,ox,(944-top)*s,G.stage.w*s,802*s);
+ x.fillStyle='#0b1a33';x.fillRect(ox+(G.hole.x-G.stage.x)*s,(G.hole.y+G.slide-top)*s,G.hole.w*s,G.hole.h*s);
+ const fr=canvasOf(Math.round(G.stage.w*s),Math.round(1140*s)),fx=fr.getContext('2d');if(fx){fx.drawImage(IMG.front,G.stage.x,16,G.stage.w,1140,0,0,fr.width,fr.height);fx.globalCompositeOperation='destination-out';cornerPath(fx,s,G.stage.x,16);fx.fill()}
+ x.drawImage(fr,ox,(16+G.slide-top)*s)}
 function paintThumbs(){for(const c of thumbs){if(!c.isConnected){thumbs.delete(c);continue}drawThumb(c)}}
 function bagCard(){const b=E('button','item-card shelf-item ac-bag-card');b.type='button';b.dataset.item='anycall-basic';const c=canvasOf(56,96);c.className='ac-thumb';thumbs.add(c);
  const info=E('div','item-card-copy');info.append(E('strong','','기본형 애니콜'),E('small','','늘 가지고 다니는 것'));b.append(c,info);load();drawThumb(c);return b}
@@ -244,13 +268,40 @@ const host={
  label(text){const l=doc.getElementById('phoneLabel');if(l)l.textContent=text||'애니콜'},
  slide,setMode,hide,
  playTune(ring,onEnd){const T=w.WebTown;if(!T?.synthPlay||!ring)return{silent:true};return T.synthPlay([[ring[5],'square',.13],[ring[6]||'R:1','triangle',.18]],ring[4],onEnd)},
- stopTune(){w.WebTown?.synthStop?.()}
+ stopTune(){w.WebTown?.synthStop?.()},
+ /* 글 쓰는 화면: 휴대폰 아래 자판 입력 칸 (cfg 가 없으면 숨김) */
+ typing(cfg){const had=!!P.typing;P.typing=cfg||null;if(!typ)return;typ.hidden=!cfg;
+  if(cfg){typIn.placeholder=cfg.placeholder||'자판으로 쓰기';if(typIn.value!==(cfg.value||''))typIn.value=cfg.value||'';
+   if(P.shown&&!(w.matchMedia?.('(pointer:coarse)')?.matches))setTimeout(()=>{if(P.typing===cfg&&P.shown)try{typIn.focus({preventScroll:true})}catch(_){}},40)}
+  else if(doc.activeElement===typIn){typIn.blur();doc.getElementById('game')?.focus?.()}
+  if(had!==!!cfg&&P.shown)layout()},
+ typingValue(v){if(!typIn||!P.typing)return;if(typIn.value!==v)typIn.value=v},
+ get typingShown(){return!!P.typing},
+ buzz(){if(!canvas)return;canvas.classList.remove('ac-buzz');void canvas.offsetWidth;canvas.classList.add('ac-buzz');clearTimeout(P.buzzT);P.buzzT=setTimeout(()=>canvas.classList.remove('ac-buzz'),760);P.buzzed=(P.buzzed||0)+1},
+ alert(o){if(!P.shown){if(o?.kind==='call')show();else toast('[휴대폰] '+(o?.text||'알림')+' · 메뉴의 휴대폰 탭이나 N 키로 꺼내 봐')}},
+ toast,
+ gameCanvas(){return doc.getElementById('game')},
+ makeCanvas:(wd,ht)=>canvasOf(wd,ht),
+ makeImage(url,onload){if(!url||!w.Image)return null;const im=new w.Image();im.onload=()=>onload?.();im.src=url;return im},
+ scene(){return w.__GAME_DEBUG__?.player?.scene||'street'},
+ me(){const p=w.__GAME_DEBUG__?.player;return p?{scene:p.scene,x:p.x}:null},
+ /* 카메라 조준 틀: 게임 화면 위에 찍힐 범위를 점선으로 보여 준다 (r: 게임 그림 좌표 {x,y,w,h}, 없으면 숨김) */
+ cameraFrame(r){const gc=doc.getElementById('game'),fr=gc?.parentElement;if(!gc||!fr)return;let el=P.aim;
+  if(!r||!P.shown){if(el)el.hidden=true;return}
+  if(!el){el=P.aim=E('div','ac-aim');el.append(E('span','','휴대폰 카메라'));el.setAttribute('aria-hidden','true');fr.append(el)}
+  const gr=gc.getBoundingClientRect?.(),pr=fr.getBoundingClientRect?.();if(!gr||!pr||!gr.width)return;const sx=gr.width/(gc.width||480),sy=gr.height/(gc.height||270);
+  el.hidden=false;el.style.left=Math.round(gr.left-pr.left+r.x*sx)+'px';el.style.top=Math.round(gr.top-pr.top+r.y*sy)+'px';el.style.width=Math.round(r.w*sx)+'px';el.style.height=Math.round(r.h*sy)+'px'},
+ /* 사진을 내 컴퓨터 파일로 내려받기 (그림판과 같은 방법) */
+ download(name,url){try{const a=doc.createElement('a');let href=url,made=null;
+  try{if(typeof w.Blob==='function'&&w.URL?.createObjectURL&&typeof w.atob==='function'){const m=/^data:([a-z/]+);base64,(.*)$/.exec(url);if(m){const bin=w.atob(m[2]),buf=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)buf[i]=bin.charCodeAt(i);made=w.URL.createObjectURL(new w.Blob([buf],{type:m[1]}));href=made}}}catch(_){href=url;made=null}
+  a.href=href;a.download=name;a.style.display='none';(doc.body||doc.documentElement).appendChild(a);a.click?.();a.remove?.();if(made)setTimeout(()=>{try{w.URL.revokeObjectURL(made)}catch(_){}},4000);P.downloads=(P.downloads||0)+1;return true}catch(_){return false}},
+ pcSave(name,url,wd,ht){const sh=w.XPDesktop?.current?.modules?.shell;if(!sh?.picSave)return null;try{return sh.picSave(name,url,wd,ht)}catch(_){return{ok:false}}}
 };
 
 w.AnycallPhone={version:VERSION,geometry:G,duration:DUR,keymap:KEYMAP,pad:PAD.slice(),keyNames:KEY_NAMES,
  show,hide,toggle,setMode,slide,press,bagCard,bagDetail,
  get lcd(){build();return lcd},
  get state(){return{shown:P.shown,mode:P.mode,pos:P.pos,open:keypadOpen(),sliding:!!P.anim,ready:P.ready,cssW:P.cssW,cssH:P.cssH,k:P.k,x:prefs.x,y:prefs.y,h:prefs.h,keyTone:prefs.keyTone,keyVol:prefs.keyVol}},
- _test:{hit,toneFor,beeps:()=>A.log.slice(),beepCount:()=>A.count,step:now=>step(now),setClock(fn){clock=fn},sil:SIL,front:FRONT,nav:NAV,padCols:PAD_COLS,padRows:PAD_ROWS,layout,paint:()=>paint(clock()),get canvas(){return canvas}}};
+ _test:{cornerX,corner:CORNER,cache:C,hit,toneFor,beeps:()=>A.log.slice(),beepCount:()=>A.count,step:now=>step(now),setClock(fn){clock=fn},sil:SIL,front:FRONT,nav:NAV,padCols:PAD_COLS,padRows:PAD_ROWS,layout,paint:()=>paint(clock()),get canvas(){return canvas}}};
 if(doc?.body)build();else doc?.addEventListener?.('DOMContentLoaded',build);
 })(window);

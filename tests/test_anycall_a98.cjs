@@ -1,5 +1,5 @@
 'use strict';
-/* A98 (2026-11-13 KST): 애니콜 슬라이드폰. 받은 그림 그대로 쓰기, 상판을 실제로 옮기는 260ms 애니메이션,
+/* A98 (2026-11-13 KST): 애니콜 슬라이드폰. (A99에서 닫힘 거리 595, 메뉴 16칸, 문자 쓰기에 맞춰 고침) 받은 그림 그대로 쓰기, 상판을 실제로 옮기는 260ms 애니메이션,
    움직이는 동안 누름 막기, 닫혔을 때 숫자판 막기, 버튼 위치와 소리 높이, 간편모드와 전체화면, 키보드,
    액정 화면(전화, 문자, 통화 기록, 벨소리, 배경 화면, 게임, NATE, 내 위치, 설정), 메뉴판의 휴대폰 탭, 가방 속 기본 소지품을 검사한다. */
 const assert=require('node:assert/strict'),fs=require('fs'),vm=require('vm'),path=require('path'),crypto=require('crypto');
@@ -22,9 +22,9 @@ assert.ok(html.includes("uiClick('phoneBtn',()=>window.AnycallPhone?.toggle());"
 assert.ok(html.includes("if(k==='KeyN'){window.AnycallPhone?.toggle();return}"),'N 키');assert.ok(html.includes('N 휴대폰 꺼내기/넣기'),'조작법 안내');
 assert.ok(html.includes('if(D.outfit)D.outfit.textContent='),'V 옷 바꾸기는 그대로 두되 지운 탭을 건드리지 않음');
 assert.ok(html.includes("window.AnycallPhone?.bagCard?.()"),'가방에 기본 소지품');
-const iWA=html.indexOf('src/world-audio.js'),iL=html.indexOf('<script src="src/anycall-lcd.js?v=A98"></script>'),iP=html.indexOf('<script src="src/anycall-phone.js?v=A98"></script>');
-assert.ok(iWA>0&&iL>iWA&&iP>iL,'읽는 순서: 소리 → 액정 → 몸체');assert.ok(html.includes('<link rel="stylesheet" href="assets/phone/anycall-phone.css?v=A98">'));assert.ok(html.includes('src/web-town.js?v=A98'));
-for(const f of ['src/anycall-phone.js','src/anycall-lcd.js','assets/phone/anycall-phone.css']){const s=read(f);assert.ok(s.includes('A98')&&s.includes('2026-11-13'),'버전과 날짜 '+f);assert.ok(!s.includes(String.fromCharCode(0x2014)),'긴 줄표 없음 '+f)}
+const iWA=html.indexOf('src/world-audio.js'),iL=html.search(/<script src="src\/anycall-lcd\.js\?v=A(?:9[89]|10\d)"><\/script>/),iP=html.search(/<script src="src\/anycall-phone\.js\?v=A(?:9[89]|10\d)"><\/script>/);
+assert.ok(iWA>0&&iL>iWA&&iP>iL,'읽는 순서: 소리 → 액정 → 몸체');assert.ok(/<link rel="stylesheet" href="assets\/phone\/anycall-phone\.css\?v=A(?:9[89]|10\d)">/.test(html));assert.ok(html.includes('src/web-town.js?v=A98'));
+for(const f of ['src/anycall-phone.js','src/anycall-lcd.js','assets/phone/anycall-phone.css']){const s=read(f);assert.ok(/A(?:9[89]|10\d)/.test(s)&&s.includes('2026-11-13'),'버전과 날짜 '+f);assert.ok(!s.includes(String.fromCharCode(0x2014)),'긴 줄표 없음 '+f)}
 assert.ok(/drawWall,/.test(read('src/web-town.js').split('w.WebTown=')[1]),'배경 화면 그리기를 내보냄');
 
 /* 3. 가짜 화면에서 모듈 읽기 */
@@ -57,20 +57,20 @@ w.window=w;
 vm.createContext(w);
 vm.runInContext(read('src/web-town.js').replace(/^[\s\S]*?(const RINGS=\[)/,'$1').replace(/\nconst SMS_ART=[\s\S]*$/,'')+';window.WebTown={RINGS,PHONE_WALLS,drawWall,CONTACTS,synthPlay(){return{silent:true,why:"off"}},synthStop(){}};',w);
 assert.equal(w.WebTown.RINGS.length,10,'폰꾸미기 천국 벨소리를 그대로 씀');
-vm.runInContext(read('src/anycall-lcd.js'),w);vm.runInContext(read('src/anycall-phone.js'),w);
+vm.runInContext(read('src/anycall-lcd.js'),w);if(fs.existsSync(path.join(ROOT,'src/anycall-nate.js')))vm.runInContext(read('src/anycall-nate.js'),w);vm.runInContext(read('src/anycall-phone.js'),w);
 const A=w.AnycallPhone,T=A._test,L=()=>A.lcd,G=A.geometry;let now=1000;T.setClock(()=>now);
-assert.equal(A.version,'A98');assert.equal(w.AnycallLCD.version,'A98');
+assert.ok(/^A(?:9[89]|10\d)$/.test(A.version));assert.ok(/^A(?:9[89]|10\d)$/.test(w.AnycallLCD.version));
 const root=doc.body.children.find(n=>n.className.includes('ac-root'));assert.ok(root&&root.hidden,'몸체는 처음엔 숨어 있음');
 
 /* 4. 좌표: 실측값과 액정 칸 */
-assert.equal(G.slide,535,'닫힘 이동 거리 535');assert.equal(A.duration,260,'기본 260ms');
+assert.equal(G.slide,535,'닫힘 이동 거리 535 (A99의 595는 A100에서 되돌림)');assert.equal(A.duration,260,'기본 260ms');
 assert.ok(G.lcd.x<G.hole.x&&G.lcd.y<G.hole.y&&G.lcd.x+G.lcd.w>G.hole.x+G.hole.w&&G.lcd.y+G.lcd.h>G.hole.y+G.hole.h,'액정 칸이 구멍을 덮음');
 assert.ok(G.stage.x<=152&&G.stage.x+G.stage.w>=728&&G.stage.y<=20&&G.stage.y+G.stage.h>=1743,'보이는 범위가 실루엣을 다 품음');
 
 /* 5. 보이기, 그림 불러오기 */
 A.show();assert.equal(root.hidden,false);assert.equal(A.state.mode,'mini','처음은 간편모드');assert.equal(images.length,2);
 for(const im of images)im.onload();assert.equal(A.state.ready,true);
-assert.ok(A.state.cssH>=250&&A.state.cssH<=520,'간편모드 크기');assert.equal(Math.round(A.state.cssW),Math.round(A.state.cssH*600/1730),'비율 그대로');
+assert.ok(A.state.cssH>=250&&A.state.cssH<=520,'간편모드 크기');assert.equal(Math.round(A.state.cssW),Math.round(A.state.cssH*G.stage.w/G.stage.h),'비율 그대로');
 assert.equal(ids.phoneLabel.textContent,'새 문자 2','안 읽은 문자 수가 탭에 보임');
 
 /* 6. 누른 곳 찾기 */
@@ -86,7 +86,7 @@ assert.equal(T.hit(60,900),null,'투명한 곳');assert.equal(T.hit(440,300),nul
 const pos=[];assert.equal(A.slide(true),true);const t0=now;
 for(const dt of [0,16,65,130,195,259]){now=t0+dt;T.step(now);pos.push(A.state.pos);assert.equal(A.state.sliding,true,'움직이는 중 '+dt);assert.equal(A.slide(false),false,'움직이는 중 다시 누름 무시');assert.equal(A.press('5'),false,'움직이는 중 키 무시');assert.equal(A.press('ok'),false)}
 for(let i=1;i<pos.length;i++)assert.ok(pos[i]<pos[i-1]||pos[i]===pos[i-1]&&i===1,'계속 위로');
-assert.ok(Math.abs(pos[3]-535*0.125)<1,'끝이 부드러운 움직임 (절반 시간에 87.5% 이동)');
+assert.ok(Math.abs(pos[3]-G.slide*0.125)<1,'끝이 부드러운 움직임 (절반 시간에 87.5% 이동)');
 now=t0+260;T.step(now);assert.equal(A.state.pos,0,'260ms에 정확히 열림');assert.equal(A.state.open,true);assert.equal(A.state.sliding,false);
 for(let i=0;i<12;i++){const [x,y]=keyCenter(i);const h=T.hit(x,y);assert.equal(h.kind,'key');assert.equal(h.id,PAD[i],'열림: 숫자판 '+PAD[i])}
 for(const b of T.front)assert.equal(T.hit(b.cx,b.cy)?.id,b.id,'열림 상태 상판 버튼 '+b.name);
@@ -99,7 +99,7 @@ assert.equal(L().dial,'01','숫자 입력');assert.equal(A.press('clr'),true);as
 
 /* 9. 닫기, 닫혔을 때 숫자판 막힘 */
 assert.equal(A.slide(false),true);const t1=now;for(const dt of [0,100,200,260]){now=t1+dt;T.step(now)}
-assert.equal(A.state.pos,535);assert.equal(A.state.open,false);assert.equal(A.press('7'),false,'닫히면 숫자판 막힘');assert.equal(L().dial,'');assert.equal(A.press('menu'),true,'닫혀도 상판 버튼은 됨');
+assert.equal(A.state.pos,G.slide);assert.equal(A.state.open,false);assert.equal(A.press('7'),false,'닫히면 숫자판 막힘');assert.equal(L().dial,'');assert.equal(A.press('menu'),true,'닫혀도 상판 버튼은 됨');
 A.press('end');
 
 /* 10. 키보드: 간편모드는 숫자만, 전체화면은 모두 */
@@ -114,7 +114,7 @@ key('Escape','Escape');assert.equal(L().dial,'5','간편모드: Esc 는 게임 �
 A.setMode('full');assert.equal(A.state.mode,'full');assert.ok(root.className.includes('ac-full'));
 e=key('Escape','Escape');assert.equal(e.stopped,true);assert.equal(L().dial,'','전체화면: Esc = 종료 버튼');
 key('KeyM','m');assert.equal(L().screen,'menu','M = 매뉴');e=key('ArrowRight','ArrowRight');assert.equal(e.stopped,true,'전체화면: 방향키는 휴대폰');assert.equal(L().state.sel,1);
-key('Escape','Escape');key('Space',' ');now+=300;T.step(now);assert.equal(A.state.pos,535,'Space = 슬라이드');key('Space',' ');now+=300;T.step(now);assert.equal(A.state.open,true);
+key('Escape','Escape');key('Space',' ');now+=300;T.step(now);assert.equal(A.state.pos,G.slide,'Space = 슬라이드');key('Space',' ');now+=300;T.step(now);assert.equal(A.state.open,true);
 key('KeyN','n');assert.equal(A.state.shown,false,'N = 넣기');A.show('full');assert.equal(A.state.shown,true);
 
 /* 11. 테두리 두 번 누르기, 몸통 누르기, 아래 선택 막대 */
@@ -124,9 +124,9 @@ const tap=(nx,ny)=>{canvas.emit('pointerdown',px(nx,ny));canvas.emit('pointerup'
 tap(165,700);now+=150;tap(165,700);assert.equal(A.state.mode,'mini','전체화면에서 테두리 두 번 → 간편모드');
 tap(165,700);now+=600;tap(165,700);assert.equal(A.state.mode,'mini','너무 느리면 두 번 누름 아님');now+=600;
 tap(165,700);now+=150;tap(165,700);assert.equal(A.state.mode,'full','간편모드에서 테두리 두 번 → 전체화면');
-tap(440,460);assert.equal(A.state.sliding,true,'몸통(액정) 한 번 → 슬라이드');now+=300;T.step(now);assert.equal(A.state.pos,535);
-tap(440,460+535);now+=300;T.step(now);assert.equal(A.state.open,true);
-const bar=root.children[1].children[1],seg=bar.children[0];seg.children[0].click();assert.equal(A.state.mode,'mini','선택 막대: 간편모드');seg.children[1].click();assert.equal(A.state.mode,'full','선택 막대: 전체화면');
+tap(440,460);assert.equal(A.state.sliding,true,'몸통(액정) 한 번 → 슬라이드');now+=300;T.step(now);assert.equal(A.state.pos,G.slide);
+tap(440,460+G.slide);now+=300;T.step(now);assert.equal(A.state.open,true);
+const bar=root.children[1].children.find(n=>n.className==='ac-bar'),seg=bar.children[0];seg.children[0].click();assert.equal(A.state.mode,'mini','선택 막대: 간편모드');seg.children[1].click();assert.equal(A.state.mode,'full','선택 막대: 전체화면');
 seg.children[0].click();const h0=A.state.cssH;bar.children[2].click();assert.equal(A.state.cssH,Math.min(h0+60,700),'크게');bar.children[1].click();bar.children[1].click();assert.equal(A.state.cssH,h0-60,'작게');
 for(let i=0;i<20;i++)bar.children[1].click();assert.equal(A.state.cssH,250,'너무 작아지지 않음');
 /* 간편모드 끌어 옮기기 */
@@ -145,7 +145,7 @@ for(const d of '119')press(d);press('send');assert.ok(L().state.call.result.msg.
 press('send');assert.equal(L().screen,'calls','통화 버튼만 누르면 통화 기록');press('end');
 
 /* 13. 문자: 상용구로 보내고 답장 받기 */
-press('menu','2','2');assert.equal(L().screen,'compose');press('1');assert.equal(L().state.step,1,'받는 사람: 엄마');press('2');assert.equal(L().screen,'sending');
+press('menu','2','2');assert.equal(L().screen,'compose');press('1');assert.equal(L().state.step,1,'받는 사람: 엄마');press('nate','down','ok');assert.equal(L().editor.text(),'PC방 ㄱㄱ?','상용구 넣기');press('ok');assert.equal(L().screen,'sending');
 run(2000);assert.equal(L().data.sent[0].text,'PC방 ㄱㄱ?');assert.equal(L().data.sent[0].to,'엄마');
 const tm=timers.at(-1);assert.ok(tm.ms>=2600&&tm.ms<=4400,'답장은 조금 뒤에');tm.f();
 assert.equal(L().data.inbox[0].from,'엄마');assert.equal(L().data.inbox[0].text,'PC방 그만하고 6시까지 들어와!!','폰꾸미기 천국의 엄마 답장 규칙');assert.equal(ids.phoneLabel.textContent,'새 문자 3');
@@ -153,20 +153,20 @@ press('end','ok');assert.equal(L().screen,'inbox','확인 = 문자함');press('o
 assert.ok(JSON.parse(memory.get('2006_anycall_data_v1')).sent.length===1,'문자 저장');
 
 /* 14. 벨소리, 배경 화면, 설정 */
-press('menu','4');assert.equal(L().screen,'ring');press('down','ok');assert.notEqual(L().data.ring,'r4','벨소리 바꿈');press('end');
-press('menu','5','right','ok');assert.equal(L().data.wall,w.WebTown.PHONE_WALLS[1][0],'배경 화면 바꿈');press('end');
-press('menu','9','ok');assert.equal(A.state.keyTone,false,'키음 끄기');const bc=T.beepCount();press('clr');assert.equal(T.beepCount(),bc,'키음 꺼짐');press('ok');assert.equal(L().screen,'set');press('ok');assert.equal(A.state.keyTone,true,'키음 다시 켜기');press('end');
+press('menu','9');assert.equal(L().screen,'ring');press('down','ok');assert.notEqual(L().data.ring,'r4','벨소리 바꿈');press('end');
+press('menu','0','right','ok');assert.equal(L().data.wall,L().walls()[1][0],'배경 화면 바꿈 (A100부터 처음에는 세 가지, 나머지는 NATE에서 받기)');press('end');
+press('menu','left','ok');assert.equal(L().screen,'set');press('down','ok');assert.equal(A.state.keyTone,false,'키음 끄기');const bc=T.beepCount();press('clr');assert.equal(T.beepCount(),bc,'키음 꺼짐');press('ok');assert.equal(L().screen,'set');press('down','ok');assert.equal(A.state.keyTone,true,'키음 다시 켜기');press('end');
 
 /* 15. 게임: 두더지 잡기와 지렁이 */
-press('menu','6','1');assert.equal(L().screen,'mole');const M=L().state.g;M.holes[4]=now+5000;press('5');assert.equal(M.score,1,'숫자 5로 가운데 두더지');M.holes[0]=now+5000;press('up','left');assert.equal(M.cur,0);press('nate');assert.equal(M.score,2,'방향과 NATE로도 잡기');
+press('menu','8','1');assert.equal(L().screen,'mole');const M=L().state.g;M.holes[4]=now+5000;press('5');assert.equal(M.score,1,'숫자 5로 가운데 두더지');M.holes[0]=now+5000;press('up','left');assert.equal(M.cur,0);press('nate');assert.equal(M.score,2,'방향과 NATE로도 잡기');
 run(31000);assert.equal(M.over,true);assert.ok(L().data.best.mole>=2,'최고 점수 저장');press('clr','down','ok');assert.equal(L().screen,'snake');
 const Sn=L().state.g;press('down');run(300);assert.equal(Sn.dir.y,1,'아래로 꺾기');press('up');run(300);assert.equal(Sn.dir.y,1,'바로 뒤로는 못 감');
 run(5000);assert.equal(Sn.over,true,'벽에 부딪히면 끝');press('end');
 
 /* 16. NATE, 내 위치, 새 기능 붙이기 */
-press('nate');assert.equal(L().screen,'nate');press('ok');run(1600);assert.equal(L().state.step,2);press('3');assert.ok(L().state.arg.text.includes('맑음'),'게임 날씨');press('end');
-press('down');run(1700);assert.equal(L().screen,'gps');press('end');
-const n0=w.AnycallLCD.apps.length;w.AnycallLCD.registerApp({id:'memo',name:'메모',icon:'app',draw(){},key(){}});assert.equal(w.AnycallLCD.apps.length,n0+1,'메뉴에 새 기능 붙이기');
+press('nate');assert.equal(L().screen,'nate');run(1500);assert.equal(L().nate.state.cur.id,'home','A100: NATE 무선 인터넷 첫 화면');press('4');run(1500);press('1');run(1500);assert.equal(L().nate.state.cur.id,'weather');assert.ok(L().nate.state.cur.text.includes('맑음'),'게임 날씨');press('end');
+press('down');run(1700);assert.equal(L().screen,'find','아래(GPS) = 친구 찾기');press('end');
+const n0=w.AnycallLCD.apps.length;w.AnycallLCD.registerApp({id:'todo',name:'할 일',icon:'app',draw(){},key(){}});assert.equal(w.AnycallLCD.apps.length,n0+1,'메뉴에 새 기능 붙이기');
 assert.throws(()=>w.AnycallLCD.registerApp({id:'x'}));
 
 /* 17. 가방 카드 */

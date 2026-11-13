@@ -12,6 +12,7 @@ const PLAY=require('./server_playground.js');
 const CLUB=require('./src/club-core.js');
 const CLUB_SEED=require('./src/club-seed.js');
 const MINI=require('./server_minihome.js');
+const PHONE=require('./server_phone.js');
 const { TextDecoder } = require('node:util');
 const ROOT = __dirname;
 const PORT = Number(process.env.PORT || 3000);
@@ -47,6 +48,7 @@ function buddyMessage(s,obj){
   const out={type:'buddy',op,from:s.id,name:s.name,nick:s.buddyNick||s.name,text,at:now};
   send(to,out);send(s,Object.assign({},out,{op:op==='say'?'sent':'nudged',to:to.id,toPc:!!(to.buddySeen&&now-to.buddySeen<BUDDY_ALIVE)}));
 }
+/* A99 휴대폰: 같은 방 친구끼리 문자, 포토 메일, 전화 울림과 통화 중 말을 전달만 한다(규칙은 server_phone.js). 저장하지 않는다. */
 /* A97 미니홈피: 같은 방 친구들의 미니홈피를 방마다 메모리에 둔다(규칙은 server_minihome.js). 방이 비면 아지트처럼 6시간 뒤에 지운다. */
 const minis=new Map(),MINI_ROOMS=80,miniTimers=new Map();
 function miniOnline(room){const m=new Map();for(const x of rooms.get(room)||[])if(x.miniHid&&!m.has(x.miniHid))m.set(x.miniHid,{pc:x.state.scene==='pcroom',id:x.id,look:x.state.look});return m}
@@ -252,6 +254,7 @@ function onMessage(s,obj){
  if(obj.type==='club'){clubMessage(s,obj);return}
  if(obj.type==='buddy'){buddyMessage(s,obj);return}
  if(obj.type==='mini'){miniMessage(s,obj);return}
+ if(obj.type==='phone'){if(s.room)for(const [to,msg] of PHONE.relay(s,obj,[...(rooms.get(s.room)||[])],Date.now()))send(to,msg);return}
 }
 function onData(s,chunk){
   if(s.closed)return;s.buffer=Buffer.concat([s.buffer,chunk]);
