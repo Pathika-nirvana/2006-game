@@ -395,7 +395,7 @@ body.playing-a5 #bgmControls{position:fixed;z-index:1100;bottom:0;left:0;right:0
  <div class="a20-heading"><strong id="a20Title">2006년 · 놀이터</strong><span id="a20Status">가까이 가면 탈 수 있어</span></div>
  <div class="a20-buttons"><button type="button" id="a20Ride">타기 / 내리기 (E)</button><button type="button" id="a20Help">친구 밀어주기 (P)</button><button type="button" id="a20Push">살짝 밀기 (H)</button><button type="button" id="a20Hard">세게 밀기 (K)</button><button type="button" id="a20Auto">연속 세게 밀기</button><button type="button" id="a20Quit">그만 놀기 (Esc)</button></div>
  </div><div class="action-label" id="actionLabel" aria-live="polite">E · 둘러보기</div><div class="holding-label hidden" id="holdingStatus" aria-live="polite"></div><div class="toast" id="hint" aria-live="polite"></div>
-        <div class="dialog hidden" id="dialog" role="status"><span id="dialogIcon">✿</span><div><strong id="dialogTitle"></strong><p id="dialogText"></p></div><button id="dialogClose" aria-label="닫기">×</button></div>
+        <div class="dialog hidden" id="dialog" role="status"><span id="dialogIcon">✿</span><div><strong id="dialogTitle"></strong><p id="dialogText"></p><div id="alleyChoices" hidden><button id="alleyPay" type="button">100원 준다</button> <button id="alleyRefuse" type="button">거절한다</button></div></div><button id="dialogClose" aria-label="닫기">×</button></div>
         <div id="charEditor" class="char-editor hidden" role="dialog" aria-label="2006년 캐릭터 꾸미기" aria-modal="true">
 <div class="char-card"><div class="char-heading"><strong>2006년 · 캐릭터 꾸미기</strong><button id="charClose" aria-label="닫기" type="button">×</button></div>
 <div class="char-body"><div class="char-view"><canvas id="charPreview" width="48" height="64"></canvas><small id="charChoice">남학생 · 샤기컷</small></div><div class="char-variants" id="charVariants"></div></div>
@@ -3321,7 +3321,35 @@ function changeOutfit(){shirtIndex=(shirtIndex+1)%shirts.length;player.shirt=shi
 function toast(msg,s=2.6){D.hint.textContent=msg;D.hint.classList.add('show');toastTimer=s}
 function closeDialog(){openDialog=false;D.dialog.classList.add('hidden')}
 function showDialog(title,msg,icon='✿'){D.title.textContent=title;D.text.textContent=msg;D.icon.textContent=icon;D.dialog.classList.remove('hidden');openDialog=true}
+const alleyChoices = el('alleyChoices');
+const alleyUI = {
+ ask(definition, choose) {
+  input.clear();
+  showDialog(definition.name, definition.demand, '…');
+  alleyChoices.hidden = false;
+  el('dialogClose').hidden = true;
+  el('alleyPay').disabled = SHOPS.coins < definition.price;
+  const finish = choice => {
+   if (!choose(choice)) return;
+   alleyChoices.hidden = true;
+   el('dialogClose').hidden = false;
+   closeDialog();
+   document.activeElement?.blur();
+  };
+  el('alleyPay').onclick = () => finish('pay');
+  el('alleyRefuse').onclick = () => finish('refuse');
+  el(el('alleyPay').disabled ? 'alleyRefuse' : 'alleyPay').focus();
+ },
+ pay: amount => SHOPS.spendCoins(amount),
+ notice: message => toast(message)
+};
 function setScene(next,spawn,spawnY){
+ if(next!==player.scene){
+  window.AlleyEncounter?.reset();
+  alleyChoices.hidden=true;
+  el('dialogClose').hidden=false;
+ }
+
  closeDialog();input.clear();
  player.playground=false;
  const previous=player.scene,dungeon=window.AlleyDungeon;
@@ -3436,6 +3464,7 @@ function unsit(){player.pose='stand';player.sitAt=null;player.y=GROUND;player.on
 function sit(){if(!running||player.pose==='eat')return;closeDialog();if(['sit','bench','swing'].includes(player.pose)){unsit();toast('다시 걸어볼까?');return}if(!player.onGround)return;player.pose='sit';toast('조금 쉬어 가자.');}
 function wave(){if(!running||player.pose==='eat')return;closeDialog();if(['sit','bench','swing'].includes(player.pose))unsit();player.pose='wave';player.waveEnd=t+1.3;toast(ROUTINES.reactWave(player.scene,player.x,t)||'안녕! 👋',2.1)}
 function keydown(e){const k=e.code;const target=e.target||document.activeElement;if(e.isComposing||e.keyCode===229||['INPUT','TEXTAREA','SELECT'].includes(target?.tagName)||target?.isContentEditable)return;
+ if(window.AlleyEncounter?.choosing){if(!['Tab','Enter','Space'].includes(k))e.preventDefault();return;}
  if(k==='Space'&&['lobby','hall','rooftop'].includes(player.scene)&&!SHOPS.isOpen&&!PLAYROOM.isOpen&&!MEMO.isOpen){e.preventDefault();window.Block104.jump(player);return;}
  if((player.playground||window.A20WORLD?.hidesPlayer())&&window.A20WORLD?.key(k,player,{running,scene:player.scene,dialog:openDialog,uiBusy:SHOPS.isOpen||MEMO.isOpen||PLAYROOM.isOpen||ROUTES.isMapOpen})){e.preventDefault();return}
  if(ROUTES.isMapOpen){if(['KeyM','Escape'].includes(k)){e.preventDefault();ROUTES.toggleMap(false)}return}
@@ -3448,6 +3477,7 @@ function keydown(e){const k=e.code;const target=e.target||document.activeElement
  }
  if(k==='Enter'&&['BUTTON','SUMMARY','A'].includes(target?.tagName))return;
  if(window.GameInterface?.isMenuOpen){if(k==='Escape'){e.preventDefault();window.GameInterface.closeMenus()}return;}
+ if(window.TaekwondoMotion?.keyDown(e,player,running&&!openDialog&&!window.AnycallPhone?.shown&&document.getElementById('charEditor').classList.contains('hidden'),input))return;
  if(['KeyW','KeyA','KeyS','KeyD'].includes(k))return;
  if(k==='Enter'&&running){if(!e.repeat){e.preventDefault();input.clear();window.A25NET?.beginChat()}return;}
  if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Space','KeyE','KeyC','KeyT','KeyX','KeyV','KeyI','KeyF','KeyJ','KeyR','KeyM','Escape','Enter'].includes(k))e.preventDefault();input.add(k);
@@ -3460,7 +3490,7 @@ function keydown(e){const k=e.code;const target=e.target||document.activeElement
  if(running&&player.scene==='stationery'&&k==='Space'){window.StationeryInterior?.jump(player);closeDialog();return;}
  if(running&&window.AlleyDungeon.width(player.scene)&&k==='Space'){window.AlleyDungeon.jump(player);closeDialog();return;}
  if(running&&player.scene==='hidden_alley'&&k==='Space'){window.NarrowAlleyMap.jump(player);closeDialog();return;}
- if(running&&player.scene==='back_alley'&&k==='Space'){window.BackAlleyMap?.jump(player);closeDialog();return;}
+ if(running&&player.scene==='back_alley'&&k==='Space'){window.BackAlleyMap?.jump(player);window.TaekwondoMotion?.jump(player);closeDialog();return;}
  if(running&&player.scene==='apartment_path'&&k==='Space'){window.ApartmentPathMap?.jump(player);closeDialog();return;}
  if(k==='Enter'&&!running){start();return}if(!running)return;
  if(k==='KeyM'){ROUTES.toggleMap();return}if(k==='KeyR'){changeWeather();return}if(k==='KeyI'){SHOPS.openBag();return}if(k==='KeyJ'){MEMO.show();return}if(k==='KeyF'){takeBite();return}if(k==='KeyE'){interact();return}if(k==='KeyC'){sit();return}if(k==='KeyT'){changeTime();return}if(k==='KeyX'){wave();return}if(k==='KeyV'){changeOutfit();return}if(k==='KeyN'){window.AnycallPhone?.toggle();return}
@@ -3477,7 +3507,7 @@ function takeBite(){
  player.pose='eat';player.eatEnd=t+1.25;player.walking=0;window.EatingMotion?.start(SHOPS.heldKind);
  closeDialog();toast(SHOPS.heldName+' · 한 입씩 천천히 먹는다. ('+SHOPS.heldBites+'입 남음)',1.6);
 }
-function keyup(e){input.delete(e.code)}
+function keyup(e){input.delete(e.code);window.TaekwondoMotion?.keyUp(e)}
 window.addEventListener('keydown',keydown);window.addEventListener('keyup',keyup);window.addEventListener('blur',()=>input.clear());window.addEventListener('arcade-focus-change',()=>input.clear());
 /* A96: 폰에서도 먹기(F)와 가방(I)을 쓸 수 있게. 먹기 단추는 손에 음식을 들고 있을 때만 보인다. */
 setInterval(()=>{const eat=document.querySelector('.touch .t-eat');if(eat){const on=!!(window.SHOPS&&window.SHOPS.held);if(eat.hidden===on)eat.hidden=!on}},350);
@@ -3511,9 +3541,10 @@ function landBetween(x,oldY,newY){
  const list=[{x1:0,x2:WORLD.WIDTH,y:GROUND,kind:'road'},...WORLD.platforms];
  return list.filter(s=>inRange(x,s)&&s.y>=oldY-1&&s.y<=newY+0.01).sort((a,b)=>a.y-b.y)[0]||null;
 }
-function inputH(){return Number(input.has('ArrowRight'))-Number(input.has('ArrowLeft'))}
-function inputV(){return Number(input.has('ArrowDown'))-Number(input.has('ArrowUp'))}
+function inputH(){if(window.TaekwondoMotion?.active)return 0;return Number(input.has('ArrowRight'))-Number(input.has('ArrowLeft'))}
+function inputV(){if(window.TaekwondoMotion?.active)return 0;return Number(input.has('ArrowDown'))-Number(input.has('ArrowUp'))}
 function update(dt){
+ window.TaekwondoMotion?.update(player,running&&!SHOPS.isOpen&&!MEMO.isOpen&&!PLAYROOM.isOpen&&!ROUTES.isMapOpen&&!openDialog&&!window.GameInterface?.isMenuOpen&&!window.AnycallPhone?.shown&&document.getElementById('charEditor').classList.contains('hidden'));
  if(player.scene==='street'){player.x=Math.max(372,player.x);cam=Math.max(359,cam)}
  t+=dt;window.A25NET?.tick(dt,player,running);ROUTINES.update(dt,phase,weather,t);if(toastTimer>0){toastTimer-=dt;if(toastTimer<=0)D.hint.classList.remove('show')}
  if(sound.enabled&&player.scene==='street'&&t-sound.lastChirp>8+Math.sin(t)*4){sound.lastChirp=t;chirp()}
@@ -3567,8 +3598,9 @@ function update(dt){
   const h=player.pose==='eat'?0:inputH(),v=player.pose==='eat'?0:inputV();
   if(h||v){if(openDialog)closeDialog();if(player.pose==='wave')player.pose='stand'}
   window.BackAlleyMap?.walk(player,h,v,dt);
+  if(!openDialog&&!window.AnycallPhone?.shown&&!window.GameInterface?.isMenuOpen&&el('charEditor').classList.contains('hidden'))window.AlleyEncounter?.update(dt,player,alleyUI);
   const target=Math.max(0,Math.min(sceneWidth()-W,player.x-206));cam+=(target-cam)*Math.min(1,dt*6);
-  D.area.textContent='문구점 뒤 주택 골목';const a=nearest();D.action.textContent=a?'E · '+a.title:'↑↓←→ 골목 걷기 · Space 점프';return;
+  D.area.textContent='문구점 뒤 주택 골목';const a=nearest();D.action.textContent=a?'E · '+a.title:'↑↓←→ 걷기 · S×4→D 손 연속기 · D×3 발 연속기 · A 막기';return;
  }
  if(player.scene==='apartment_path'){
   if(player.pose==='wave'&&t>player.waveEnd)player.pose='stand';
@@ -3663,13 +3695,21 @@ function render(){
  if(player.scene==='hidden_alley')window.NarrowAlleyMap.render(ctx,player,t);
  if(player.scene==='apartment_path')window.ApartmentPathMap?.render(ctx,player,t);
  if(player.scene==='supermarket')window.SupermarketMap.render(ctx,player,t);if(player.scene==='stationery')window.StationeryInterior?.render(ctx,player,t);if(player.scene==='pcroom')window.PcRoomMap.render(ctx,player,t);if(['lobby','hall','rooftop'].includes(player.scene))window.Block104.render(ctx,player,t);if(player.scene==='courtyard')window.CourtyardMap.render(ctx,player,t);
+ if(player.scene==='back_alley'&&window.AlleyEncounter?.status.y<=player.alleyFloorY)window.AlleyEncounter.draw(ctx);
  if(player.scene==='main_road'){ctx.save();ctx.translate(player.x,player.y);ctx.scale(.72,.72);WORLD.drawKid(ctx,0,0,player.dir,player.walking,player.shirt,false,['sit','bench','swing'].includes(player.pose),player.pose);SHOPS.renderHeld(ctx,0,0,player.dir,player.pose,t);ctx.restore();}
- if(!dungeonScene&&!['lobby','hall','rooftop'].includes(player.scene)&&player.scene!=='main_road'&&player.scene!=='hidden_alley'&&player.scene!=='apartment_path'&&player.scene!=='supermarket'&&player.scene!=='stationery'&&player.scene!=='courtyard'&&player.scene!=='pcroom'&&!(player.scene==='street'&&PlaygroundSpace.contains(player.x))&&!window.A20WORLD?.hidesPlayer())WORLD.drawKid(ctx,player.x,player.y,player.dir,player.walking,player.shirt,false,(['sit','bench','swing'].includes(player.pose)||(player.pose==='eat'&&player.eatRestore!=='stand')),player.pose);
+ if(player.scene==='back_alley'){
+  ctx.save();ctx.translate(player.x,player.y);
+  const scale=window.BackAlleyMap.scale(player.alleyFloorY);ctx.scale(scale,scale);
+  WORLD.drawKid(ctx,0,0,player.dir,player.walking,player.shirt,false,['sit','bench','swing'].includes(player.pose),player.pose);
+  SHOPS.renderHeld(ctx,0,0,player.dir,player.pose,t);ctx.restore();
+ }
+ if(player.scene!=='back_alley'&&!dungeonScene&&!['lobby','hall','rooftop'].includes(player.scene)&&player.scene!=='main_road'&&player.scene!=='hidden_alley'&&player.scene!=='apartment_path'&&player.scene!=='supermarket'&&player.scene!=='stationery'&&player.scene!=='courtyard'&&player.scene!=='pcroom'&&!(player.scene==='street'&&PlaygroundSpace.contains(player.x))&&!window.A20WORLD?.hidesPlayer())WORLD.drawKid(ctx,player.x,player.y,player.dir,player.walking,player.shirt,false,(['sit','bench','swing'].includes(player.pose)||(player.pose==='eat'&&player.eatRestore!=='stand')),player.pose);
+ if(player.scene==='back_alley'&&window.AlleyEncounter?.status.y>player.alleyFloorY)window.AlleyEncounter.draw(ctx);
  if(player.scene==='street'){PlaygroundSpace.render(ctx,player,t);ROUTINES.render(ctx,player.scene,t,weather);}
- if(!dungeonScene&&!['lobby','hall','rooftop'].includes(player.scene)&&player.scene!=='main_road'&&player.scene!=='hidden_alley'&&player.scene!=='apartment_path'&&player.scene!=='supermarket'&&player.scene!=='stationery'&&player.scene!=='courtyard'&&player.scene!=='pcroom'&&!(player.scene==='street'&&PlaygroundSpace.contains(player.x)))SHOPS.renderHeld(ctx,player.x,player.y,player.dir,player.pose,t);
+ if(player.scene!=='back_alley'&&!dungeonScene&&!['lobby','hall','rooftop'].includes(player.scene)&&player.scene!=='main_road'&&player.scene!=='hidden_alley'&&player.scene!=='apartment_path'&&player.scene!=='supermarket'&&player.scene!=='stationery'&&player.scene!=='courtyard'&&player.scene!=='pcroom'&&!(player.scene==='street'&&PlaygroundSpace.contains(player.x)))SHOPS.renderHeld(ctx,player.x,player.y,player.dir,player.pose,t);
  if(player.scene==='main_road')window.CommercialRoad?.foreground(ctx,t);
  window.A25NET?.renderSelfBubble(ctx,player.scene);
- if(running&&!openDialog&&!window.A20WORLD?.hidesPlayer()){let h=nearest();if(h){const xx=h.x;let yy=player.scene==='street'?(h.type==='swing'?126:h.type==='counter'?126:['routineNpc','resNpc'].includes(h.type)?126:h.type==='door'?153:165):154;if(player.scene==='stationery')yy=(h.y??player.stationeryFloorY)-window.StationeryInterior.actorHeight-18;if(player.scene==='pcroom')yy=(h.y??player.pcFloorY)-51*window.PcRoomMap.scale(player.pcFloorY)-18;if(player.scene==='supermarket')yy=(h.y??player.superFloorY)-51*window.SupermarketMap.scale(player.superFloorY)-18;if(player.scene==='courtyard')yy=(h.y??player.yardFloorY)-51*window.CourtyardMap.scale(player.yardFloorY)-20;if(player.scene==='hidden_alley')yy=(h.y??player.narrowFloorY)-51*window.NarrowAlleyMap.scale(player.narrowFloorY)-18;if(player.scene==='back_alley')yy=(h.y??player.alleyFloorY)-65;if(dungeonScene)yy=h.y-51*window.AlleyDungeon.scale(h.y,player.scene)-13;if(Math.abs(xx-player.x)<22)yy=Math.min(yy,player.y-74);
+ if(running&&!openDialog&&!window.A20WORLD?.hidesPlayer()){let h=nearest();if(h){const xx=h.x;let yy=player.scene==='street'?(h.type==='swing'?126:h.type==='counter'?126:['routineNpc','resNpc'].includes(h.type)?126:h.type==='door'?153:165):154;if(player.scene==='stationery')yy=(h.y??player.stationeryFloorY)-window.StationeryInterior.actorHeight-18;if(player.scene==='pcroom')yy=(h.y??player.pcFloorY)-51*window.PcRoomMap.scale(player.pcFloorY)-18;if(player.scene==='supermarket')yy=(h.y??player.superFloorY)-51*window.SupermarketMap.scale(player.superFloorY)-18;if(player.scene==='courtyard')yy=(h.y??player.yardFloorY)-51*window.CourtyardMap.scale(player.yardFloorY)-20;if(player.scene==='hidden_alley')yy=(h.y??player.narrowFloorY)-51*window.NarrowAlleyMap.scale(player.narrowFloorY)-18;if(player.scene==='back_alley')yy=(h.y??player.alleyFloorY)-51*window.BackAlleyMap.scale(h.y??player.alleyFloorY)-12;if(dungeonScene)yy=h.y-51*window.AlleyDungeon.scale(h.y,player.scene)-13;if(Math.abs(xx-player.x)<22)yy=Math.min(yy,player.y-74);
   let bob=Math.round(Math.sin(t*3)*2);ctx.fillStyle='#f4e3af';ctx.fillRect(Math.round(xx-5),yy+bob,11,11);
   ctx.fillStyle='#3c5159';ctx.font='bold 8px monospace';ctx.fillText('E',Math.round(xx-2),yy+8+bob);
  }}
@@ -4148,5 +4188,8 @@ window.A26NET={get snapshot(){return snapshot},get ready(){return connected()},p
 <script src="src/anycall-lcd.js?v=A102"></script>
 <script src="src/anycall-nate.js?v=A102"></script>
 <script src="src/anycall-phone.js?v=A102"></script>
+<script src="src/combat-frames.js?v=A109"></script>
+<script src="src/taekwondo-motion.js?v=A109"></script>
+<script src="src/alley-encounter.js?v=A109"></script>
 </body>
 </html>

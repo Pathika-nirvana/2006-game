@@ -19,6 +19,7 @@ function frameAt(spec,pose,elapsed){
 }
 function valid(img,id){const s=manifest[id];return !!s&&img.naturalWidth===s.columns*s.frameWidth&&img.naturalHeight===s.rows*s.frameHeight}
 function draw(c,img,id,x,foot,dir,name,now=performance.now(),actorKey="local",heldKind=null){
+ if(root.TaekwondoMotion?.draw(c,id,x,foot,dir,now,actorKey))return true;
  const s=manifest[id];if(!s)return false;
  const pose=motion(name);const held=actorKey==='local'?root.SHOPS?.heldKind:heldKind;
  if(held&&root.CarryEatAtlas?.draw(c,id,x,foot,dir,pose,held,now,actorKey))return true;
