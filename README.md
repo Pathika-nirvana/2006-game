@@ -1,3 +1,19 @@
+# A105 · 계단 원근과 폐교 앞마당 입구
+
+[RELEASE_A105.md](RELEASE_A105.md)
+
+# A104 · 골목 입구와 걷기 수정
+
+[RELEASE_A104.md](RELEASE_A104.md)
+
+# A103 · 좁은 뒷골목 복구와 던전 보행 수정
+
+[RELEASE_A103.md](RELEASE_A103.md)
+
+# A102 · 문구점 뒤 골목 던전
+
+[RELEASE_A102.md](RELEASE_A102.md)
+
 # A101 · 미니홈피 원화와 애니콜 전원
 
 최신 변경점과 설치 방법은 [RELEASE_A101.md](RELEASE_A101.md)를 참고하세요.

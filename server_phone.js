@@ -9,12 +9,14 @@ const PHOTO_MAX=6200;
 function line(t,max){return String(t==null?'':t).normalize('NFC').replace(/[\x00-\x1f\x7f<>]/g,' ').replace(/\s+/g,' ').trim().slice(0,max)}
 /* s: 보낸 사람 접속, obj: 받은 메시지, members: 같은 방 접속들, now: 지금 시각.
    돌려주는 값: [받을 접속, 보낼 메시지] 목록 */
+const unreachable=s=>/^alley_d(?:[4-8]|10|11(?:_1)?|12(?:_1)?)$/.test(s.state?.scene||'');
 function relay(s,obj,members,now){
   const op=String(obj&&obj.op||'').slice(0,10),rule=OPS[op];if(!rule)return[];
   const key='phone_'+op;
   if(now-(s[key]||0)<rule.gap)return[[s,{type:'phone',op:'error',for:op,message:'조금 천천히 해 주세요.',t:now}]];
   const to=members.find(x=>x.id===String(obj.to||''));
   if(!to||to===s)return[[s,{type:'phone',op:'error',for:op,message:'그 친구가 지금 방에 없어요.',to:String(obj.to||'').slice(0,20),t:now}]];
+  if(!['hang','decline'].includes(op)&&(unreachable(s)||unreachable(to)))return [[s,{type:'phone',op:'error',for:op,message:'통신 신호가 없습니다.',t:now}]];
   const out={type:'phone',op,from:s.id,name:s.name,at:now};
   if(rule.text){const text=line(obj.text,rule.text);if(!text&&op!=='photo')return[];out.text=text}
   if(op==='photo'){const p=String(obj.photo||'');if(p.length>PHOTO_MAX||!PHOTO_RE.test(p))return[[s,{type:'phone',op:'error',for:op,message:'사진이 너무 커요.',t:now}]];out.photo=p}

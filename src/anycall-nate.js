@@ -212,7 +212,7 @@ function create(K){
  function items(){const pg=B.cur;if(!pg||!pg.items)return[];try{return pg.items()}catch(_){return[]}}
  function summary(){return'NATE 접속 끊음\n데이터 '+B.kb.toFixed(1)+'KB ('+B.pkts+'패킷)\n데이터 통화료 '+won(B.won)+(B.info?'\n정보이용료 '+won(B.info):'')}
  function exit(toHome){const had=B.cur||B.load||B.splash;const msg=had&&(B.kb||B.info)?summary():null;B.cur=null;B.stack=[];B.load=null;B.splash=null;B.dl=null;B.opts=null;B.ed=null;K.stopTune();K.setEditor(null);K.leave(msg,toHome)}
- function open(code){Object.assign(B,{cur:null,stack:[],sel:0,scroll:0,load:null,dl:null,opts:null,ed:null,kb:0,pkts:0,won:0,info:0,t0:now(),hist:[],code:null,warned:false});
+ function open(code){if(host.signal&&host.signal!=='normal'){K.leave('통신 신호가 없습니다',true);return}Object.assign(B,{cur:null,stack:[],sel:0,scroll:0,load:null,dl:null,opts:null,ed:null,kb:0,pkts:0,won:0,info:0,t0:now(),hist:[],code:null,warned:false});
   if(code&&!CODES[code]){K.pop(code+'번은 없는 바로가기예요',1600)}B.code=CODES[code]?CODES[code][0]:null;B.splash={t0:now()};K.setEditor(null);K.dirty()}
  function typing(){return B.ed&&B.cur?.input?B.cur.input.ph:null}
 

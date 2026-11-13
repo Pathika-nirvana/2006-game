@@ -241,7 +241,7 @@ function onMessage(s,obj){
    const x=Number(obj.x),y=Number(obj.y);if(!Number.isFinite(x)||!Number.isFinite(y))return;
    const arena=physicsRooms.get(s.room);const occ=PLAY.occupancy(arena,s.id),flight=arena?.flights.get(s.id);
    if(obj.scene!=='street'&&(occ||flight))PLAY.clearUser(arena,s.id);
-   if(!occ&&!flight){s.state={playground:!!obj.playground,scene:obj.scene,x:Math.max(0,Math.min(20000,x)),y:Math.max(-100,Math.min(500,y)),pose:poses.has(obj.pose)?obj.pose:'stand',dir:obj.dir===0?0:1,look:looks.has(obj.look)?obj.look:'boy_main_blue',held:heldFoods.has(obj.held)?obj.held:null};}
+   if(!occ&&!flight){s.state={playground:!!obj.playground,scene:obj.scene,x:Math.max(0,Math.min(20000,x)),y:Math.max(-100,Math.min(500,y)),depth:/^alley_d/.test(obj.scene)&&Number.isFinite(obj.depth)?Math.max(130,Math.min(267,obj.depth)):undefined,pose:poses.has(obj.pose)?obj.pose:'stand',dir:obj.dir===0?0:1,look:looks.has(obj.look)?obj.look:'boy_main_blue',held:heldFoods.has(obj.held)?obj.held:null};}
    else{s.state.dir=obj.dir===0?0:1;s.state.look=looks.has(obj.look)?obj.look:'boy_main_blue';s.state.held=heldFoods.has(obj.held)?obj.held:null}
    cast(s.room,{type:'state',id:s.id,...s.state},s);return;
  }

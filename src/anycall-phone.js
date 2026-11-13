@@ -142,9 +142,9 @@ function buildCache(){
 /* ---------- 그리기 ---------- */
 function drawLcd(now){const c=C.lcdG;if(!c)return;const k=P.k;c.setTransform(1,0,0,1,0,0);c.fillStyle='#06090f';c.fillRect(0,0,C.lcd.width,C.lcd.height);
  if(!lcd)return;const LW=lcd.W,LH=lcd.H;c.setTransform(G.hole.w*k/LW,0,0,G.hole.h*k/LH,(G.hole.x-G.lcd.x)*k,(G.hole.y-G.lcd.y)*k);
- c.save();c.beginPath();c.rect(0,0,LW,LH);c.clip();try{if(P.power==='on')lcd.draw(c,now);else drawPower(c,now,LW,LH)}catch(err){c.fillStyle='#fff';c.font='10px sans-serif';c.fillText('화면 오류',8,20)}c.restore()}
+ c.save();c.beginPath();c.rect(0,0,LW,LH);c.clip();try{if(signal()==='dead'){c.fillStyle='#020304';c.fillRect(0,0,LW,LH)}else if(P.power==='on')lcd.draw(c,now);else drawPower(c,now,LW,LH)}catch(err){c.fillStyle='#fff';c.font='10px sans-serif';c.fillText('화면 오류',8,20)}c.restore()}
 function togglePower(now){
- if(P.anim||P.power==='booting'||P.power==='stopping')return;
+ if(signal()==='dead'||P.anim||P.power==='booting'||P.power==='stopping')return;
  const on=P.power==='off';
  P.power=on?'booting':'stopping';P.powerAt=now;prefs.powerOn=on;savePrefs();
  P.hint=null;P.press=null;
@@ -206,10 +206,10 @@ function step(now){
 /* ---------- 슬라이드 ---------- */
 const keypadOpen=()=>P.pos===0&&!P.anim;
 function slide(open){if(P.anim)return false;const want=open==null?!(P.pos===0):!!open;const to=want?0:G.slide;if(P.pos===to)return false;
- P.anim={from:P.pos,to,t0:clock(),dur:DUR};P.open=false;if(P.power==='on'){slideSound(want);lcd?.event?.('slide',want)}P.dirty=true;schedule();return true}
+ P.anim={from:P.pos,to,t0:clock(),dur:DUR};P.open=false;if(signal()!=='dead'&&P.power==='on'){slideSound(want);lcd?.event?.('slide',want)}P.dirty=true;schedule();return true}
 
 /* ---------- 누르기 ---------- */
-function press(id,src){if(P.power!=='on'||(!PAD.includes(id)&&!TONE[id]))return false;if(P.anim)return false;
+function press(id,src){if(signal()==='dead'||P.power!=='on'||(!PAD.includes(id)&&!TONE[id]))return false;if(P.anim)return false;
  if(PAD.includes(id)&&!keypadOpen()){P.hint={until:clock()+1500};lcd?.event?.('locked',id);P.lcdDirty=P.dirty=true;schedule();return false}
  const now=clock();let glow=null;const pi=PAD.indexOf(id);
  if(pi>=0){const c=PAD_COLS[pi%3],r=PAD_ROWS[Math.floor(pi/3)];glow={layer:'b',cx:(c[0]+c[1])/2,cy:(r[0]+r[1])/2,r:58}}
@@ -287,6 +287,11 @@ w.addEventListener('blur',()=>{P.hold=null;P.gesture=null});
 
 /* ---------- 보이기 ---------- */
 function setMode(m){P.mode=m==='full'?'full':'mini';prefs.mode=P.mode;savePrefs();if(P.mode==='full')w.__GAME_DEBUG__?.clearInput?.();if(P.shown)layout()}
+function signal(scene=w.__GAME_DEBUG__?.player?.scene){return w.AlleyDungeon?.signal(scene)||'normal'}
+function sceneChanged(scene){
+ const next=signal(scene);if(P.signal===next)return;P.signal=next;P.hold=null;P.press=null;if(next==='dead')P.hint=null;
+ lcd?.event?.('signal',next);P.lcdDirty=P.dirty=true;
+}
 function show(mode){build();if(!root)return;if(mode)P.mode=prefs.mode=mode==='full'?'full':'mini';load();root.hidden=false;P.shown=true;doc.body.classList.add('ac-phone-on');lcd?.event?.('show');if(P.ready)layout();else schedule();savePrefs()}
 function hide(){if(!root)return;root.hidden=true;P.shown=false;if(P.aim)P.aim.hidden=true;P.gesture=null;P.hold=null;doc.body.classList.remove('ac-phone-on');if(P.raf&&w.cancelAnimationFrame)w.cancelAnimationFrame(P.raf);P.raf=0;lcd?.event?.('hide');doc.getElementById('game')?.focus?.()}
 function toggle(mode){if(P.shown&&(!mode||mode===P.mode))hide();else show(mode)}
@@ -310,7 +315,7 @@ function bagDetail(onTake){const box=E('div','ac-bag-detail');const c=canvasOf(8
 
 /* ---------- 액정 화면에 주는 도구 ---------- */
 const host={
- get open(){return keypadOpen()},get sliding(){return!!P.anim},get shown(){return P.shown},get powered(){return P.power==='on'},get mode(){return P.mode},prefs,savePrefs,
+ get open(){return keypadOpen()},get sliding(){return!!P.anim},get shown(){return P.shown},get powered(){return P.power==='on'},get signal(){return signal()},get mode(){return P.mode},prefs,savePrefs,
  now:()=>clock(),beep,keyBeep,toneFor,
  invalidate(){P.lcdDirty=P.dirty=true;schedule()},
  hintActive(now){return!!(P.hint&&now<P.hint.until)},
@@ -352,7 +357,7 @@ const host={
 };
 
 w.AnycallPhone={version:VERSION,geometry:G,duration:DUR,keymap:KEYMAP,pad:PAD.slice(),keyNames:KEY_NAMES,
- show,hide,toggle,setMode,slide,press,bagCard,bagDetail,
+ show,hide,toggle,setMode,slide,press,sceneChanged,bagCard,bagDetail,
  get lcd(){build();return lcd},
  get state(){return{power:P.power,shown:P.shown,mode:P.mode,pos:P.pos,open:keypadOpen(),sliding:!!P.anim,ready:P.ready,cssW:P.cssW,cssH:P.cssH,k:P.k,x:prefs.x,y:prefs.y,h:prefs.h,keyTone:prefs.keyTone,keyVol:prefs.keyVol}},
  _test:{cache:C,hit,toneFor,beeps:()=>A.log.slice(),beepCount:()=>A.count,step:now=>step(now),setClock(fn){clock=fn},sil:SIL,front:FRONT,nav:NAV,padCols:PAD_COLS,padRows:PAD_ROWS,layout,paint:()=>paint(clock()),get canvas(){return canvas}}};

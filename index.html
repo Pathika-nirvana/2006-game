@@ -3253,7 +3253,7 @@ window.A12ART={retouch,retouchRoute,dynamic,get enabled(){return enabled},set en
 })();
 
 /* END src/16_pilot_art.js */
-</script><script src="assets/maps/after-school/manifest.js"></script><script src="src/after-school-map.js"></script><script src="src/playground-space.js"></script><script src="src/side-alley-map.js"></script><script src="src/apartment-path-map.js"></script><script src="src/back-alley-map.js"></script><script src="src/narrow-alley-map.js"></script><script src="src/stationery-interior.js"></script><script src="src/supermarket-map.js"></script><script src="src/courtyard-map.js"></script><script src="src/pcroom-map.js"></script><script src="src/portal-comics.js?v=A89"></script><script src="src/portal-news.js?v=A94"></script><script src="src/portal-boards.js?v=A97"></script><script src="src/portal-pages.js?v=A95"></script><script src="src/pc-system.js?v=A89"></script><script src="src/club-seed.js?v=A88"></script><script src="src/club-core.js?v=A88"></script><script src="src/club.js?v=A88"></script><script src="src/kids-data.js?v=A97"></script><script src="src/kids-games.js?v=A95"></script><script src="src/kids-portal.js?v=A95"></script><script src="src/kids-more.js?v=A97"></script><script src="src/kids-extra.js?v=A97"></script><script src="src/desk-smash.js?v=A89"></script><script src="src/xp-shell.js?v=A94"></script><script src="src/xp-setup.js?v=A94"></script><script src="src/xp-apps.js?v=A94"></script><script src="src/xp-messenger.js?v=A96"></script><script src="src/xp-net.js?v=A94"></script><script src="src/web-data.js?v=A94"></script><script src="src/web-stories.js?v=A94"></script><script src="src/web-ghost.js?v=A94"></script><script src="src/web-flash.js?v=A94"></script><script src="src/web-sites.js?v=A101"></script><script src="src/web-more.js?v=A94"></script><script src="src/web-fun.js?v=A95"></script><script src="src/web-town.js?v=A98"></script><script src="src/pc-games.js?v=A95"></script><script src="src/xp-minihome.js?v=A101"></script><script src="src/pc-mail.js?v=A95"></script><script src="src/xp-desktop.js?v=A95"></script><script src="src/block104.js"></script><script src="src/commercial-road.js"></script><script>
+</script><script src="assets/maps/after-school/manifest.js"></script><script src="src/after-school-map.js"></script><script src="src/playground-space.js"></script><script src="src/side-alley-map.js"></script><script src="src/apartment-path-map.js"></script><script src="src/back-alley-map.js?v=A103"></script><script src="src/narrow-alley-map.js?v=A103"></script><script src="src/alley-dungeon.js?v=A105"></script><script src="src/stationery-interior.js"></script><script src="src/supermarket-map.js"></script><script src="src/courtyard-map.js"></script><script src="src/pcroom-map.js"></script><script src="src/portal-comics.js?v=A89"></script><script src="src/portal-news.js?v=A94"></script><script src="src/portal-boards.js?v=A97"></script><script src="src/portal-pages.js?v=A95"></script><script src="src/pc-system.js?v=A89"></script><script src="src/club-seed.js?v=A88"></script><script src="src/club-core.js?v=A88"></script><script src="src/club.js?v=A88"></script><script src="src/kids-data.js?v=A97"></script><script src="src/kids-games.js?v=A95"></script><script src="src/kids-portal.js?v=A95"></script><script src="src/kids-more.js?v=A97"></script><script src="src/kids-extra.js?v=A97"></script><script src="src/desk-smash.js?v=A89"></script><script src="src/xp-shell.js?v=A94"></script><script src="src/xp-setup.js?v=A94"></script><script src="src/xp-apps.js?v=A94"></script><script src="src/xp-messenger.js?v=A96"></script><script src="src/xp-net.js?v=A94"></script><script src="src/web-data.js?v=A94"></script><script src="src/web-stories.js?v=A94"></script><script src="src/web-ghost.js?v=A94"></script><script src="src/web-flash.js?v=A94"></script><script src="src/web-sites.js?v=A101"></script><script src="src/web-more.js?v=A94"></script><script src="src/web-fun.js?v=A95"></script><script src="src/web-town.js?v=A98"></script><script src="src/pc-games.js?v=A95"></script><script src="src/xp-minihome.js?v=A101"></script><script src="src/pc-mail.js?v=A95"></script><script src="src/xp-desktop.js?v=A95"></script><script src="src/block104.js"></script><script src="src/commercial-road.js"></script><script>
 /* BEGIN src/13_game_core.js */
 
 /* 《2006년.. 90년대생의 회상》 ART STAGE 10 (everyday neighborhood detours + A8 routines)
@@ -3309,7 +3309,7 @@ const shirts=[{name:'아이보리 티셔츠',c:'#e4d9b8'},{name:'줄무늬 느�
 let last=performance.now(),running=false,t=0,cam=270,phase=0,weather=0,openDialog=false,busWasHere=false,toastTimer=0,highest=508,sceneReturnX=1090;
 const sound={ctx:null,noise:null,enabled:false,lastChirp:0};
 const areas=[{x:950,label:'동일초등학교 앞'},{x:1290,label:'담장길 · 은하분식'},{x:1690,label:'문방구가 있는 골목'},{x:2310,label:'주택가'},{x:3040,label:'큰길과 골목 경계'},{x:99999,label:'아파트 단지'}];
-function sceneWidth(){if(player.scene==='supermarket')return window.SupermarketMap.WIDTH;if(player.scene==='pcroom')return window.PcRoomMap?.WIDTH||810;if(player.scene==='stationery')return window.StationeryInterior?.WIDTH||840;return player.scene==='street'?WORLD.WIDTH:(ROUTES.widths[player.scene]||RESIDENTIAL.width(player.scene)||840)}
+function sceneWidth(){const dungeonWidth=window.AlleyDungeon.width(player.scene);if(dungeonWidth)return dungeonWidth;if(player.scene==='supermarket')return window.SupermarketMap.WIDTH;if(player.scene==='pcroom')return window.PcRoomMap?.WIDTH||810;if(player.scene==='stationery')return window.StationeryInterior?.WIDTH||840;return player.scene==='street'?WORLD.WIDTH:(ROUTES.widths[player.scene]||RESIDENTIAL.width(player.scene)||840)}
 function uiClick(id,fn){el(id).addEventListener('click',fn)}
 function start(){window.GameAudio?.unlock();window.BGM?.start();running=true;D.intro.classList.add('hidden');D.start.blur();toast('화살표 이동 · E 상호작용 · Enter 채팅',4)}
 uiClick('startBtn',start);uiClick('dialogClose',closeDialog);uiClick('mapBtn',()=>ROUTES.toggleMap());
@@ -3324,14 +3324,14 @@ function showDialog(title,msg,icon='✿'){D.title.textContent=title;D.text.textC
 function setScene(next,spawn,spawnY){
  closeDialog();input.clear();
  player.playground=false;
- const previous=player.scene;
+ const previous=player.scene,dungeon=window.AlleyDungeon;
  if(next==='street'){
   player.scene='street';player.x=typeof spawn==='number'?spawn:sceneReturnX;player.y=GROUND;
   toast('다시 익숙한 골목으로 나왔다.',3.2);
  }else{
   if(previous==='street')sceneReturnX=player.x;
   player.scene=next;player.x=typeof spawn==='number'?spawn:95;player.y=GROUND;
-  toast(next==='supermarket'?'유리문이 열리고, 냉장고 모터 소리와 익숙한 가게 냄새가 느껴진다.':next==='hidden_alley'?'벽이 가까워지고, 뒤쪽 골목으로 들어오는 바람 소리가 들린다.':next==='main_road'?'골목을 빠져나와 상가와 학원이 있는 큰길로 나왔다.':ROUTES.isRoute(next)?'건물 사이로 난 조용한 길을 따라 들어왔다.':RESIDENTIAL.isRoom(next)?'누군가 살고 있는 건물의 평범한 하루가 이어진다.':next==='stationery'?'문방구 문에 달린 방울이 딸랑 울린다.':'키보드 소리와 컴퓨터 팬 소음이 들린다.',3.3);
+  toast(dungeon.title(next)|| (next==='supermarket'?'유리문이 열리고, 냉장고 모터 소리와 익숙한 가게 냄새가 느껴진다.':next==='hidden_alley'?'벽이 가까워지고, 뒤쪽 골목으로 들어오는 바람 소리가 들린다.':next==='main_road'?'골목을 빠져나와 상가와 학원이 있는 큰길로 나왔다.':ROUTES.isRoute(next)?'건물 사이로 난 조용한 길을 따라 들어왔다.':RESIDENTIAL.isRoom(next)?'누군가 살고 있는 건물의 평범한 하루가 이어진다.':next==='stationery'?'문방구 문에 달린 방울이 딸랑 울린다.':'키보드 소리와 컴퓨터 팬 소음이 들린다.'),3.3);
  }
  player.vy=0;player.onGround=true;player.pose='stand';player.sitAt=null;
  if(['lobby','hall','rooftop'].includes(next))window.Block104.enter(player,spawnY);
@@ -3340,11 +3340,13 @@ function setScene(next,spawn,spawnY){
  if(next==='pcroom'){if(typeof spawn!=='number')player.x=window.PcRoomMap.ENTRY.x;window.PcRoomMap.enter(player,spawnY)}
  if(next==='courtyard'){if(typeof spawn!=='number')player.x=window.CourtyardMap.ENTRY.x;window.CourtyardMap.enter(player,spawnY)}
  if(next==='back_alley')window.BackAlleyMap?.enter(player,spawnY);
+ if(dungeon.width(next))dungeon.enter(player,spawnY);
+ window.AnycallPhone?.sceneChanged?.(next);
  if(next==='hidden_alley')window.NarrowAlleyMap.enter(player,spawnY);
  if(next==='apartment_path')window.ApartmentPathMap?.enter(player,spawnY);
  cam=Math.max(player.scene==='street'?359:0,Math.min(sceneWidth()-W,player.x-206));
- D.scene.textContent=player.scene==='street'?'거리':ROUTES.isRoute(player.scene)?'산책길':RESIDENTIAL.isRoom(player.scene)?'주거 공간':'실내';
- if(next!=='street'){
+ D.scene.textContent=dungeon.width(next)?'뒷골목':player.scene==='street'?'거리':ROUTES.isRoute(player.scene)?'산책길':RESIDENTIAL.isRoom(player.scene)?'주거 공간':'실내';
+ if(next!=='street'&&!dungeon.width(next)){
   const title=ROUTES.names[next]||RESIDENTIAL.names[next]||(next==='supermarket'?'우리슈퍼':next==='stationery'?'별빛 문방구':'동네 PC방');
   const description=next==='supermarket'?'작은 진열대에 과자와 라면, 생활용품이 가득하다. 유리문 너머로 초록 차양이 보인다.':next==='hidden_alley'?'가까운 벽과 배관 사이로 좁은 길이 이어진다. 그늘진 뒷문 앞에는 누군가 머물다 간 흔적이 남아 있다.':next==='main_road'?'층마다 다른 간판과 학원 창문, 서점과 정류장이 긴 보도를 따라 이어진다.':ROUTES.isRoute(next)?'특별한 가게가 없는 길도, 누군가의 하루를 이어 준다.':RESIDENTIAL.isRoom(next)?'낡은 공동주택에도 누군가의 일상과 작은 생활 흔적이 남아 있다.':next==='stationery'?'진열대 앞에 서서 작은 과자 봉지들을 구경했다.':'모니터와 키보드 소리로 가득한 오후.';
   MEMO.add(title,description,phase);
@@ -3352,6 +3354,7 @@ function setScene(next,spawn,spawnY){
 }
 
 function nearest(){
+ if(window.AlleyDungeon.width(player.scene))return window.AlleyDungeon.nearest(player);
  if(player.scene==='street'&&player.playground){const d=PlaygroundSpace.near(player);if(d)return{x:d.x,r:39,type:'a20Device',device:d.id,title:d.id==='swing_pair'?'그네 타기':'뺑뺑이 타기'};return null;}
  if(player.scene==='street'&&player.x>3435&&player.x<4000)return null;
  let candidate=null,dist=Infinity;
@@ -3455,6 +3458,7 @@ function keydown(e){const k=e.code;const target=e.target||document.activeElement
  if(running&&player.scene==='pcroom'&&k==='Space'){window.PcRoomMap.jump(player);closeDialog();return;}
  if(running&&player.scene==='courtyard'&&k==='Space'){window.CourtyardMap?.jump(player);closeDialog();return;}
  if(running&&player.scene==='stationery'&&k==='Space'){window.StationeryInterior?.jump(player);closeDialog();return;}
+ if(running&&window.AlleyDungeon.width(player.scene)&&k==='Space'){window.AlleyDungeon.jump(player);closeDialog();return;}
  if(running&&player.scene==='hidden_alley'&&k==='Space'){window.NarrowAlleyMap.jump(player);closeDialog();return;}
  if(running&&player.scene==='back_alley'&&k==='Space'){window.BackAlleyMap?.jump(player);closeDialog();return;}
  if(running&&player.scene==='apartment_path'&&k==='Space'){window.ApartmentPathMap?.jump(player);closeDialog();return;}
@@ -3542,6 +3546,18 @@ function update(dt){
   const h=player.pose==='eat'?0:inputH(),v=player.pose==='eat'?0:inputV();if(h||v){if(openDialog)closeDialog();if(player.pose==='wave')player.pose='stand'}
   window.CourtyardMap.walk(player,h,v,dt);cam=0;D.area.textContent='주택가의 작은 마당';const a=nearest();D.action.textContent=a?'E · '+a.title:'↑↓←→ 마당 걷기 · Space 점프';return;
  }
+ if(window.AlleyDungeon.width(player.scene)){
+  const map=window.AlleyDungeon;
+  if(player.pose==='wave'&&t>player.waveEnd)player.pose='stand';
+  const h=player.pose==='eat'?0:inputH(),v=player.pose==='eat'?0:inputV();
+  if(h||v){if(openDialog)closeDialog();if(['wave','sit','bench'].includes(player.pose))player.pose='stand'}
+  const exit=map.walk(player,h,v,dt);
+  if(exit){setScene(exit.to,exit.spawn,exit.spawnY);input.add(h<0?'ArrowLeft':'ArrowRight');return}
+  const target=Math.max(0,Math.min(sceneWidth()-W,player.x-206));
+  cam+=(target-cam)*Math.min(1,dt*6);
+  D.area.textContent=map.title(player.scene);
+  const a=nearest();D.action.textContent=a?'E · '+a.title:'↑↓←→ 이동 · Space 점프';return;
+ }
  if(player.scene==='hidden_alley'){
   if(player.pose==='wave'&&t>player.waveEnd)player.pose='stand';const h=player.pose==='eat'?0:inputH(),v=player.pose==='eat'?0:inputV();if(h||v){if(openDialog)closeDialog();if(player.pose==='wave')player.pose='stand'}
   window.NarrowAlleyMap.walk(player,h,v,dt);const target=Math.max(0,Math.min(sceneWidth()-W,player.x-206));cam+=(target-cam)*Math.min(1,dt*6);D.area.textContent='주택 사이 좁은 뒷골목';const a=nearest();D.action.textContent=a?'E · '+a.title:'↑↓←→ 좁은 골목 걷기 · Space 점프';return;
@@ -3614,6 +3630,8 @@ function render(){
  if(player.scene==='street'){
   WORLD.sky(ctx,cam,phase,t);ctx.drawImage(A12ART.enabled?bg:bgA11,-Math.round(cam),0);window.A14ART?.draw(ctx,cam,phase,t);window.A21SPACE?.draw(ctx,cam,phase,weather,t);WORLD.drawAmbient(ctx,cam,t,phase);
   if(A12ART.enabled)A12ART.dynamic(ctx,cam,phase,weather,t);
+ }else if(window.AlleyDungeon.width(player.scene)){
+  window.AlleyDungeon.draw(ctx,player.scene,cam);
  }else if(ROUTES.isRoute(player.scene)){
   WORLD.sky(ctx,cam,phase,t);if(!(player.scene==='hidden_alley'&&window.NarrowAlleyMap.draw(ctx,cam))&&!(player.scene==='back_alley'&&window.BackAlleyMap?.draw(ctx,cam))&&!(player.scene==='side_alley'&&window.SideAlleyMap?.draw(ctx,cam))&&!(player.scene==='apartment_path'&&window.ApartmentPathMap?.draw(ctx,cam))&&!(player.scene==='main_road'&&window.CommercialRoad?.draw(ctx,cam)))ctx.drawImage(ROUTES.background(player.scene),-Math.round(cam),0);
   if(phase===2){ctx.fillStyle='#233c5230';ctx.fillRect(0,player.scene==='main_road'?-24:0,W,H)}
@@ -3633,23 +3651,25 @@ function render(){
    for(let i=0;i<6;i++){const x=165+i*100-Math.round(cam);if(x>=-60&&x<=480)ctx.fillRect(x,136,38,17)}
   }
  }
+ const dungeonScene=!!window.AlleyDungeon.width(player.scene);
  ctx.save();ctx.translate(-Math.round(cam),0);
+ if(dungeonScene)window.AlleyDungeon.render(ctx,player,t);
  if(player.scene==='street'){NEIGHBOR.renderWorld(ctx,phase,t,weather);LIFE.render(ctx,phase,t,weather);RESIDENTIAL.streetLayer(ctx,phase,weather,t);}
  if(player.scene==='street'){if(!window.AfterSchoolMap?.draw(ctx,t))window.FoodArt?.counter(ctx);PlaygroundSpace.ground(ctx);}
  if(player.scene!=='street'&&!['lobby','hall','rooftop'].includes(player.scene))ROUTINES.render(ctx,player.scene,t,weather);
  window.CHARART?.drawAmbient?.(ctx,player.scene,t);
- if(!['lobby','hall','rooftop'].includes(player.scene)&&player.scene!=='hidden_alley'&&player.scene!=='apartment_path'&&player.scene!=='supermarket'&&player.scene!=='stationery'&&player.scene!=='courtyard'&&player.scene!=='pcroom')window.A25NET?.render(ctx,cam,player.scene);
+ if(!dungeonScene&&!['lobby','hall','rooftop'].includes(player.scene)&&player.scene!=='hidden_alley'&&player.scene!=='apartment_path'&&player.scene!=='supermarket'&&player.scene!=='stationery'&&player.scene!=='courtyard'&&player.scene!=='pcroom')window.A25NET?.render(ctx,cam,player.scene);
  if(ROUTES.isRoute(player.scene))ROUTES.dynamic(ctx,player.scene,phase,weather,t);
  if(player.scene==='hidden_alley')window.NarrowAlleyMap.render(ctx,player,t);
  if(player.scene==='apartment_path')window.ApartmentPathMap?.render(ctx,player,t);
  if(player.scene==='supermarket')window.SupermarketMap.render(ctx,player,t);if(player.scene==='stationery')window.StationeryInterior?.render(ctx,player,t);if(player.scene==='pcroom')window.PcRoomMap.render(ctx,player,t);if(['lobby','hall','rooftop'].includes(player.scene))window.Block104.render(ctx,player,t);if(player.scene==='courtyard')window.CourtyardMap.render(ctx,player,t);
  if(player.scene==='main_road'){ctx.save();ctx.translate(player.x,player.y);ctx.scale(.72,.72);WORLD.drawKid(ctx,0,0,player.dir,player.walking,player.shirt,false,['sit','bench','swing'].includes(player.pose),player.pose);SHOPS.renderHeld(ctx,0,0,player.dir,player.pose,t);ctx.restore();}
- if(!['lobby','hall','rooftop'].includes(player.scene)&&player.scene!=='main_road'&&player.scene!=='hidden_alley'&&player.scene!=='apartment_path'&&player.scene!=='supermarket'&&player.scene!=='stationery'&&player.scene!=='courtyard'&&player.scene!=='pcroom'&&!(player.scene==='street'&&PlaygroundSpace.contains(player.x))&&!window.A20WORLD?.hidesPlayer())WORLD.drawKid(ctx,player.x,player.y,player.dir,player.walking,player.shirt,false,(['sit','bench','swing'].includes(player.pose)||(player.pose==='eat'&&player.eatRestore!=='stand')),player.pose);
+ if(!dungeonScene&&!['lobby','hall','rooftop'].includes(player.scene)&&player.scene!=='main_road'&&player.scene!=='hidden_alley'&&player.scene!=='apartment_path'&&player.scene!=='supermarket'&&player.scene!=='stationery'&&player.scene!=='courtyard'&&player.scene!=='pcroom'&&!(player.scene==='street'&&PlaygroundSpace.contains(player.x))&&!window.A20WORLD?.hidesPlayer())WORLD.drawKid(ctx,player.x,player.y,player.dir,player.walking,player.shirt,false,(['sit','bench','swing'].includes(player.pose)||(player.pose==='eat'&&player.eatRestore!=='stand')),player.pose);
  if(player.scene==='street'){PlaygroundSpace.render(ctx,player,t);ROUTINES.render(ctx,player.scene,t,weather);}
- if(!['lobby','hall','rooftop'].includes(player.scene)&&player.scene!=='main_road'&&player.scene!=='hidden_alley'&&player.scene!=='apartment_path'&&player.scene!=='supermarket'&&player.scene!=='stationery'&&player.scene!=='courtyard'&&player.scene!=='pcroom'&&!(player.scene==='street'&&PlaygroundSpace.contains(player.x)))SHOPS.renderHeld(ctx,player.x,player.y,player.dir,player.pose,t);
+ if(!dungeonScene&&!['lobby','hall','rooftop'].includes(player.scene)&&player.scene!=='main_road'&&player.scene!=='hidden_alley'&&player.scene!=='apartment_path'&&player.scene!=='supermarket'&&player.scene!=='stationery'&&player.scene!=='courtyard'&&player.scene!=='pcroom'&&!(player.scene==='street'&&PlaygroundSpace.contains(player.x)))SHOPS.renderHeld(ctx,player.x,player.y,player.dir,player.pose,t);
  if(player.scene==='main_road')window.CommercialRoad?.foreground(ctx,t);
  window.A25NET?.renderSelfBubble(ctx,player.scene);
- if(running&&!openDialog&&!window.A20WORLD?.hidesPlayer()){let h=nearest();if(h){const xx=h.x;let yy=player.scene==='street'?(h.type==='swing'?126:h.type==='counter'?126:['routineNpc','resNpc'].includes(h.type)?126:h.type==='door'?153:165):154;if(player.scene==='stationery')yy=(h.y??player.stationeryFloorY)-window.StationeryInterior.actorHeight-18;if(player.scene==='pcroom')yy=(h.y??player.pcFloorY)-51*window.PcRoomMap.scale(player.pcFloorY)-18;if(player.scene==='supermarket')yy=(h.y??player.superFloorY)-51*window.SupermarketMap.scale(player.superFloorY)-18;if(player.scene==='courtyard')yy=(h.y??player.yardFloorY)-51*window.CourtyardMap.scale(player.yardFloorY)-20;if(player.scene==='hidden_alley')yy=(h.y??player.narrowFloorY)-51*window.NarrowAlleyMap.scale(player.narrowFloorY)-18;if(player.scene==='back_alley')yy=(h.y??player.alleyFloorY)-65;if(Math.abs(xx-player.x)<22)yy=Math.min(yy,player.y-74);
+ if(running&&!openDialog&&!window.A20WORLD?.hidesPlayer()){let h=nearest();if(h){const xx=h.x;let yy=player.scene==='street'?(h.type==='swing'?126:h.type==='counter'?126:['routineNpc','resNpc'].includes(h.type)?126:h.type==='door'?153:165):154;if(player.scene==='stationery')yy=(h.y??player.stationeryFloorY)-window.StationeryInterior.actorHeight-18;if(player.scene==='pcroom')yy=(h.y??player.pcFloorY)-51*window.PcRoomMap.scale(player.pcFloorY)-18;if(player.scene==='supermarket')yy=(h.y??player.superFloorY)-51*window.SupermarketMap.scale(player.superFloorY)-18;if(player.scene==='courtyard')yy=(h.y??player.yardFloorY)-51*window.CourtyardMap.scale(player.yardFloorY)-20;if(player.scene==='hidden_alley')yy=(h.y??player.narrowFloorY)-51*window.NarrowAlleyMap.scale(player.narrowFloorY)-18;if(player.scene==='back_alley')yy=(h.y??player.alleyFloorY)-65;if(dungeonScene)yy=h.y-51*window.AlleyDungeon.scale(h.y,player.scene)-13;if(Math.abs(xx-player.x)<22)yy=Math.min(yy,player.y-74);
   let bob=Math.round(Math.sin(t*3)*2);ctx.fillStyle='#f4e3af';ctx.fillRect(Math.round(xx-5),yy+bob,11,11);
   ctx.fillStyle='#3c5159';ctx.font='bold 8px monospace';ctx.fillText('E',Math.round(xx-2),yy+8+bob);
  }}
@@ -3661,7 +3681,7 @@ function render(){
    ctx.fillStyle='#f4d79c9e';for(const wx of [698,1397,2311,3196,3840]){let x=wx-cam;if(x>-10&&x<490){ctx.fillRect(Math.floor(x-5),117,14,3);ctx.fillStyle='#efd39c18';ctx.fillRect(Math.floor(x-17),119,38,52);ctx.fillStyle='#f4d79c9e'}}
   }
  }
- if(player.scene==='street'||ROUTES.isRoute(player.scene))NEIGHBOR.renderWeather(ctx,t,weather,phase);
+ if(dungeonScene||player.scene==='street'||ROUTES.isRoute(player.scene))NEIGHBOR.renderWeather(ctx,t,weather,phase);
  ctx.setTransform(RENDER_SCALE,0,0,RENDER_SCALE,0,0);
  // Soft film-edge gradient, still rendered in native pixels.
  const v=ctx.createLinearGradient(0,0,0,270);v.addColorStop(0,'#263b4520');v.addColorStop(.22,'#00000000');v.addColorStop(.76,'#00000000');v.addColorStop(1,'#192e3345');ctx.fillStyle=v;ctx.fillRect(0,0,W,H);
@@ -3872,7 +3892,7 @@ function close(){selfBubble='';selfBubbleUntil=0;announce({type:'network_close'}
 function assignState(d){
  let old=friends.get(d.id);if(!old){old={id:d.id,name:d.name||'친구',renderX:d.x,renderY:d.y};friends.set(d.id,old)}
  if(d.name)old.name=d.name;
- Object.assign(old,{scene:d.scene||'street',x:d.x,y:d.y,pose:d.pose||'stand',dir:d.dir===0?0:1,look:d.look||'boy_main_blue',held:d.held||null,playground:!!d.playground});
+ Object.assign(old,{scene:d.scene||'street',x:d.x,y:d.y,depth:d.depth,pose:d.pose||'stand',dir:d.dir===0?0:1,look:d.look||'boy_main_blue',held:d.held||null,playground:!!d.playground});
  if(!Number.isFinite(old.renderX))old.renderX=old.x;
  if(!Number.isFinite(old.renderY))old.renderY=old.y;
  updateCount();
@@ -3925,7 +3945,7 @@ function sendState(){
  if(!ready)return;
  const pose=(player.pose==='stand'&&Math.abs(player.walking)>0.2&&['stand','street'].includes(player.pose)?'walk':player.pose);
  // Walking is a presentation-only pose; its physics remains local.
- send({type:'state',playground:!!player.playground,scene:player.scene,x:Math.round(player.x*10)/10,y:Math.round(player.y*10)/10,pose,dir:player.dir,look:window.CHARART?.selected||'boy_main_blue',held:window.SHOPS?.heldKind||null});
+ send({type:'state',playground:!!player.playground,scene:player.scene,x:Math.round(player.x*10)/10,y:Math.round(player.y*10)/10,depth:window.AlleyDungeon.width(player.scene)?player.alleyDepth:undefined,pose,dir:player.dir,look:window.CHARART?.selected||'boy_main_blue',held:window.SHOPS?.heldKind||null});
 }
 connectBtn.addEventListener('click',()=>ready?close():connect());
 share.addEventListener('click',async()=>{
@@ -3964,7 +3984,7 @@ function drawBubble(c,x,top,body){
 function renderSelfBubble(c,scene){
  if(!ready||player.scene!==scene||!selfBubble||performance.now()>=selfBubbleUntil)return;
  c.save();c.textAlign='center';c.textBaseline='bottom';
- drawBubble(c,player.x,player.y-(scene==='supermarket'?(51*window.SupermarketMap.scale(player.superFloorY)+30):scene==='hidden_alley'?(51*window.NarrowAlleyMap.scale(player.narrowFloorY)+30):scene==='main_road'?72:scene==='pcroom'?(51*window.PcRoomMap.scale(player.pcFloorY)+30):scene==='courtyard'?(51*window.CourtyardMap.scale(player.yardFloorY)+30):scene==='stationery'?(window.StationeryInterior.actorHeight+30):97),selfBubble);c.restore();
+ drawBubble(c,player.x,player.y-(window.AlleyDungeon.width(scene)?51*window.AlleyDungeon.scale(player.alleyDepth,scene)+30:scene==='supermarket'?(51*window.SupermarketMap.scale(player.superFloorY)+30):scene==='hidden_alley'?(51*window.NarrowAlleyMap.scale(player.narrowFloorY)+30):scene==='main_road'?72:scene==='pcroom'?(51*window.PcRoomMap.scale(player.pcFloorY)+30):scene==='courtyard'?(51*window.CourtyardMap.scale(player.yardFloorY)+30):scene==='stationery'?(window.StationeryInterior.actorHeight+30):97),selfBubble);c.restore();
 }
 function render(c,cam,scene){
  if(!ready)return;
@@ -3983,7 +4003,7 @@ function render(c,cam,scene){
  }
  c.restore();
 }
-window.A25NET={connect,close,tick,render,renderSelfBubble,send,beginChat,subscribe(fn){subscribers.add(fn);return()=>subscribers.delete(fn)},get state(){return{ready,room:currentRoom,id:myId,peers:friends.size}},get drawPeers(){return [...friends.values()].map(f=>({id:f.id,name:f.name,scene:f.scene,x:f.renderX,y:f.renderY,pose:f.pose,look:f.look,dir:f.dir,held:f.held,bubble:f.bubble,bubbleUntil:f.bubbleUntil}))},get peers(){return [...friends.values()].map(f=>({id:f.id,name:f.name,scene:f.scene,x:f.x,y:f.y,pose:f.pose,look:f.look,dir:f.dir,held:f.held,playground:f.playground}))}};
+window.A25NET={connect,close,tick,render,renderSelfBubble,send,beginChat,subscribe(fn){subscribers.add(fn);return()=>subscribers.delete(fn)},get state(){return{ready,room:currentRoom,id:myId,peers:friends.size}},get drawPeers(){return [...friends.values()].map(f=>({id:f.id,name:f.name,scene:f.scene,x:f.renderX,y:f.renderY,depth:f.depth,pose:f.pose,look:f.look,dir:f.dir,held:f.held,bubble:f.bubble,bubbleUntil:f.bubbleUntil}))},get peers(){return [...friends.values()].map(f=>({id:f.id,name:f.name,scene:f.scene,x:f.x,y:f.y,pose:f.pose,look:f.look,dir:f.dir,held:f.held,playground:f.playground}))}};
 updateCount();
 })();
 
@@ -4125,8 +4145,8 @@ window.A26NET={get snapshot(){return snapshot},get ready(){return connected()},p
 <script src="src/background-music.js"></script>
 <script src="src/interface.js"></script>
 <script src="src/world-audio.js?v=A94"></script>
-<script src="src/anycall-lcd.js?v=A101"></script>
-<script src="src/anycall-nate.js?v=A100"></script>
-<script src="src/anycall-phone.js?v=A101"></script>
+<script src="src/anycall-lcd.js?v=A102"></script>
+<script src="src/anycall-nate.js?v=A102"></script>
+<script src="src/anycall-phone.js?v=A102"></script>
 </body>
 </html>

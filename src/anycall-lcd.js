@@ -195,11 +195,11 @@ function create(host){
 
  /* ---------- 공통 틀 ---------- */
  function status(g){g.fillStyle=grad(g,0,TOP,'#33435f','#0d1524');g.fillRect(0,0,W,TOP);
-  for(let i=0;i<5;i++){const hh=2+i*1.7;R(g,3+i*3,10-hh,2,hh,'#e8f0ff')}
+  if(host.signal&&host.signal!=='normal')T(g,'×',7,10,{size:10,bold:true,color:'#ff8580'});else for(let i=0;i<5;i++){const hh=2+i*1.7;R(g,3+i*3,10-hh,2,hh,'#e8f0ff')}
   let x=21;if(unread()){R(g,x,3.5,9,6,'#ffd34a');g.strokeStyle='#8a5a00';g.lineWidth=.8;g.beginPath();g.moveTo(x,3.5);g.lineTo(x+4.5,7);g.lineTo(x+9,3.5);g.stroke();x+=12}
   if(D.alert==='vib'){g.strokeStyle='#e8f0ff';g.lineWidth=1;g.strokeRect(x+2.5,3,4,7);g.beginPath();g.moveTo(x+.5,4);g.lineTo(x+.5,9);g.moveTo(x+8.5,4);g.lineTo(x+8.5,9);g.stroke();x+=12}
   else if(D.alert==='mute'||!host.audioOn()||!host.prefs.keyTone){R(g,x,5,2.5,3,'#e8f0ff');g.fillStyle='#e8f0ff';g.beginPath();g.moveTo(x+2.5,5);g.lineTo(x+5.5,2.5);g.lineTo(x+5.5,10.5);g.lineTo(x+2.5,8);g.fill();g.strokeStyle='#ff6a5a';g.lineWidth=1;g.beginPath();g.moveTo(x+7,4);g.lineTo(x+10,9);g.moveTo(x+10,4);g.lineTo(x+7,9);g.stroke();x+=12}
-  if(NET.ready()){T(g,'방',x+1,9.5,{size:7.5,bold:true,color:'#7dff8a'});x+=10}
+  if(host.signal==='none'){T(g,'서비스 지역 아님',x,9.5,{size:7,color:'#ffb2ad'});x+=49}else if(NET.ready()){T(g,'방',x+1,9.5,{size:7.5,bold:true,color:'#7dff8a'});x+=10}
   if(S.scr!=='idle')T(g,nowStr(),W/2+8,9.5,{size:8.5,bold:true,color:'#e8f0ff',align:'center'});
   g.strokeStyle='#e8f0ff';g.lineWidth=.9;g.strokeRect(W-17.5,3,13,6.5);R(g,W-4.5,4.8,1.5,3,'#e8f0ff');for(let i=0;i<3;i++)R(g,W-16+i*4,4.5,3,3.5,'#7dff8a')}
  function soft(g,l,c,r){g.fillStyle=grad(g,H-BOT,H,'#3a4252','#0f131b');g.fillRect(0,H-BOT,W,BOT);R(g,0,H-BOT,W,.8,'#596277');
@@ -246,7 +246,7 @@ function create(host){
  function edHelp(g,ed,y){const s=ed.mode==='ko'?'1ㅣ *ㆍ 0ㅡ  #띄움 ▶다음':ed.mode==='en'?'2abc~9wxyz 1.,?! #띄움':'숫자 그대로 · ▶띄움';T(g,s,W/2,y,{size:7.5,color:'#6b778a',align:'center'})}
 
  /* ---------- 전화 ---------- */
- function call(target){stopTune();if(S.call&&S.call.phase!=='ended')return;let who=typeof target==='string'?(findNum(target)||{n:target,num:target,unknown:true}):target;
+ function call(target){if(host.signal&&host.signal!=='normal'){pop('통신 신호가 없습니다');return}stopTune();if(S.call&&S.call.phase!=='ended')return;let who=typeof target==='string'?(findNum(target)||{n:target,num:target,unknown:true}):target;
   const c={who,phase:'dial',t0:now(),lines:[],talk0:0,result:null,ring:0};const digits=String(who.num||'').replace(/\D/g,'');
   if(who.peer){if(!NET.ready()||!peerAlive(who.peer)){pop('같은 방에 있어야\n걸 수 있어요');return}c.cid=Math.random().toString(36).slice(2,10);c.real=true;NET.send('ring',{to:who.peer,call:c.cid})}
   else if(who.unknown){if(/^(112|119|113|122)$/.test(digits))c.result={msg:'긴급 전화는 장난으로 걸면 안 돼요!\n(게임 속 휴대폰이라 연결되지 않아요)',fast:true};
@@ -259,7 +259,7 @@ function create(host){
  function endCall(msg){const c=S.call;if(!c||c.phase==='ended')return;stopTune();if(c.talk0)charge('sec',Math.round((now()-c.talk0)/1000));c.phase='ended';c.endAt=now()+1400;c.endMsg=msg||'통화 종료';S.ed=null;afterNav();dirty()}
  function hang(msg){const c=S.call;if(!c)return;if(c.real&&c.phase!=='ended')NET.send('hang',{to:c.who.peer,call:c.cid});endCall(msg)}
  function incoming(m){
-  if(host.powered===false){NET.send('decline',{to:m.from,call:m.call});return}
+  if(host.powered===false||host.signal&&host.signal!=='normal'){NET.send('decline',{to:m.from,call:m.call});return}
   const who={n:m.name||'친구',num:fakeNum(m.from),peer:m.from,friend:true};
   if(S.call&&S.call.phase!=='ended'){NET.send('busy',{to:m.from,call:m.call});D.calls.unshift({t:'miss',n:who.n,num:who.num,time:nowStr(),peer:m.from});save();return}
   if(D.coloring&&allRings().some(r=>r[0]===D.coloring))NET.send('tone',{to:m.from,call:m.call,ring:D.coloring});
@@ -271,7 +271,7 @@ function create(host){
  function sayLine(){const c=S.call,ed=S.ed;if(!c||c.phase!=='live'||!ed)return;const text=ed.text().trim();if(!text)return;NET.send('talk',{to:c.who.peer,call:c.cid,text});c.lines.push({me:1,text});ed.clear();edChanged();dirty()}
 
  /* ---------- 문자 ---------- */
- function sendSms(to,text,photo){const id='m'+(++D.n);D.sent.unshift({id,to:to.n,toId:to.id,text,time:nowStr(),photo:photo?1:0});D.sent=D.sent.slice(0,30);charge('sms',1);save();
+ function sendSms(to,text,photo){if(host.signal&&host.signal!=='normal')return 'no-signal';const id='m'+(++D.n);D.sent.unshift({id,to:to.n,toId:to.id,text,time:nowStr(),photo:photo?1:0});D.sent=D.sent.slice(0,30);charge('sms',1);save();
   if(to.peer){if(!NET.send(photo?'photo':'sms',photo?{to:to.peer,photo,text}:{to:to.peer,text}))return 'offline';return 'net'}
   const rules=(w.WebTown?.CONTACTS||[]).find(c=>c[0]===to.id);let reply=null;if(rules)reply=(rules[2].find(([re])=>re.test(text))||[null,rules[3]])[1];else if(OWN_REPLY[to.id])reply=OWN_REPLY[to.id];
   if(reply&&to.id!=='home')later(()=>receive({from:to.n,fromId:to.id,text:reply}),2600+Math.round(Math.random()*1800));return 'local'}
@@ -379,6 +379,7 @@ function create(host){
    wrap(g,'"'+S.arg.text+'"',W-24,9.5,false).slice(0,2).forEach((l,i)=>T(g,l,W/2,105+i*12,{size:9.5,color:'#44506a',align:'center'}));
    R(g,16,134,W-32,8,'#c9d4e6');R(g,16,134,(W-32)*p,8,'#2bb24c');T(g,p<1?'전송 중...':'잠시만요...',W/2,156,{size:10,bold:true,color:'#2f4a7a',align:'center'});soft(g,'','','')},
   needs(t){if(t-S.t0<1300)return true;const r=S.res;
+   if(r==='no-signal'){back();pop('통신 신호가 없습니다');return true}
    if(r==='offline'){back();pop('같은 방에 있어야\n보낼 수 있어요');return true}
    if(r==='net'){if(S.ack&&S.ack.ok){back();pop('전송 완료!',1300);return true}if(S.ack&&!S.ack.ok){back();pop(S.ack.msg||'보내지 못했어요');return true}if(t-S.t0>6000){back();pop('보내지 못했어요');return true}return true}
    if(t-S.t0>=1900){back();pop('전송 완료!',1300)}return true},key(){return true}};
@@ -467,6 +468,7 @@ function create(host){
  /* ---------- DMB 방송 ---------- */
  const CH=[['뉴스','동네 저녁 뉴스'],['만화','꼬마 공룡 초록이'],['스포츠','월드컵 응원 특집'],['음악','가요 순위 열전'],['홈쇼핑','쇼핑 라이브']];
  SCR.dmb={enter(){S.tv={ch:0,t0:now()}},draw(g,t){const tv=S.tv,[kind,name]=CH[tv.ch],scene=host.scene?.()||'street',weak=INDOOR.has(scene);R(g,0,TOP,W,H-TOP,'#000');status(g);
+   if(host.signal==='none'){T(g,'수신 신호 없음',W/2,H/2,{size:12,color:'#fff',align:'center'});soft(g,'','','');return}
    const y0=TOP+12,hh=H-BOT-y0-14,k=(t-tv.t0)/1000;g.save();g.beginPath();g.rect(0,y0,W,hh);g.clip();drawTv(g,kind,k,y0,hh);
    if(t-tv.t0<700||weak&&Math.floor(k*3)%4===0){for(let i=0;i<220;i++){const v=(i*7919+Math.floor(t/40)*104729)%255;R(g,(i*37+Math.floor(t/30)*13)%W,y0+(i*53+Math.floor(t/50)*7)%hh,3,2,'rgb('+v+','+v+','+v+')')}}
    g.restore();R(g,0,TOP,W,12,'#111');T(g,'DMB '+(tv.ch+7)+'  '+name,4,TOP+9,{size:8,bold:true,color:'#fff',max:W-40});
@@ -654,11 +656,11 @@ function create(host){
   if(S.ed&&Math.floor(t/500)!==S.edBlink){S.edBlink=Math.floor(t/500);n=true}
   const sc=cur();if(sc?.needs&&sc.needs.call(sc,t,api))n=true;if(S.call&&S.scr!=='call'&&SCR.call.needs.call(SCR.call,t,api))n=true;return n}
  function event(type,v){
-  if(type==='poweroff'){
+  if(type==='poweroff'||type==='signal'&&v!=='normal'){
    if(S.call?.phase==='ring')decline(true);else if(S.call)hang();
    S.call=null;S.dial='';S.pop=null;S.ack=null;
    if(S.scr==='nate'&&NB)NB.exit(true);
-   home();S.pop=null;
+   home();S.pop=null;if(type==='signal'&&v==='none')pop('통신 신호가 없습니다');
   }
   if(type==='slide'&&!v&&S.scr==='idle'&&S.dial)S.dial='';if(type==='hide'&&!S.call)stopTune();if(type==='show')syncLabel();dirty()}
  function ownsSound(id){const sc=cur();return!!(sc?.ownsSound&&sc.ownsSound(id))}
