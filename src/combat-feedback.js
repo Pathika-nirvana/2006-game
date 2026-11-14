@@ -176,6 +176,6 @@
     root.document?.getElementById('bgmControls')?.addEventListener(input,()=>setTimeout(syncMusic,0));
   }
   function reset() { stop=shake=combo=comboTime=0; pops=[]; battle(null); }
-  root.CombatFeedback = {move, impact, pickup, heal, frame, transform, draw, battle, syncMusic, reset,
+  root.CombatFeedback = {groundShock(x,y){sound('base_combat_knockdown');stop=Math.max(stop,.075);shake=Math.max(shake,.38);burst('heavy',x,y,'쿵!',.7);},move, impact, pickup, heal, frame, transform, draw, battle, syncMusic, reset,
     swing:()=>varied('base_combat_swing',2), get combo(){return combo}};
 })(window);

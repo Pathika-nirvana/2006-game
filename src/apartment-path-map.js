@@ -11,8 +11,8 @@ function walk(p,h,v,dt){
  if((h||v)&&['bench','sit'].includes(p.pose)){p.pose='stand';p.apartmentFloorY=p.apartmentStandY??p.apartmentFloorY;p.apartmentStandY=null}
  const resting=['bench','sit'].includes(p.pose)||(p.pose==='eat'&&p.eatRestore!=='stand');
  if(!resting){const n=Math.hypot(h,v)||1;
-  p.x=Math.max(18,Math.min(WIDTH-18,p.x+h/n*91*dt));const b=bounds(p.x);
-  p.apartmentFloorY=Math.max(b.top,Math.min(b.bottom,p.apartmentFloorY+v/n*66*dt));
+  p.x=Math.max(18,Math.min(WIDTH-18,p.x+h/n*91*dt*(p.dashMultiplier||1)));const b=bounds(p.x);
+  p.apartmentFloorY=Math.max(b.top,Math.min(b.bottom,p.apartmentFloorY+v/n*66*dt*(p.dashMultiplier||1)));
   if(h)p.dir=h>0?1:0;p.walking=h||v?p.walking+dt*11:0;
   if(p.apartmentJump>0||p.apartmentVelocity>0){p.apartmentVelocity-=510*dt;p.apartmentJump=Math.max(0,p.apartmentJump+p.apartmentVelocity*dt);if(!p.apartmentJump){p.apartmentVelocity=0;p.onGround=true;p.pose='stand'}else{p.onGround=false;p.pose='jump'}}
   p.y=p.apartmentFloorY-(p.apartmentJump||0);

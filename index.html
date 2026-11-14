@@ -377,7 +377,7 @@ body.playing-a5 #bgmControls{position:fixed;z-index:1100;bottom:0;left:0;right:0
 <link rel="stylesheet" href="assets/pc-desktop/web-town.css?v=A97">
 <link rel="stylesheet" href="assets/phone/anycall-phone.css?v=A100">
 <link rel="stylesheet" href="assets/pc-desktop/boot.css">
-<link rel="stylesheet" href="src/combat-ui.css?v=A116">
+<link rel="stylesheet" href="src/combat-ui.css?v=A118">
 </head>
 <body>
   <div class="grain"></div>
@@ -2069,7 +2069,7 @@ function openBag(){mode='bag';selected=null;overlay.classList.remove('is-snackba
  renderBagSelected(found[0]);
 }
 function renderBagSelected(item){detail.innerHTML='';let pic=document.createElement('div');pic.className='selected-art';pic.appendChild(makePixel(item.kind));let body=document.createElement('div');body.className='bag-description';let strong=document.createElement('strong');strong.textContent=item.name;let p=document.createElement('p');p.textContent=item.detail+(item.bites>1?' · 한 입에 체력 +7':' · 체력 +10');body.append(strong,p);
- const eatWithAnimation=item.bites>1||window.AlleyEncounter?.status.phase==='fight';
+ const eatWithAnimation=item.bites>1||window.AlleyEncounter?.status.phase==='fight'||window.BossEncounter?.active;
  const use=makeButton(eatWithAnimation?'손에 꺼내 먹기 · F':'지금 먹기',()=>{
  if(!inventory[item.id]||window.AlleyEncounter?.status.phase==='lost')return;
  if(eatWithAnimation){holdItem(item.id);close();return}
@@ -3327,7 +3327,7 @@ function sceneWidth(){const dungeonWidth=window.AlleyDungeon.width(player.scene)
 function uiClick(id,fn){el(id).addEventListener('click',fn)}
 function start(){window.GameAudio?.unlock();window.BGM?.start();running=true;D.intro.classList.add('hidden');D.start.blur();toast('화살표 이동 · E 상호작용 · Enter 채팅',4)}
 uiClick('startBtn',start);uiClick('dialogClose',closeDialog);uiClick('mapBtn',()=>ROUTES.toggleMap());
-uiClick('helpBtn',()=>showDialog('조작법','화살표키 이동 · Enter 채팅 · SPACE 점프 · ↑ ↓ 사다리 · E 주변 살펴보기/가게/정류장/주택·아파트 계단 · C 앉기 · X 인사 · V 옷 바꾸기 · N 휴대폰 꺼내기/넣기 · T 시간대 · R 비 내리기/그치기 · F 간식 먹기 · J 수첩. 정류장에선 E를 눌러 버스를 기다리고, 버스가 서면 다시 E를 눌러 탈 수 있어. M은 동네 길 안내도야. 주택가 샛길과 아파트 산책길은 큰길 대신 이어지는 우회로야.','✿'));
+uiClick('helpBtn',()=>showDialog('조작법','화살표키 이동 · Shift 대시 · Enter 채팅 · SPACE 점프 · ↑ ↓ 사다리 · E 주변 살펴보기/가게/정류장/주택·아파트 계단 · C 앉기 · X 인사 · V 옷 바꾸기 · N 휴대폰 꺼내기/넣기 · T 시간대 · R 비 내리기/그치기 · F 간식 먹기 · J 수첩. 정류장에선 E를 눌러 버스를 기다리고, 버스가 서면 다시 E를 눌러 탈 수 있어. M은 동네 길 안내도야. 주택가 샛길과 아파트 산책길은 큰길 대신 이어지는 우회로야.','✿'));
 uiClick('timeBtn',changeTime);uiClick('weatherBtn',changeWeather);uiClick('soundBtn',toggleSound);uiClick('phoneBtn',()=>window.AnycallPhone?.toggle());
 function changeTime(){phase=(phase+1)%3;D.time.textContent=['늦은 오후','해 질 무렵','저녁'][phase];D.clock.textContent=['오후 4:32','오후 6:24','오후 7:38'][phase];MEMO.add(['학교 끝난 시간','저녁이 다가온다','골목의 불빛'][phase],['교문 앞으로 나온 아이들이 흩어진다.','그림자가 길어지고 저녁 준비하는 소리가 들린다.','집집마다 불이 켜지고 골목이 조용해진다.'][phase],phase);toast(['하굣길의 햇빛이 따뜻하다.','골목에 노을이 내려앉는다.','창문에 불빛이 하나둘 켜진다.'][phase]);}
 function changeWeather(){weather=1-weather;el('weatherLabel').textContent=weather?'비 내림':'맑음';MEMO.add(weather?'비가 내리기 시작했다':'비가 그쳤다',weather?'낡은 차양 끝에서 빗물이 떨어진다.':'조금씩 마르는 보도블록 위로 오후가 돌아왔다.',phase);toast(weather?'비가 내린다. 골목길에서 우산을 쓴 사람들이 보인다.':'빗줄기가 그쳤다. 물웅덩이만 조금 남았다.',3.3)}
@@ -3345,6 +3345,8 @@ const alleyUI = {
   el('dialogClose').hidden = true;
   window.TaekwondoMotion?.reset();
   el('alleyPay').disabled = SHOPS.coins < definition.price;
+  el('alleyPay').textContent=definition.payLabel||'100원 준다';
+  el('alleyRefuse').textContent=definition.fightLabel||'거절한다';
   const finish = choice => {
    if (!choose(choice)) return;
    alleyChoices.hidden = true;
@@ -3360,6 +3362,7 @@ const alleyUI = {
  notice: message => toast(message)
 };
 function setScene(next,spawn,spawnY){
+ if(player.scene==='hidden_alley'&&next!==player.scene&&window.BossEncounter?.active){toast('상대를 제압해야 앞으로 갈 수 있다.');return;}
  if(next!==player.scene){
   window.AlleyEncounter?.reset(false);
   alleyChoices.hidden=true;
@@ -3429,7 +3432,7 @@ function nearest(){
  return candidate;
 }
 function interact(){
- if(window.AlleyEncounter?.loot(player,alleyUI))return;
+ if(window.AlleyEncounter?.loot(player,alleyUI)||window.BossEncounter?.loot(player,alleyUI))return;
  if(!running){start();return}
  if(openDialog){closeDialog();return}
  const a=nearest();if(!a){toast('여기서는 잠깐 서 있어도 좋아.');return}
@@ -3481,7 +3484,7 @@ function unsit(){player.pose='stand';player.sitAt=null;player.y=GROUND;player.on
 function sit(){if(!running||player.pose==='eat')return;closeDialog();if(['sit','bench','swing'].includes(player.pose)){unsit();toast('다시 걸어볼까?');return}if(!player.onGround)return;player.pose='sit';toast('조금 쉬어 가자.');}
 function wave(){if(!running||player.pose==='eat')return;closeDialog();if(['sit','bench','swing'].includes(player.pose))unsit();player.pose='wave';player.waveEnd=t+1.3;toast(ROUTINES.reactWave(player.scene,player.x,t)||'안녕! 👋',2.1)}
 function keydown(e){const k=e.code;const target=e.target||document.activeElement;if(e.isComposing||e.keyCode===229||['INPUT','TEXTAREA','SELECT'].includes(target?.tagName)||target?.isContentEditable)return;
- if(window.AlleyEncounter?.choosing){if(!['Tab','Enter','Space'].includes(k))e.preventDefault();return;}
+ if(window.AlleyEncounter?.choosing||window.BossEncounter?.choosing){if(!['Tab','Enter','Space'].includes(k))e.preventDefault();return;}
  if(k==='Space'&&['lobby','hall','rooftop'].includes(player.scene)&&!SHOPS.isOpen&&!PLAYROOM.isOpen&&!MEMO.isOpen){e.preventDefault();window.Block104.jump(player);return;}
  if((player.playground||window.A20WORLD?.hidesPlayer())&&window.A20WORLD?.key(k,player,{running,scene:player.scene,dialog:openDialog,uiBusy:SHOPS.isOpen||MEMO.isOpen||PLAYROOM.isOpen||ROUTES.isMapOpen})){e.preventDefault();return}
  if(ROUTES.isMapOpen){if(['KeyM','Escape'].includes(k)){e.preventDefault();ROUTES.toggleMap(false)}return}
@@ -3561,6 +3564,7 @@ function landBetween(x,oldY,newY){
 function inputH(){if(window.TaekwondoMotion?.active)return 0;return Number(input.has('ArrowRight'))-Number(input.has('ArrowLeft'))}
 function inputV(){if(window.TaekwondoMotion?.active)return 0;return Number(input.has('ArrowDown'))-Number(input.has('ArrowUp'))}
 function update(dt){
+ player.dashMultiplier=(input.has('ShiftLeft')||input.has('ShiftRight'))&&!window.TaekwondoMotion?.active&&player.pose!=='eat'?(window.CombatSettings?.dashMultiplier||1.8):1;
  window.TaekwondoMotion?.update(player,running&&!SHOPS.isOpen&&!MEMO.isOpen&&!PLAYROOM.isOpen&&!ROUTES.isMapOpen&&!openDialog&&!window.GameInterface?.isMenuOpen&&!window.AnycallPhone?.shown&&document.getElementById('charEditor').classList.contains('hidden'));
  if(player.scene==='street'){player.x=Math.max(372,player.x);cam=Math.max(359,cam)}
  t+=dt;window.A25NET?.tick(dt,player,running);ROUTINES.update(dt,phase,weather,t);if(toastTimer>0){toastTimer-=dt;if(toastTimer<=0)D.hint.classList.remove('show')}
@@ -3608,7 +3612,7 @@ function update(dt){
  }
  if(player.scene==='hidden_alley'){
   if(player.pose==='wave'&&t>player.waveEnd)player.pose='stand';const h=player.pose==='eat'?0:inputH(),v=player.pose==='eat'?0:inputV();if(h||v){if(openDialog)closeDialog();if(player.pose==='wave')player.pose='stand'}
-  window.NarrowAlleyMap.walk(player,h,v,dt);const target=Math.max(0,Math.min(sceneWidth()-W,player.x-206));cam+=(target-cam)*Math.min(1,dt*6);D.area.textContent='주택 사이 좁은 뒷골목';const a=nearest();D.action.textContent=a?'E · '+a.title:'↑↓←→ 좁은 골목 걷기 · Space 점프';return;
+  window.NarrowAlleyMap.walk(player,h,v,dt);if(!openDialog&&!window.AnycallPhone?.shown&&!window.GameInterface?.isMenuOpen&&el('charEditor').classList.contains('hidden'))window.BossEncounter?.update(dt,player,alleyUI);const target=Math.max(0,Math.min(sceneWidth()-W,player.x-206));cam+=(target-cam)*Math.min(1,dt*6);D.area.textContent='주택 사이 좁은 뒷골목';const a=nearest();D.action.textContent=a?'E · '+a.title:'↑↓←→ 이동 · Shift 대시 · A 막기 · G 가드 파괴';return;
  }
  if(player.scene==='back_alley'){
   if(player.pose==='wave'&&t>player.waveEnd)player.pose='stand';
@@ -3638,7 +3642,7 @@ function update(dt){
   if(player.y<=ladder.top+.5){player.y=ladder.top;player.pose='stand';player.onGround=true}
   else if(player.y>=ladder.bottom-.5){player.y=GROUND;player.pose='stand';player.onGround=true}
  }else if(player.pose!=='climb'){
-   let move=horizontal*105*dt;
+   let move=horizontal*105*dt*(player.dashMultiplier||1);
    if(horizontal){
     if(['sit','bench','swing'].includes(player.pose)){unsit();closeDialog()}
     if(player.pose==='wave')player.pose='stand';
@@ -3673,7 +3677,7 @@ function update(dt){
 function render(){
  ctx.setTransform(RENDER_SCALE,0,0,RENDER_SCALE,0,0);
  ctx.imageSmoothingEnabled=false;
- if(player.scene==='back_alley'){ctx.fillStyle='#4d5558';ctx.fillRect(0,0,W,H);window.CombatFeedback?.transform(ctx);}
+ if(['back_alley','hidden_alley'].includes(player.scene)){ctx.fillStyle='#4d5558';ctx.fillRect(0,0,W,H);window.CombatFeedback?.transform(ctx);}
  if(player.scene==='main_road')ctx.translate(0,24);
  // A46: move the street camera up 40 world units; preserve all shared physics coordinates.
  if(player.scene==='street'||player.scene==='side_alley'){ctx.fillStyle=phase===2?'#273b57':phase===1?'#d5aba0':'#78b9eb';ctx.fillRect(0,0,W,H);ctx.translate(0,40);}
@@ -4202,19 +4206,21 @@ window.A26NET={get snapshot(){return snapshot},get ready(){return connected()},p
 
 
 </script>
-<script src="src/background-music.js?v=A116"></script>
+<script src="src/background-music.js?v=A118"></script>
 <script src="src/interface.js"></script>
 <script src="src/world-audio.js?v=A94"></script>
 <script src="src/anycall-lcd.js?v=A102"></script>
 <script src="src/anycall-nate.js?v=A102"></script>
 <script src="src/anycall-phone.js?v=A102"></script>
-<script src="src/combat-settings.js?v=A116"></script>
-<script src="src/combat-sounds.js?v=A116"></script>
-<script src="src/combat-feedback.js?v=A116"></script>
+<script src="src/combat-settings.js?v=A118"></script>
+<script src="src/combat-sounds.js?v=A118"></script>
+<script src="src/combat-feedback.js?v=A118"></script>
 <script src="src/combat-frames.js?v=A109"></script>
-<script src="src/taekwondo-motion.js?v=A116"></script>
+<script src="src/taekwondo-motion.js?v=A118"></script>
 <script src="src/enemy-frames.js"></script>
-<script src="src/alley-encounter.js?v=A116"></script>
-<script src="src/combat-hud.js?v=A116"></script>
+<script src="src/alley-encounter.js?v=A118"></script>
+<script src="src/boss-frames.js?v=A118"></script>
+<script src="src/boss-encounter.js?v=A118"></script>
+<script src="src/combat-hud.js?v=A118"></script>
 </body>
 </html>

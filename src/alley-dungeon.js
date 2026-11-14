@@ -95,9 +95,9 @@ function walk(p,h,v,dt){
  const distance=Math.max(Math.abs(h)*94,Math.abs(v)*68)*dt;
  const steps=Math.max(1,Math.ceil(distance/2));
  for(let i=0;i<steps;i++){
-  const x=clamp(p.x+h/n*94*dt/steps,left,right);
+  const x=clamp(p.x+h/n*94*dt*(p.dashMultiplier||1)/steps,left,right);
   if(walkable(scene,x,p.alleyDepth))p.x=x;
-  p.alleyDepth=clamp(p.alleyDepth+v/n*68*dt/steps,top(scene,p.x),bottom);
+  p.alleyDepth=clamp(p.alleyDepth+v/n*68*dt*(p.dashMultiplier||1)/steps,top(scene,p.x),bottom);
  }
  if(h)p.dir=h>0?1:0;
  p.walking=h||v?p.walking+dt*11:0;

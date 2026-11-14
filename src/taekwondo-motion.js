@@ -125,7 +125,7 @@
     const code = event.code;
     if (allowed && state?.held && code.startsWith('Arrow')) state = null;
     if (!['KeyS','KeyD','KeyA','KeyG'].includes(code) || !allowed || !eligible(player)) return false;
-    if(code==='KeyG'&&(player.scene!=='back_alley'||root.AlleyEncounter?.status.phase!=='fight'))return false;
+    if(code==='KeyG'&&(!((player.scene==='back_alley'&&root.AlleyEncounter?.status.phase==='fight')||(player.scene==='hidden_alley'&&root.BossEncounter?.active))))return false;
     event.preventDefault();
     if (event.repeat) return true;
     actor = player; scene = player.scene;
@@ -183,7 +183,7 @@
         const horizontal = guardDirection === 'ArrowLeft' ? -1 : guardDirection === 'ArrowRight' ? 1 : 0;
         const vertical = guardDirection === 'ArrowUp' ? -1 : guardDirection === 'ArrowDown' ? 1 : 0;
         const direction = player.dir;
-        root.BackAlleyMap.walk(player,horizontal,vertical,.14);
+        (player.scene==='hidden_alley'?root.NarrowAlleyMap:root.BackAlleyMap).walk(player,horizontal,vertical,.14);
         player.dir = direction;
         start(guardDirection, now);
       } else start('parry', now);

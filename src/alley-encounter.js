@@ -278,5 +278,5 @@ function heal(amount,p){
  if(gained>0){playerHealth+=gained;fx.heal?.(p.x,p.y-40,gained);}
  return gained;
 }
-reset();root.AlleyEncounter={reset,heal,update,draw,drawIndicators,loot,lootTarget,get choosing(){return phase==='choice'},get targets(){return npcs.filter(ready).map(n=>({...n,height:82*root.BackAlleyMap.scale(n.y)}))},get status(){return{phase,playerHealth,...npcs[0]}},get debug(){return{npcs,phase}}};
+reset();root.AlleyEncounter={damage(amount){playerHealth=Math.max(0,playerHealth-Math.max(0,amount));return playerHealth;},reset,heal,update,draw,drawIndicators,loot,lootTarget,get choosing(){return phase==='choice'},get targets(){return npcs.filter(ready).map(n=>({...n,height:82*root.BackAlleyMap.scale(n.y)}))},get status(){return{phase,playerHealth,...npcs[0]}},get debug(){return{npcs,phase}}};
 })(window);

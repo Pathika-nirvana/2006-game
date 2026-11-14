@@ -12,7 +12,7 @@
   function update(scene) {
     const state = root.AlleyEncounter.status;
     const config = root.CombatSettings;
-    const inFight = scene === 'back_alley' && ['fight','won','lost'].includes(state.phase);
+    const inFight = (scene === 'back_alley' && ['fight','won','lost'].includes(state.phase)) || (scene==='hidden_alley' && ['fight','interval','won','lost'].includes(root.BossEncounter?.status.phase));
     hud.hidden = !inFight && state.playerHealth >= config.player.health;
     if (hud.hidden) return;
     hud.querySelector('.fight-vital').style.opacity = state.playerHealth < config.player.health*.25 ? '.85' : '1';
