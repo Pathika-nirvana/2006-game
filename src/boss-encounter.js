@@ -18,13 +18,15 @@ function hurtPlayer(n,p,damage,knock,canBlock=true){
   if(/parry|Arrow/.test(pm.motion||'')){anim(n,'strong');n.cooldown=1.25;n.punishUntil=clock+1.25;n.comboHits=0;n.telegraph=null;}
   return;
  }
+ // The belly slam retains its fixed percentage damage.
+ if(canBlock)damage=Math.max(1,Math.round(damage*(w.CombatItems?.multiplier('defense')||1)));
  const hp=w.AlleyEncounter.damage(damage);inv=cfg.player.hurtInvulnerability;
- if(p.pose==='eat'){p.pose='stand';p.eatEnd=0;}
+ if(w.CombatItems?.cancelEating(p))uiRef?.notice('피격으로 먹기가 끊겼다.');
  pm.react(hp?(knock>10?'hitHeavy':'hitMid'):'down',p);
  // Resolve knockback with the same solid floor constraints as normal movement.
  const dir=p.x<n.x?-1:1,oldDash=p.dashMultiplier;p.dashMultiplier=1;w.NarrowAlleyMap.walk(p,dir,0,knock/84);p.dashMultiplier=oldDash;p.walking=0;
  fx.impact('player',hp?(knock>10?'heavy':'hit'):'down',p.x,p.y-45,damage);
- if(!hp){phase='lost';delay=2;fx.battle(null);uiRef?.notice('쓰러졌다. 골목 입구에서 다시 일어난다.');}
+ if(!hp){w.CombatItems?.clear();phase='lost';delay=2;fx.battle(null);uiRef?.notice('쓰러졌다. 골목 입구에서 다시 일어난다.');}
 }
 function takeHit(n,p){
  const pm=w.TaekwondoMotion,hit=pm.impact;if(!hit||n.seen===hit||n.health<=0||n.motion==='air')return;
@@ -37,7 +39,7 @@ function takeHit(n,p){
  }
  const heavy=/finisher|backKick|axeKick|punch4|launchKick/.test(hit.name);
  const defense=n.kind==='boss'?(f>=2?bc.exhaustedDefense:bc.defense):bc.defense;
- const damage=Math.max(2,Math.round(cfg.player.attack*(heavy?1.45:hit.name==='guardBreaker'?.72:1)-defense));
+ const damage=Math.max(2,Math.round(cfg.player.attack*(w.CombatItems?.multiplier('attack')||1)*(heavy?1.45:hit.name==='guardBreaker'?.72:1)-defense));
  n.health=Math.max(0,n.health-damage);fx.impact('npc',n.health?(heavy?'heavy':'hit'):'down',n.x,n.y-65,damage);
  if(!n.health){anim(n,'down');n.telegraph=null;phase='interval';delay=2.2;return;}
  // Healthy giant keeps the committed action; exhaustion strips that armour.
@@ -204,6 +206,6 @@ function floor(c){
 function indicators(c,p){c.save();c.textAlign='center';c.font='bold 7px sans-serif';for(const n of actors){if(n.health>0){if(n!==actors[active]||!['fight','interval'].includes(phase))continue;const y=n.visualTop-10;if(n.kind==='underboss'&&n.counterUntil>clock){c.fillStyle='#ffcb72';c.fillText('반격',n.x,y+13);}c.fillStyle='#171a20';c.fillRect(n.x-34,y,68,5);c.fillStyle='#dbad70';c.fillRect(n.x-34,y,68,1);c.fillStyle='#da4b39';c.fillRect(n.x-33,y+1,66*n.health/n.maxHealth,3);c.fillStyle='#fff1d8';c.fillText(n.name,n.x,y-3);if(fatigue(n)>=2){c.fillStyle='#a8e7ef';c.fillText(fatigue(n)===3?'완전 탈진':'탈진 · 빈틈',n.x,y+13);}}
  else if(!n.looted){c.fillStyle='#f3c478';c.fillRect(n.x-2,n.y-5,4,4);if(lootTarget(p)===n)c.fillText('E 줍기',n.x,n.y-13);}}c.restore();}
 function lootTarget(p){return p.scene===scene?actors.find(n=>!n.health&&!n.looted&&n.age>.6&&Math.hypot(n.x-p.x,n.y-p.narrowFloorY)<36):null;}
-function loot(p,ui){const n=lootTarget(p);if(!n)return false;const coins=n.kind==='boss'?600:300;if(!w.SHOPS?.grantLoot('boss117:'+n.kind,{coins,item:'stars'}))return true;n.looted=true;fx.pickup?.(n.x,n.y-15,coins,'별사탕');ui.notice(coins+'원 · 별사탕 획득');return true;}
+function loot(p,ui){const n=lootTarget(p);if(!n)return false;const coins=n.kind==='boss'?600:300;const receipt=w.SHOPS?.grantLoot('boss117:'+n.kind,{coins,item:'stars'});if(receipt==='full'){ui.notice('가방이 꽉 찼다. 자리를 비우고 다시 줍자.');return true;}if(!receipt)return true;n.looted=true;fx.pickup?.(n.x,n.y-15,coins,'별사탕');ui.notice(coins+'원 · 별사탕 획득');return true;}
 reset();w.BossEncounter={update,draw,drawFloor:floor,drawIndicators:indicators,loot,lootTarget,reset,get choosing(){return phase==='choice'},get active(){return ['fight','interval'].includes(phase)},get status(){return{phase,index:active}},get debug(){return{actors,begin,inside,fatigue}}};
 })(window);

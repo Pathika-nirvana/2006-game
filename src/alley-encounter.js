@@ -130,7 +130,7 @@ function update(dt,p,ui){
      }
      else{
       const heavy=/finisher|backKick|axeKick|punch4|launchKick/.test(impact.name);
-      const damage=Math.max(1,Math.round(cfg.player.attack*(heavy?1.45:impact.name==='guardBreaker'?.72:1)-cfg.bully.defense));n.health=Math.max(0,n.health-damage);
+      const damage=Math.max(1,Math.round(cfg.player.attack*(root.CombatItems?.multiplier('attack')||1)*(heavy?1.45:impact.name==='guardBreaker'?.72:1)-cfg.bully.defense));n.health=Math.max(0,n.health-damage);
       fx.impact('npc',n.health?(heavy?'heavy':'hit'):'down',n.x,n.y-44,damage);
       n.x+=face*(heavy?8:3);clamp(n);animate(n,n.health?(heavy?'strong':/^kick/.test(impact.name)?'low':/punch[13]/.test(impact.name)?'weak':'mid'):'down');
       n.hitsTaken++;n.counterUntil=0;n.counterAttack=false;n.cooldown=heavy?.55:.25;
@@ -144,10 +144,10 @@ function update(dt,p,ui){
     const windup=(n.motion==='punch'?.18:.23)/cfg.bully.attackSpeed/n.rate;
     if(n.age>=windup&&n.age-dt<windup&&d<=attackReach(n)&&Math.abs(dy)<14&&dx*n.dir>=0&&p.onGround&&!invulnerable){
      if(pm?.defend(p,dx,dy)){fx.impact('player','block',p.x,p.y-38,0);n.cooldown=.55;}
-     else{const damage=Math.max(1,Math.round(cfg.bully.attack*n.attack-cfg.player.defense));playerHealth=Math.max(0,playerHealth-damage);invulnerable=cfg.player.hurtInvulnerability;
-      if(p.pose==='eat'){p.pose='stand';p.eatEnd=0;}
+     else{const damage=Math.max(1,Math.round((cfg.bully.attack*n.attack-cfg.player.defense)*(root.CombatItems?.multiplier('defense')||1)));playerHealth=Math.max(0,playerHealth-damage);invulnerable=cfg.player.hurtInvulnerability;
+      if(root.CombatItems?.cancelEating(p))ui.notice('피격으로 먹기가 끊겼다.');
       fx.impact('player',playerHealth?(n.counterAttack?'counter':'hit'):'down',p.x,p.y-40,damage);pm?.react(playerHealth?(n.motion==='kick'?'hitLow':'hitMid'):'down',p);
-      if(!playerHealth){phase='lost';timer=0;fx.battle(null);ui.notice('쓰러졌다. 골목 입구로 물러난다.');break;}
+      if(!playerHealth){root.CombatItems?.clear();phase='lost';timer=0;fx.battle(null);ui.notice('쓰러졌다. 골목 입구로 물러난다.');break;}
      }
     }
     if(n.age<windup+.25/cfg.bully.attackSpeed)continue;
@@ -245,6 +245,7 @@ function draw(c,foot,front){for(const n of [...npcs].sort((a,b)=>a.y-b.y))if(foo
 function lootTarget(p){if(p.scene!=='back_alley'||!p.onGround||phase==='lost')return null;return npcs.filter(n=>n.health<=0&&!n.looted&&n.age>.5&&Math.hypot(n.x-p.x,n.y-p.alleyFloorY)<34).sort((a,b)=>Math.hypot(a.x-p.x,a.y-p.alleyFloorY)-Math.hypot(b.x-p.x,b.y-p.alleyFloorY))[0]||null;}
 function loot(p,ui){const n=lootTarget(p);if(!n)return false;
  const receipt=root.SHOPS?.grantLoot(encounterId+':'+n.id,n.loot);
+ if(receipt==='full'){ui.notice('가방이 꽉 찼다. 자리를 비우고 다시 줍자.');return true;}
  if(!receipt){ui.notice('획득 내역을 저장하지 못했다. 다시 시도해 줘.');return true;}
  n.looted=true;fx.pickup?.(n.x,n.y-12,n.loot.coins,n.loot.item==='ring'?'반지사탕':'별사탕');ui.notice(n.name+'에게서 '+n.loot.coins+'원 · '+(n.loot.item==='ring'?'반지사탕':'별사탕')+' 1개 획득');return true;
 }

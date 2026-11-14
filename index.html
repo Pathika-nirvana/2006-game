@@ -157,6 +157,7 @@
 .activity.is-snackbar .activity-foot{background:#d7b991;color:#68493a;border-top:2px solid #b98d69;font-size:11px}
 .holding-label{position:absolute;left:11px;bottom:12px;z-index:3;max-width:63%;background:#f3dfbaea;border:1px solid #b69a70;color:#614639;font:bold 10px 'Malgun Gothic',sans-serif;padding:5px 8px;pointer-events:none}
 .holding-label.hidden{display:none}
+.holding-label.buff-label{left:auto;right:11px;background:#263328ed;color:#f2e2af;border-color:#7c8c66}
 @media(max-width:750px){
  .activity.is-snackbar .activity-card{width:99%;max-height:99%;border-width:3px}
  .activity.is-snackbar .activity-head{padding:7px 9px}
@@ -395,7 +396,7 @@ body.playing-a5 #bgmControls{position:fixed;z-index:1100;bottom:0;left:0;right:0
         <div class="a20-panel hidden" id="a20Panel" aria-live="polite">
  <div class="a20-heading"><strong id="a20Title">2006년 · 놀이터</strong><span id="a20Status">가까이 가면 탈 수 있어</span></div>
  <div class="a20-buttons"><button type="button" id="a20Ride">타기 / 내리기 (E)</button><button type="button" id="a20Help">친구 밀어주기 (P)</button><button type="button" id="a20Push">살짝 밀기 (H)</button><button type="button" id="a20Hard">세게 밀기 (K)</button><button type="button" id="a20Auto">연속 세게 밀기</button><button type="button" id="a20Quit">그만 놀기 (Esc)</button></div>
- </div><div class="action-label" id="actionLabel" aria-live="polite">E · 둘러보기</div><div class="holding-label hidden" id="holdingStatus" aria-live="polite"></div><div class="toast" id="hint" aria-live="polite"></div>
+ </div><div class="action-label" id="actionLabel" aria-live="polite">E · 둘러보기</div><div class="holding-label hidden" id="holdingStatus" aria-live="polite"></div><div class="holding-label buff-label hidden" id="buffStatus"></div><div class="toast" id="hint" aria-live="polite"></div>
         <div class="dialog hidden" id="dialog" role="status"><span id="dialogIcon">✿</span><div><strong id="dialogTitle"></strong><p id="dialogText"></p><div id="alleyChoices" hidden><button id="alleyPay" type="button">100원 준다</button> <button id="alleyRefuse" type="button">거절한다</button></div></div><button id="dialogClose" aria-label="닫기">×</button></div>
         <div id="charEditor" class="char-editor hidden" role="dialog" aria-label="2006년 캐릭터 꾸미기" aria-modal="true">
 <div class="char-card"><div class="char-heading"><strong>2006년 · 캐릭터 꾸미기</strong><button id="charClose" aria-label="닫기" type="button">×</button></div>
@@ -1904,14 +1905,15 @@ window.ROUTINES={update,render,hotspots,reactWave,clothCount,debug};
 
 
 /* END src/07_memo.js */
-</script><script src="assets/food/manifest.js"></script><script src="src/food-art.js"></script><script src="src/stationery-products.js"></script><script>
+</script><script src="assets/food/manifest.js"></script><script src="src/food-art.js"></script><script src="src/stationery-products.js"></script><script src="src/combat-items.js?v=A119"></script><script>
 /* BEGIN src/08_shops.js */
 
 /* ART A4 — street food from an outdoor counter, scrollable 2006 menu, multi-bite food, take-away, soup service. */
 (function(){
 'use strict';
+const supplies=window.CombatItems;
 const stock={
- stationery:window.StationeryProducts.catalog,
+ stationery:[...window.StationeryProducts.catalog,...supplies.catalog],
  snackbar:[
   {id:'tteok',name:'컵떡볶이',price:500,bites:4,kind:'tteok',detail:'작은 종이컵에 담은 떡볶이. 소스가 묻은 나무꼬치로 하나씩 집어 먹는다.',line:'종이컵 바닥에 소스가 조금 남았다.'},
   {id:'odeng',name:'어묵 꼬치',price:300,bites:3,kind:'odeng',detail:'따뜻한 국물 속에서 꺼낸 어묵. 종이컵에 국물을 조금 받아도 좋다.',line:'손이 따뜻해진다.'},
@@ -1931,18 +1933,28 @@ const descriptions={stationery:'바스락거리는 봉지와 삐걱거리는 진
 const $=id=>document.getElementById(id);
 const overlay=$('activity'),card=$('activityCard'),money=$('coinCount'),bag=$('bagCount');
 const header=$('activityTitle'),sub=$('activitySubtitle'),grid=$('itemGrid'),detail=$('itemDetail'),footer=$('activityFoot');
-let coins=3000,inventory={},held=null,heldBites=0,brothCredit=0,lootReceipts={},open=false,mode='',selected=null,notice='';
+let coins=3000,inventory={},held=null,heldBites=0,brothCredit=0,partialBites={},lootReceipts={},open=false,mode='',selected=null,notice='';
 try{
  const saved=JSON.parse(localStorage.getItem('memory_2006_a4')||localStorage.getItem('memory_2006_a2')||'null');
  if(saved&&Number.isFinite(saved.coins)){
-   coins=Math.max(0,saved.coins);inventory=saved.inventory||{};lootReceipts=saved.lootReceipts||{};held=saved.held||null;
+   coins=Math.max(0,saved.coins);inventory=saved.inventory||{};partialBites=saved.partialBites||{};lootReceipts=saved.lootReceipts||{};held=saved.held||null;
    heldBites=Number(saved.heldBites)||0;brothCredit=Math.max(0,Number(saved.brothCredit)||0);
    if(!inventory[held])held=null;
    if(held&&!heldBites)heldBites=findItem(held)?.bites||1;
+   if(held&&heldBites>0)partialBites[held]=heldBites;
  }
 }catch(e){}
-function persist(){try{localStorage.setItem('memory_2006_a4',JSON.stringify({coins,inventory,held,heldBites,brothCredit,lootReceipts}))}catch(e){}}
+function persist(){try{localStorage.setItem('memory_2006_a4',JSON.stringify({coins,inventory,held,heldBites,brothCredit,partialBites,lootReceipts}))}catch(e){}}
 function fmt(v){return v.toLocaleString('ko-KR')+'원'}
+function foodCount(){
+ return Object.entries(inventory).reduce((sum,[id,count])=>sum+(findItem(id)?Math.max(0,count):0),0);
+}
+function roomFor(item){
+ return foodCount()<supplies.capacity && (inventory[item.id]||0)<(item.limit||4);
+}
+function roomNotice(item){
+ return foodCount()>=supplies.capacity?'먹을 것은 가방에 '+supplies.capacity+'개까지 넣을 수 있어.':item.name+'은(는) '+(item.limit||4)+'개까지 챙길 수 있어.';
+}
 function status(){
  money.textContent=fmt(coins);bag.textContent=Object.values(inventory).reduce((a,b)=>a+b,0)+'개';
  const h=$('holdingStatus');if(h){h.classList.toggle('hidden',!held);h.textContent=held?`손에 든 것 · ${findItem(held)?.name||''} (${heldBites}입 남음) · F`:'';}
@@ -1958,6 +1970,20 @@ function makePixel(kind){
  if(['zzon','fish','cola','stars','ring','straw'].includes(kind)){
    p(10,7,28,33,'#423d42');p(12,5,26,33,kind==='zzon'?'#dca34c':kind==='fish'?'#6c7d80':kind==='cola'?'#8b5251':kind==='stars'?'#d8a8ac':kind==='ring'?'#b78da4':'#91abb8');
    p(14,8,21,3,'#ffffff77');p(15,34,20,2,'#efd7ab');
+ }
+ const supply=supplies.get(kind);
+ if(supply){
+   if(supply.wrap==='rice'){
+     for(let i=0;i<24;i++)p(23-Math.floor(i*.64),11+i,2+Math.floor(i*.64)*2,1,i<12?'#f4e9ce':supply.color);
+     p(15,31,19,6,'#e6bf71');p(19,33,11,2,'#854d38');
+   }else if(supply.wrap==='bread'){
+     p(6,17,36,21,'#70402f');p(9,15,30,23,supply.color);p(13,17,22,5,'#f4c887');p(11,28,26,6,'#f7e0a1');p(21,27,12,11,'#a74437');
+   }else if(supply.wrap==='bottle'){
+     p(18,5,12,5,'#e6d8c0');p(20,10,8,6,'#8a8370');p(15,16,18,24,supply.color);p(17,18,3,19,'#fff5d477');p(15,23,18,11,'#f3dfb2');p(20,26,8,4,supply.color);
+   }else{
+     p(13,14,22,27,supply.color);p(14,9,20,6,'#dbcead');p(14,21,20,11,'#efe1c0');p(19,24,10,4,supply.color);p(30,16,4,24,'#33251d44');
+   }
+   return c;
  }
  switch(kind){
   case 'zzon':for(let i=0;i<4;i++){p(17+i*4,13,3,18,i%2?'#f2c77a':'#9f6342');p(18+i*4,14,1,15,'#fff0be')}break;
@@ -1991,8 +2017,9 @@ function renderStock(){
  for(let item of stock[mode])grid.appendChild(makeCard(item));
  const line=document.createElement('div');line.className='selected-art';line.appendChild(makePixel(selected.kind));
  const body=document.createElement('div');body.innerHTML=`<div class="selected-name"></div><p class="selected-desc"></p><p class="selected-price"></p>`;
- body.querySelector('.selected-name').textContent=selected.name;body.querySelector('.selected-desc').textContent=selected.detail;body.querySelector('.selected-price').textContent=fmt(selected.price);
+ body.querySelector('.selected-name').textContent=selected.name;body.querySelector('.selected-desc').textContent=(supplies.get(selected.id)?supplies.describe(selected):selected.detail);body.querySelector('.selected-price').textContent=fmt(selected.price);
  const buy=makeButton('이거 주세요 · '+fmt(selected.price),()=>{
+   if(!roomFor(selected)){notice=roomNotice(selected);renderStock();return;}
    if(coins<selected.price){notice='동전이 부족하다. 오늘은 구경만 해도 괜찮아.';renderStock();return;}
    coins-=selected.price;inventory[selected.id]=(inventory[selected.id]||0)+1;persist();status();notice=`${selected.name} 하나를 샀다. 종이봉지가 바스락거린다.`;window.MEMO?.add('가게에서 산 것',selected.name+' 하나를 골라 가방에 넣었다.',0);renderStock();
  },'primary');buy.disabled=coins<selected.price;const hold=makeButton(held===selected.id?'손에 들고 있어':'손에 들기',()=>{holdItem(selected.id);notice=selected.name+'을(를) 손에 들었다. 골목에서 F를 누르면 먹을 수 있어.';renderStock()},'secondary');hold.disabled=!(inventory[selected.id]>0); detail.append(line,body,buy,hold);
@@ -2001,6 +2028,7 @@ function renderStock(){
 function buySnack(takeaway){
  const item=selected;
  if(!item||coins<item.price){notice='용돈이 부족하다. 구경만 해도 괜찮다.';renderSnackMenu();return}
+ if(!roomFor(item)){notice=roomNotice(item);renderSnackMenu();return}
  coins-=item.price;inventory[item.id]=(inventory[item.id]||0)+1;
  if(item.id==='odeng')brothCredit+=1;
  if(!takeaway){holdItem(item.id);notice=`${item.name}을(를) 받아 들었다. 밖에서 F를 눌러 한 입씩 먹자.`}
@@ -2010,6 +2038,7 @@ function buySnack(takeaway){
 }
 function receiveBroth(){
  if(brothCredit<1)return;
+ if(!roomFor(broth)){notice=roomNotice(broth);renderSnackMenu();return}
  brothCredit--;inventory.broth=(inventory.broth||0)+1;holdItem('broth');
  notice='“국물도 받아 가!” 따뜻한 어묵 국물을 종이컵에 담았다.';
  persist();status();renderSnackMenu();
@@ -2061,21 +2090,15 @@ function handleKey(k){
  if(k==='KeyB'&&brothCredit>0){receiveBroth();return true}
  return false;
 }
-function openBag(){mode='bag';selected=null;overlay.classList.remove('is-snackbar');grid.classList.remove('vintage-menu');openOverlay();header.textContent='책가방 속';sub.textContent='학교가 끝난 오후, 오늘 산 것들.';grid.innerHTML='';grid.classList.remove('shelf-board');detail.innerHTML='';footer.textContent=held?'손에 들고 있는 것: '+findItem(held)?.name+' · F로 먹기':'가방은 게임을 다시 열어도 남아 있어.';
- const found=Object.keys(inventory).filter(k=>inventory[k]>0).map(k=>[...stock.stationery,...retiredStationery,...stock.snackbar,broth].find(i=>i.id===k)).filter(Boolean);
+function openBag(){mode='bag';selected=null;overlay.classList.remove('is-snackbar');grid.classList.remove('vintage-menu');openOverlay();header.textContent='책가방 속';sub.textContent='먹을 것 '+foodCount()+'/'+supplies.capacity+'개 · 꺼낸 간식은 F로 먹기';grid.innerHTML='';grid.classList.remove('shelf-board');detail.innerHTML='';footer.textContent=held?'손에 들고 있는 것: '+findItem(held)?.name+' · F로 먹기':'가방은 게임을 다시 열어도 남아 있어.';
+ const found=Object.keys(inventory).filter(k=>inventory[k]>0).map(findItem).filter(Boolean);
  const phone=window.AnycallPhone?.bagCard?.();if(phone){phone.addEventListener('click',()=>{detail.innerHTML='';detail.append(window.AnycallPhone.bagDetail(()=>{close();window.AnycallPhone.show()}))});grid.append(phone)}
  if(!found.length){grid.insertAdjacentHTML('beforeend','<div class="empty-bag">아직 아무것도 없네. 문방구에 들러볼까?</div>');return}
  for(let item of found){let btn=makeCard(item,()=>renderBagSelected(item)),num=document.createElement('span');num.className='count-pill';num.textContent='×'+inventory[item.id];btn.append(num);grid.append(btn)}
  renderBagSelected(found[0]);
 }
-function renderBagSelected(item){detail.innerHTML='';let pic=document.createElement('div');pic.className='selected-art';pic.appendChild(makePixel(item.kind));let body=document.createElement('div');body.className='bag-description';let strong=document.createElement('strong');strong.textContent=item.name;let p=document.createElement('p');p.textContent=item.detail+(item.bites>1?' · 한 입에 체력 +7':' · 체력 +10');body.append(strong,p);
- const eatWithAnimation=item.bites>1||window.AlleyEncounter?.status.phase==='fight'||window.BossEncounter?.active;
- const use=makeButton(eatWithAnimation?'손에 꺼내 먹기 · F':'지금 먹기',()=>{
- if(!inventory[item.id]||window.AlleyEncounter?.status.phase==='lost')return;
- if(eatWithAnimation){holdItem(item.id);close();return}
- inventory[item.id]--;if(held===item.id){held=null;heldBites=0}
- persist();status();notice=item.line+recoverFromBite(item,window.__GAME_DEBUG__?.player);window.MEMO?.add('가방 속 간식',item.name+'을(를) 먹었다.',0);openBag();footer.textContent=notice;
- },'primary');const hold=makeButton(held===item.id?'지금 손에 들고 있음':'손에 들고 나가기',()=>{holdItem(item.id);openBag()},'secondary');detail.append(pic,body,use,hold);
+function renderBagSelected(item){detail.innerHTML='';let pic=document.createElement('div');pic.className='selected-art';pic.appendChild(makePixel(item.kind));let body=document.createElement('div');body.className='bag-description';let strong=document.createElement('strong');strong.textContent=item.name;let p=document.createElement('p');p.textContent=(supplies.get(item.id)?supplies.describe(item):item.detail+(item.bites>1?' · 한 입에 체력 +7':' · 체력 +10'))+' · 최대 '+(item.limit||4)+'개';body.append(strong,p);
+ const use=makeButton('손에 꺼내기 · F로 먹기',()=>{if(holdItem(item.id))close()},'primary');detail.append(pic,body,use);
 }
 function openPc(){mode='pcroom';overlay.classList.remove('is-snackbar');openOverlay();grid.classList.remove('shelf-board');header.textContent='동네 PC방 · 12번 자리';sub.textContent='선불 카운터, 키보드 타건음, 옆자리 친구의 낮은 목소리.';grid.innerHTML='';detail.innerHTML='';footer.textContent='2006년의 PC방을 표현한 장식용 데스크톱. 실제 온라인 서비스 연결은 없음.';
  const monitor=document.createElement('div');monitor.className='fake-monitor';monitor.innerHTML='<div class="fake-topbar">내 컴퓨터　　▢　×</div><div class="fake-screen"><div class="desktop-badge">2006</div><p>어서 와, 오늘도 방과 후야.</p><div class="fake-apps"></div></div>';
@@ -2084,17 +2107,18 @@ function openPc(){mode='pcroom';overlay.classList.remove('is-snackbar');openOver
  grid.append(monitor);detail.append(makeButton('자리에서 일어나기',close,'primary'));
 }
 $('activityClose').addEventListener('click',close);overlay.addEventListener('pointerdown',e=>{if(e.target===overlay)close()});$('bagBtn').addEventListener('click',openBag);
-$('newAllowance').addEventListener('click',()=>{if(!confirm('체험 데이터를 초기화하고 3,000원을 다시 받을까?'))return;coins=3000;inventory={};held=null;heldBites=0;brothCredit=0;persist();status();if(open){if(mode==='bag')openBag();else if(stock[mode])renderStock()}window.PLAYROOM?.resetCollection();});
+$('newAllowance').addEventListener('click',()=>{if(!confirm('체험 데이터를 초기화하고 3,000원을 다시 받을까?'))return;coins=3000;inventory={};held=null;heldBites=0;brothCredit=0;partialBites={};lootReceipts={};supplies.clear();persist();status();if(open){if(mode==='bag')openBag();else if(stock[mode])renderStock()}window.PLAYROOM?.resetCollection();});
 function grantLoot(id,reward){
  if(typeof id!=='string'||!reward||!Number.isInteger(reward.coins)||reward.coins<0||!findItem(reward.item))return false;
  if(lootReceipts[id])return true;
+ if(!roomFor(findItem(reward.item)))return 'full';
  const nextCoins=coins+reward.coins,nextInventory={...inventory,[reward.item]:(inventory[reward.item]||0)+1},nextReceipts={...lootReceipts,[id]:true};
- try{localStorage.setItem('memory_2006_a4',JSON.stringify({coins:nextCoins,inventory:nextInventory,held,heldBites,brothCredit,lootReceipts:nextReceipts}));}catch(e){return false;}
+ try{localStorage.setItem('memory_2006_a4',JSON.stringify({coins:nextCoins,inventory:nextInventory,held,heldBites,brothCredit,partialBites,lootReceipts:nextReceipts}));}catch(e){return false;}
  coins=nextCoins;inventory=nextInventory;lootReceipts=nextReceipts;status();return true;
 }
 function spendCoins(amount){if(!Number.isInteger(amount)||amount<0||coins<amount)return false;coins-=amount;persist();status();return true}
 function findItem(id){return [...stock.stationery,...retiredStationery,...stock.snackbar,broth].find(x=>x.id===id)}
-function holdItem(id){if(!inventory[id])return false;if(held!==id||heldBites<=0)heldBites=findItem(id)?.bites||1;held=id;persist();status();return true}
+function holdItem(id){if(!inventory[id])return false;if(held!==id||heldBites<=0)heldBites=partialBites[id]||findItem(id)?.bites||1;held=id;persist();status();return true}
 function recoverFromBite(item,consumer){
  const healed=consumer?window.AlleyEncounter?.heal(item.bites>1?7:10,consumer):0;
  return healed?' · 체력 +'+healed:'';
@@ -2102,10 +2126,11 @@ function recoverFromBite(item,consumer){
 function consumeHeld(consumer){
  const item=findItem(held);
  if(!item||!inventory[item.id]){held=null;heldBites=0;persist();status();return null}
- const recovery=recoverFromBite(item,consumer);
+ const supply=supplies.get(item.id);
+ const recovery=supply&&consumer?supplies.apply(supply,consumer):recoverFromBite(item,consumer);
  heldBites=Math.max(0,heldBites-1);
- if(heldBites>0){persist();status();return `${item.name} 한 입. ${heldBites}입 남았다.`+recovery}
- inventory[item.id]--;held=null;heldBites=0;persist();status();
+ if(heldBites>0){partialBites[item.id]=heldBites;persist();status();return `${item.name} 한 입. ${heldBites}입 남았다.`+recovery}
+ inventory[item.id]--;delete partialBites[item.id];held=supply&&inventory[item.id]>0?item.id:null;heldBites=held?1:0;persist();status();
  window.MEMO?.add('잠깐의 간식',item.name+'을(를) 천천히 다 먹었다. '+item.line,0);
  return item.line+recovery;
 }
@@ -3306,7 +3331,7 @@ for(const rscene of ['side_alley','apartment_path']){
  A12ART.retouchRoute(routeBg.getContext('2d'),rscene);
 }
 const W=480,H=270,GROUND=WORLD.GROUND,MAX_STAIR=8;
-const input=new Set();const player={scene:'street',x:508,y:GROUND,vy:0,dir:1,walking:0,onGround:true,pose:'stand',sitAt:null,shirt:'#e4d9b8',waveEnd:0,eatEnd:0,eatRestore:'stand'};
+const input=new Set();const player={scene:'street',x:508,y:GROUND,vy:0,dir:1,walking:0,onGround:true,pose:'stand',sitAt:null,shirt:'#e4d9b8',waveEnd:0,eatRemaining:0,eatingItem:null,eatRestore:'stand'};
 // A17 edits are atomic; if the player stands on a moved ledge, reproject safely.
 A17TERRAIN.onChange(()=>{
  rebuildStreetBackground();
@@ -3502,6 +3527,7 @@ function keydown(e){const k=e.code;const target=e.target||document.activeElement
  if(k==='Enter'&&running){if(!e.repeat){e.preventDefault();input.clear();window.A25NET?.beginChat()}return;}
  if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Space','KeyE','KeyC','KeyT','KeyX','KeyV','KeyI','KeyF','KeyJ','KeyR','KeyM','Escape','Enter'].includes(k))e.preventDefault();input.add(k);
  if(e.repeat)return;
+ if(player.pose==='eat'&&['KeyE','KeyV','KeyM','KeyJ','KeyN'].includes(k))return;
 
  if(player.playground&&k==='Space')return;
  if(running&&player.scene==='supermarket'&&k==='Space'){window.SupermarketMap.jump(player);closeDialog();return;}
@@ -3521,11 +3547,26 @@ function keydown(e){const k=e.code;const target=e.target||document.activeElement
  }
 }
 function takeBite(){
- if(!SHOPS.held){toast('먹을 것을 손에 들고 있지 않아. 가방에서 고를 수 있어.',3);return}
- if(player.pose==='eat'||/^(hit|down|getUp|guardBreak)/.test(window.TaekwondoMotion?.motion||'')||window.AlleyEncounter?.status.phase==='lost')return;
+ if(!SHOPS.held){toast('가방(I)에서 먹을 것을 꺼내 줘.',3);return}
+ if(!player.onGround||player.pose==='eat'||window.TaekwondoMotion?.active||
+    window.AlleyEncounter?.status.playerHealth<=0||window.AnycallPhone?.shown)return;
+ const item=window.CombatItems.get(SHOPS.held);
  player.eatRestore=['sit','bench','swing'].includes(player.pose)?player.pose:'stand';
- player.pose='eat';player.eatEnd=t+1.25;player.walking=0;window.EatingMotion?.start(SHOPS.heldKind);
- closeDialog();toast(SHOPS.heldName+' · 한 입씩 천천히 먹는다. ('+SHOPS.heldBites+'입 남음)',1.6);
+ player.eatingItem=SHOPS.held;
+ player.eatRemaining=item?.seconds||1.25;
+ player.pose='eat';player.walking=0;
+ window.EatingMotion?.start(SHOPS.heldKind);
+ closeDialog();toast(SHOPS.heldName+' · 먹는 중',player.eatRemaining);
+}
+function finishBite(dt){
+ if(player.pose!=='eat')return;
+ if(player.eatingItem!==SHOPS.held){window.CombatItems.cancelEating(player);return}
+ player.eatRemaining-=dt;
+ if(player.eatRemaining>0)return;
+ const msg=SHOPS.consumeHeld(player);
+ player.pose=player.eatRestore||'stand';
+ player.eatingItem=null;player.walking=0;
+ if(msg)toast(msg,3.5);
 }
 function keyup(e){input.delete(e.code);window.TaekwondoMotion?.keyUp(e)}
 window.addEventListener('keydown',keydown);window.addEventListener('keyup',keyup);window.addEventListener('blur',()=>input.clear());window.addEventListener('arcade-focus-change',()=>input.clear());
@@ -3565,18 +3606,22 @@ function inputH(){if(window.TaekwondoMotion?.active)return 0;return Number(input
 function inputV(){if(window.TaekwondoMotion?.active)return 0;return Number(input.has('ArrowDown'))-Number(input.has('ArrowUp'))}
 function update(dt){
  player.dashMultiplier=(input.has('ShiftLeft')||input.has('ShiftRight'))&&!window.TaekwondoMotion?.active&&player.pose!=='eat'?(window.CombatSettings?.dashMultiplier||1.8):1;
+ player.dashMultiplier*=window.CombatItems.multiplier('speed');
  window.TaekwondoMotion?.update(player,running&&!SHOPS.isOpen&&!MEMO.isOpen&&!PLAYROOM.isOpen&&!ROUTES.isMapOpen&&!openDialog&&!window.GameInterface?.isMenuOpen&&!window.AnycallPhone?.shown&&document.getElementById('charEditor').classList.contains('hidden'));
  if(player.scene==='street'){player.x=Math.max(372,player.x);cam=Math.max(359,cam)}
  t+=dt;window.A25NET?.tick(dt,player,running);ROUTINES.update(dt,phase,weather,t);if(toastTimer>0){toastTimer-=dt;if(toastTimer<=0)D.hint.classList.remove('show')}
  if(sound.enabled&&player.scene==='street'&&t-sound.lastChirp>8+Math.sin(t)*4){sound.lastChirp=t;chirp()}
  if(sound.noise){sound.noise.filter.frequency.value=player.scene==='pcroom'?210:(weather?980:450);sound.noise.vol.gain.value=player.scene==='pcroom'?.14:(weather?.27:.14)}
  if(!running||SHOPS.isOpen||MEMO.isOpen||PLAYROOM.isOpen||ROUTES.isMapOpen)return;
+ if(!window.AnycallPhone?.shown&&!window.GameInterface?.isMenuOpen)window.CombatItems.tick(dt);
+ const buffStatus=window.CombatItems.status(),buffLabel=el('buffStatus');
+ if(buffLabel.textContent!==buffStatus){buffLabel.textContent=buffStatus;buffLabel.classList.toggle('hidden',!buffStatus);}
  if(player.scene==='street'&&!player.playground&&player.x>3435&&player.x<4000&&inputV()<0)PlaygroundSpace.enter(player);
  const a20Locked=window.A20WORLD?.update(dt,player);
  if(a20Locked){const target=Math.max(player.scene==='street'?359:0,Math.min(sceneWidth()-W,player.x-206));cam+=(target-cam)*Math.min(1,dt*6);D.action.textContent=window.A20WORLD.hint();return;}
- if(player.playground){if(player.pose==='eat'&&t>=player.eatEnd){SHOPS.consumeHeld(player);player.pose='stand'}const h=player.pose==='eat'?0:inputH(),v=player.pose==='eat'?0:inputV();PlaygroundSpace.walk(player,h,v,dt);const target=Math.max(3340,Math.min(3540,player.x-240));cam+=(target-cam)*Math.min(1,dt*5);const a=nearest();D.area.textContent='아파트 모래 놀이터';D.action.textContent=a?'E · '+a.title:'↑↓←→ 걷기 · 놀이기구 가까이 E';return;}
+ if(player.playground){finishBite(dt);const h=player.pose==='eat'?0:inputH(),v=player.pose==='eat'?0:inputV();PlaygroundSpace.walk(player,h,v,dt);const target=Math.max(3340,Math.min(3540,player.x-240));cam+=(target-cam)*Math.min(1,dt*5);const a=nearest();D.area.textContent='아파트 모래 놀이터';D.action.textContent=a?'E · '+a.title:'↑↓←→ 걷기 · 놀이기구 가까이 E';return;}
  const busNow=NEIGHBOR.busAtStop(t);if(busNow&&!busWasHere&&player.scene==='street'&&Math.abs(player.x-2623)<100)toast('버스가 도착했다. 정류장에서 E를 누르면 탈 수 있어.',3.6);busWasHere=busNow;
- if(player.pose==='eat'&&t>=player.eatEnd){const msg=SHOPS.consumeHeld(player);player.pose=player.eatRestore||'stand';player.walking=0;toast(msg||'천천히 한 입 먹었다.',3.5)}
+ if(!['back_alley','hidden_alley'].includes(player.scene))finishBite(dt);
  if(['lobby','hall','rooftop'].includes(player.scene)){const h=player.pose==='eat'?0:inputH(),v=player.pose==='eat'?0:inputV();if(h||v)closeDialog();window.Block104.walk(player,h,v,dt);cam+=(Math.max(0,Math.min(sceneWidth()-W,player.x-206))-cam)*Math.min(1,dt*6);D.area.textContent=RESIDENTIAL.names[player.scene];const a=nearest();D.action.textContent=a?'E · '+a.title:'↑↓←→ 이동 · Space 점프';return;}
  if(player.scene==='stationery'){
   if(player.pose==='wave'&&t>player.waveEnd)player.pose='stand';
@@ -3612,7 +3657,9 @@ function update(dt){
  }
  if(player.scene==='hidden_alley'){
   if(player.pose==='wave'&&t>player.waveEnd)player.pose='stand';const h=player.pose==='eat'?0:inputH(),v=player.pose==='eat'?0:inputV();if(h||v){if(openDialog)closeDialog();if(player.pose==='wave')player.pose='stand'}
-  window.NarrowAlleyMap.walk(player,h,v,dt);if(!openDialog&&!window.AnycallPhone?.shown&&!window.GameInterface?.isMenuOpen&&el('charEditor').classList.contains('hidden'))window.BossEncounter?.update(dt,player,alleyUI);const target=Math.max(0,Math.min(sceneWidth()-W,player.x-206));cam+=(target-cam)*Math.min(1,dt*6);D.area.textContent='주택 사이 좁은 뒷골목';const a=nearest();D.action.textContent=a?'E · '+a.title:'↑↓←→ 이동 · Shift 대시 · A 막기 · G 가드 파괴';return;
+  window.NarrowAlleyMap.walk(player,h,v,dt);if(!openDialog&&!window.AnycallPhone?.shown&&!window.GameInterface?.isMenuOpen&&el('charEditor').classList.contains('hidden'))window.BossEncounter?.update(dt,player,alleyUI);
+  if(!window.AnycallPhone?.shown&&!window.GameInterface?.isMenuOpen)finishBite(dt);
+  const target=Math.max(0,Math.min(sceneWidth()-W,player.x-206));cam+=(target-cam)*Math.min(1,dt*6);D.area.textContent='주택 사이 좁은 뒷골목';const a=nearest();D.action.textContent=a?'E · '+a.title:'↑↓←→ 이동 · Shift 대시 · A 막기 · G 가드 파괴';return;
  }
  if(player.scene==='back_alley'){
   if(player.pose==='wave'&&t>player.waveEnd)player.pose='stand';
@@ -3620,6 +3667,7 @@ function update(dt){
   if(h||v){if(openDialog)closeDialog();if(player.pose==='wave')player.pose='stand'}
   window.BackAlleyMap?.walk(player,h,v,dt);
   if(!openDialog&&!window.AnycallPhone?.shown&&!window.GameInterface?.isMenuOpen&&el('charEditor').classList.contains('hidden'))window.AlleyEncounter?.update(dt,player,alleyUI);
+  if(!window.AnycallPhone?.shown&&!window.GameInterface?.isMenuOpen)finishBite(dt);
   const target=Math.max(0,Math.min(sceneWidth()-W,player.x-206));cam+=(target-cam)*Math.min(1,dt*6);
   D.area.textContent='문구점 뒤 주택 골목';const a=nearest();D.action.textContent=a?'E · '+a.title:'↑↓←→ 걷기 · S×4→D 손 연속기 · D×3 발 연속기 · A 막기 · G 가드 브레이크';return;
  }
@@ -4218,9 +4266,9 @@ window.A26NET={get snapshot(){return snapshot},get ready(){return connected()},p
 <script src="src/combat-frames.js?v=A109"></script>
 <script src="src/taekwondo-motion.js?v=A118"></script>
 <script src="src/enemy-frames.js"></script>
-<script src="src/alley-encounter.js?v=A118"></script>
+<script src="src/alley-encounter.js?v=A119"></script>
 <script src="src/boss-frames.js?v=A118"></script>
-<script src="src/boss-encounter.js?v=A118"></script>
+<script src="src/boss-encounter.js?v=A119"></script>
 <script src="src/combat-hud.js?v=A118"></script>
 </body>
 </html>
