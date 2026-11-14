@@ -1,7 +1,7 @@
 /* 저장한 뒤 게임을 새로고침하면 반영된다. 단위는 체력 점수, 배율, 초. */
 window.CombatSettings = {
   player: {
-    health: 100, attack: 16, defense: 3, hurtInvulnerability: 0.65,
+    size:1, moveSpeed:1, health: 100, attack: 16, defense: 3, hurtInvulnerability: 0.65,
     punchSpeed: 1.5, kickSpeed: 1.4, guardSpeed: 1.3
   },
   bully: {

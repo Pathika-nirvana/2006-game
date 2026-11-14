@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="ko">
 <head>
+<script src="src/boot-gate.js?v=A122"></script>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
   <meta name="theme-color" content="#172b40"/>
@@ -377,7 +378,7 @@ body.playing-a5 #bgmControls{position:fixed;z-index:1100;bottom:0;left:0;right:0
 <link rel="stylesheet" href="assets/pc-desktop/web-town.css?v=A97">
 <link rel="stylesheet" href="assets/phone/anycall-phone.css?v=A100">
 <link rel="stylesheet" href="assets/pc-desktop/boot.css">
-<link rel="stylesheet" href="src/combat-ui.css?v=A121">
+<link rel="stylesheet" href="src/combat-ui.css?v=A122">
 </head>
 <body>
   <div class="grain"></div>
@@ -405,7 +406,7 @@ body.playing-a5 #bgmControls{position:fixed;z-index:1100;bottom:0;left:0;right:0
       
 <div class="game-toolbar">
  <div class="control-legend"><span><kbd>↑↓←→</kbd> 이동</span><span><kbd>SPACE</kbd> 점프</span><span><kbd>E</kbd> 상호작용</span><span><kbd>Enter</kbd> 채팅</span></div>
- <div class="right-tools"><span class="top-wallet">동전 <span id="coinCount">3,000원</span></span><button id="bagBtn">가방 <span id="bagCount">0개</span></button><button id="charBtn" type="button">꾸미기</button>
+ <div class="right-tools"><span class="top-wallet">동전 <span id="coinCount">5,000원</span></span><button id="bagBtn">가방 <span id="bagCount">0개</span></button><button id="charBtn" type="button">꾸미기</button>
  <details id="soundSettings" class="quick-menu"><summary>소리</summary><div id="soundOptions" class="menu-popover sound-popover"></div></details>
  <details id="gameMenu" class="quick-menu"><summary>메뉴</summary><div class="menu-popover">
  <button id="mapBtn">길 안내 (M)</button><button id="memoBtn">수첩 (J)</button><button id="helpBtn">조작법</button><button id="phoneBtn" type="button">휴대폰 <span id="phoneLabel">애니콜</span></button><button id="soundBtn">환경음 <span id="soundLabel">소리 켜기</span></button><button id="timeBtn">시간 <span id="timeLabel">늦은 오후</span></button><button id="weatherBtn">날씨 <span id="weatherLabel">맑음</span></button>
@@ -1904,7 +1905,7 @@ window.ROUTINES={update,render,hotspots,reactWave,clothCount,debug};
 
 
 /* END src/07_memo.js */
-</script><script src="assets/food/manifest.js"></script><script src="src/food-art.js"></script><script src="src/stationery-products.js"></script><script src="src/combat-items.js?v=A121"></script><script>
+</script><script src="assets/food/manifest.js"></script><script src="src/food-art.js"></script><script src="src/stationery-products.js"></script><script src="src/combat-items.js?v=A122"></script><script>
 /* BEGIN src/08_shops.js */
 
 /* ART A4 — street food from an outdoor counter, scrollable 2006 menu, multi-bite food, take-away, soup service. */
@@ -1933,7 +1934,7 @@ const descriptions={stationery:'바스락거리는 봉지와 삐걱거리는 진
 const $=id=>document.getElementById(id);
 const overlay=$('activity'),card=$('activityCard'),money=$('coinCount'),bag=$('bagCount');
 const header=$('activityTitle'),sub=$('activitySubtitle'),grid=$('itemGrid'),detail=$('itemDetail'),footer=$('activityFoot');
-let coins=3000,inventory={},held=null,heldBites=0,brothCredit=0,partialBites={},lootReceipts={},open=false,mode='',selected=null,notice='';
+let coins=5000,inventory={},held=null,heldBites=0,brothCredit=0,partialBites={},lootReceipts={},open=false,mode='',selected=null,notice='';
 try{
  const saved=JSON.parse(localStorage.getItem('memory_2006_a4')||localStorage.getItem('memory_2006_a2')||'null');
  let migrated=false;
@@ -1954,16 +1955,16 @@ try{
 function persist(){try{localStorage.setItem('memory_2006_a4',JSON.stringify({coins,inventory,held,heldBites,brothCredit,partialBites,lootReceipts}))}catch(e){}}
 function fmt(v){return v.toLocaleString('ko-KR')+'원'}
 function foodCount(){
- return Object.entries(inventory).reduce((sum,[id,count])=>sum+(findItem(id)?Math.max(0,count):0),0);
+ return Object.entries(inventory).reduce((sum,[id,count])=>sum+(findItem(id)?Math.max(0,count-(held===id?1:0)):0),0);
 }
 function roomFor(item){
- return foodCount()<supplies.capacity && (inventory[item.id]||0)<supplies.limit(item.id);
+ return foodCount()<supplies.capacity && ((inventory[item.id]||0)-(held===item.id?1:0))<supplies.limit(item.id);
 }
 function roomNotice(item){
  return foodCount()>=supplies.capacity?'먹을 것은 가방에 '+supplies.capacity+'개까지 넣을 수 있어.':item.name+'은(는) '+supplies.limit(item.id)+'개까지 챙길 수 있어.';
 }
 function status(){
- money.textContent=fmt(coins);bag.textContent=Object.values(inventory).reduce((a,b)=>a+b,0)+'개';
+ money.textContent=fmt(coins);bag.textContent=foodCount()+'개'+(held?' · 손에 1개':'');
  const h=$('holdingStatus');if(h){h.classList.toggle('hidden',!held);h.textContent=held?`손에 든 것 · ${findItem(held)?.name||''} (${heldBites}입 남음) · F`:'';}
 }
 function pixel(c,x,y,w,h,color){c.fillStyle=color;c.fillRect(x|0,y|0,w|0,h|0)}
@@ -2029,7 +2030,8 @@ function renderStock(){
 function buySnack(takeaway){
  const item=selected;
  if(!item||coins<item.price){notice='용돈이 부족하다. 구경만 해도 괜찮다.';renderSnackMenu();return}
- if(!roomFor(item)){notice=roomNotice(item);renderSnackMenu();return}
+ if(takeaway&&!roomFor(item)){notice=roomNotice(item);renderSnackMenu();return}
+ if(!takeaway&&held&&foodCount()>=supplies.capacity){notice='손에 든 음식을 먼저 먹어 줘. 가방이 꽉 차서 기존 음식을 넣을 수 없어.';renderSnackMenu();return}
  coins-=item.price;inventory[item.id]=(inventory[item.id]||0)+1;
  if(item.id==='odeng')brothCredit+=1;
  if(!takeaway){holdItem(item.id);notice=`${item.name}을(를) 받아 들었다. 밖에서 F를 눌러 한 입씩 먹자.`}
@@ -2039,7 +2041,7 @@ function buySnack(takeaway){
 }
 function receiveBroth(){
  if(brothCredit<1)return;
- if(!roomFor(broth)){notice=roomNotice(broth);renderSnackMenu();return}
+ if(held&&foodCount()>=supplies.capacity){notice='손에 든 음식을 먼저 먹으면 국물을 받을 수 있어.';renderSnackMenu();return}
  brothCredit--;inventory.broth=(inventory.broth||0)+1;holdItem('broth');
  notice='“국물도 받아 가!” 따뜻한 어묵 국물을 종이컵에 담았다.';
  persist();status();renderSnackMenu();
@@ -2095,7 +2097,7 @@ function openBag(){mode='bag';selected=null;overlay.classList.remove('is-snackba
  const found=Object.keys(inventory).filter(k=>inventory[k]>0).map(findItem).filter(Boolean);
  const phone=window.AnycallPhone?.bagCard?.();if(phone){phone.addEventListener('click',()=>{detail.innerHTML='';detail.append(window.AnycallPhone.bagDetail(()=>{close();window.AnycallPhone.show()}))});grid.append(phone)}
  if(!found.length){grid.insertAdjacentHTML('beforeend','<div class="empty-bag">아직 아무것도 없네. 문방구에 들러볼까?</div>');return}
- for(let item of found){let btn=makeCard(item,()=>renderBagSelected(item)),num=document.createElement('span');num.className='count-pill';num.textContent='×'+inventory[item.id];btn.append(num);grid.append(btn)}
+ for(let item of found){let btn=makeCard(item,()=>renderBagSelected(item)),num=document.createElement('span');num.className='count-pill';num.textContent='가방 ×'+Math.max(0,inventory[item.id]-(held===item.id?1:0))+(held===item.id?' · 손에 1개':'');btn.append(num);grid.append(btn)}
  renderBagSelected(found[0]);
 }
 function renderBagSelected(item){detail.innerHTML='';let pic=document.createElement('div');pic.className='selected-art';pic.appendChild(makePixel(item.kind));let body=document.createElement('div');body.className='bag-description';let strong=document.createElement('strong');strong.textContent=item.name;let p=document.createElement('p');const effect=supplies.get(item.id);
@@ -2110,7 +2112,7 @@ function openPc(){mode='pcroom';overlay.classList.remove('is-snackbar');openOver
  grid.append(monitor);detail.append(makeButton('자리에서 일어나기',close,'primary'));
 }
 $('activityClose').addEventListener('click',close);overlay.addEventListener('pointerdown',e=>{if(e.target===overlay)close()});$('bagBtn').addEventListener('click',openBag);
-$('newAllowance').addEventListener('click',()=>{if(!confirm('체험 데이터를 초기화하고 3,000원을 다시 받을까?'))return;coins=3000;inventory={};held=null;heldBites=0;brothCredit=0;partialBites={};lootReceipts={};supplies.clear();persist();status();if(open){if(mode==='bag')openBag();else if(stock[mode])renderStock()}window.PLAYROOM?.resetCollection();});
+$('newAllowance').addEventListener('click',()=>{if(!confirm('체험 데이터를 초기화하고 5,000원을 다시 받을까?'))return;coins=5000;inventory={};held=null;heldBites=0;brothCredit=0;partialBites={};lootReceipts={};supplies.clear();persist();status();if(open){if(mode==='bag')openBag();else if(stock[mode])renderStock()}window.PLAYROOM?.resetCollection();});
 function grantLoot(id,reward){
  if(typeof id!=='string'||!reward||!Number.isInteger(reward.coins)||reward.coins<0||!findItem(reward.item))return false;
  if(lootReceipts[id])return true;
@@ -2151,7 +2153,7 @@ function consumeHeld(consumer){
 }
 const spriteCache={};function renderHeld(c,x,foot,dir,pose,t){if(!held)return;if(window.CarryEatAtlas?.ready(window.CHARART?.selected))return;const item=findItem(held);if(!item)return;let s=spriteCache[item.kind]||(spriteCache[item.kind]=makePixel(item.kind));const sit=pose==='sit'||pose==='bench'||pose==='swing'||pose==='eat';const yy=pose==='eat'?foot-28:foot-22;const xx=x+(pose==='eat'?(dir?3:-16):(dir?8:-18));c.drawImage(s,0,0,s.width,s.height,Math.round(xx),Math.round(yy),13,13)}
 status();
-window.SHOPS={quickFood,grantLoot,spendCoins,renderHeld,consumeHeld,holdItem,handleKey,get held(){return held},get heldBites(){return heldBites},get brothCredit(){return brothCredit},get heldName(){return findItem(held)?.name||null},get heldKind(){return findItem(held)?.kind||null},get isOpen(){return open},openShop,openPc,openBag,close,get coins(){return coins},get inventory(){return {...inventory}},stock,renderIcon:makePixel};
+window.SHOPS={get bagFoodCount(){return foodCount()},quickFood,grantLoot,spendCoins,renderHeld,consumeHeld,holdItem,handleKey,get held(){return held},get heldBites(){return heldBites},get brothCredit(){return brothCredit},get heldName(){return findItem(held)?.name||null},get heldKind(){return findItem(held)?.kind||null},get isOpen(){return open},openShop,openPc,openBag,close,get coins(){return coins},get inventory(){return {...inventory}},stock,renderIcon:makePixel};
 })();
 
 
@@ -3365,7 +3367,7 @@ const sound={ctx:null,noise:null,enabled:false,lastChirp:0};
 const areas=[{x:950,label:'동일초등학교 앞'},{x:1290,label:'담장길 · 은하분식'},{x:1690,label:'문방구가 있는 골목'},{x:2310,label:'주택가'},{x:3040,label:'큰길과 골목 경계'},{x:99999,label:'아파트 단지'}];
 function sceneWidth(){const dungeonWidth=window.AlleyDungeon.width(player.scene);if(dungeonWidth)return dungeonWidth;if(player.scene==='supermarket')return window.SupermarketMap.WIDTH;if(player.scene==='pcroom')return window.PcRoomMap?.WIDTH||810;if(player.scene==='stationery')return window.StationeryInterior?.WIDTH||840;return player.scene==='street'?WORLD.WIDTH:(ROUTES.widths[player.scene]||RESIDENTIAL.width(player.scene)||840)}
 function uiClick(id,fn){el(id).addEventListener('click',fn)}
-function start(){window.GameAudio?.unlock();window.BGM?.start();running=true;D.intro.classList.add('hidden');D.start.blur();toast('화살표 이동 · E 상호작용 · Enter 채팅',4)}
+function start(){if(window.BootGate&&!window.BootGate.ready)return;window.GameAudio?.unlock();window.BGM?.start();running=true;D.intro.classList.add('hidden');D.start.blur();toast('화살표 이동 · E 상호작용 · Enter 채팅',4)}
 uiClick('startBtn',start);uiClick('dialogClose',closeDialog);uiClick('mapBtn',()=>ROUTES.toggleMap());
 uiClick('helpBtn',()=>showDialog('조작법','화살표키 이동 · Shift 대시 · Enter 채팅 · SPACE 점프 · ↑ ↓ 사다리 · E 주변 살펴보기/가게/정류장/주택·아파트 계단 · C 앉기 · X 인사 · V 옷 바꾸기 · N 휴대폰 꺼내기/넣기 · T 시간대 · R 비 내리기/그치기 · F 간식 먹기 · J 수첩. 정류장에선 E를 눌러 버스를 기다리고, 버스가 서면 다시 E를 눌러 탈 수 있어. M은 동네 길 안내도야. 주택가 샛길과 아파트 산책길은 큰길 대신 이어지는 우회로야.','✿'));
 uiClick('timeBtn',changeTime);uiClick('weatherBtn',changeWeather);uiClick('soundBtn',toggleSound);uiClick('phoneBtn',()=>window.AnycallPhone?.toggle());
@@ -3404,7 +3406,7 @@ const alleyUI = {
 function setScene(next,spawn,spawnY){
  if(player.scene==='hidden_alley'&&next!==player.scene&&window.BossEncounter?.active){toast('상대를 제압해야 앞으로 갈 수 있다.');return;}
  if(next!==player.scene){
-  window.AlleyEncounter?.reset(false);
+  window.AlleyEncounter?.reset(false,next);
   alleyChoices.hidden=true;
   el('dialogClose').hidden=false;
  }
@@ -3472,6 +3474,7 @@ function nearest(){
  return candidate;
 }
 function interact(){
+ if(window.AlleyLife?.interact(player))return;
  if(window.AlleyEncounter?.loot(player,alleyUI)||window.BossEncounter?.loot(player,alleyUI))return;
  if(!running){start();return}
  if(openDialog){closeDialog();return}
@@ -3555,7 +3558,7 @@ function keydown(e){const k=e.code;const target=e.target||document.activeElement
  if(running&&player.scene==='pcroom'&&k==='Space'){window.PcRoomMap.jump(player);closeDialog();return;}
  if(running&&player.scene==='courtyard'&&k==='Space'){window.CourtyardMap?.jump(player);closeDialog();return;}
  if(running&&player.scene==='stationery'&&k==='Space'){window.StationeryInterior?.jump(player);closeDialog();return;}
- if(running&&window.AlleyDungeon.width(player.scene)&&k==='Space'){window.AlleyDungeon.jump(player);closeDialog();return;}
+ if(running&&window.AlleyDungeon.width(player.scene)&&k==='Space'){window.AlleyDungeon.jump(player);window.TaekwondoMotion?.jump(player);closeDialog();return;}
  if(running&&player.scene==='hidden_alley'&&k==='Space'){window.NarrowAlleyMap.jump(player);closeDialog();return;}
  if(running&&player.scene==='back_alley'&&k==='Space'){window.BackAlleyMap?.jump(player);window.TaekwondoMotion?.jump(player);closeDialog();return;}
  if(running&&player.scene==='apartment_path'&&k==='Space'){window.ApartmentPathMap?.jump(player);closeDialog();return;}
@@ -3568,7 +3571,7 @@ function keydown(e){const k=e.code;const target=e.target||document.activeElement
  }
 }
 function combatScene(){
- return player.scene==='back_alley'||player.scene==='hidden_alley';
+ return !!window.AlleyEncounter?.enabled(player.scene)||player.scene==='hidden_alley';
 }
 function canEat(){
  return player.onGround&&player.pose!=='eat'&&!window.TaekwondoMotion?.active&&
@@ -3643,7 +3646,7 @@ function inputH(){if(window.TaekwondoMotion?.active)return 0;return Number(input
 function inputV(){if(window.TaekwondoMotion?.active)return 0;return Number(input.has('ArrowDown'))-Number(input.has('ArrowUp'))}
 function update(dt){
  player.dashMultiplier=(input.has('ShiftLeft')||input.has('ShiftRight'))&&!window.TaekwondoMotion?.active&&player.pose!=='eat'?(window.CombatSettings?.dashMultiplier||1.8):1;
- player.dashMultiplier*=window.CombatItems.multiplier('speed');
+ player.dashMultiplier*=window.CombatItems.multiplier('speed')*(window.CombatSettings?.player.moveSpeed||1);
  window.TaekwondoMotion?.update(player,running&&!SHOPS.isOpen&&!MEMO.isOpen&&!PLAYROOM.isOpen&&!ROUTES.isMapOpen&&!openDialog&&!window.GameInterface?.isMenuOpen&&!window.AnycallPhone?.shown&&document.getElementById('charEditor').classList.contains('hidden'));
  if(player.scene==='street'){player.x=Math.max(372,player.x);cam=Math.max(359,cam)}
  t+=dt;window.A25NET?.tick(dt,player,running);ROUTINES.update(dt,phase,weather,t);if(toastTimer>0){toastTimer-=dt;if(toastTimer<=0)D.hint.classList.remove('show')}
@@ -3685,6 +3688,8 @@ function update(dt){
   const h=player.pose==='eat'?0:inputH(),v=player.pose==='eat'?0:inputV();
   if(h||v){if(openDialog)closeDialog();if(['wave','sit','bench'].includes(player.pose))player.pose='stand'}
   const exit=map.walk(player,h,v,dt);
+  if(!openDialog&&!window.AnycallPhone?.shown&&!window.GameInterface?.isMenuOpen)window.AlleyEncounter?.update(dt,player,alleyUI);
+  if(!window.AnycallPhone?.shown&&!window.GameInterface?.isMenuOpen)finishBite(dt);
   if(exit){setScene(exit.to,exit.spawn,exit.spawnY);input.add(h<0?'ArrowLeft':'ArrowRight');return}
   const target=Math.max(0,Math.min(sceneWidth()-W,player.x-206));
   cam+=(target-cam)*Math.min(1,dt*6);
@@ -3791,7 +3796,7 @@ function render(){
  }
  const dungeonScene=!!window.AlleyDungeon.width(player.scene);
  ctx.save();ctx.translate(-Math.round(cam),0);
- if(dungeonScene)window.AlleyDungeon.render(ctx,player,t);
+ if(dungeonScene){if(window.AlleyEncounter?.enabled(player.scene))window.AlleyEncounter.draw(ctx,player.alleyDepth,false);window.AlleyDungeon.render(ctx,player,t);}
  if(player.scene==='street'){NEIGHBOR.renderWorld(ctx,phase,t,weather);LIFE.render(ctx,phase,t,weather);RESIDENTIAL.streetLayer(ctx,phase,weather,t);}
  if(player.scene==='street'){if(!window.AfterSchoolMap?.draw(ctx,t))window.FoodArt?.counter(ctx);PlaygroundSpace.ground(ctx);}
  if(player.scene!=='street'&&!['lobby','hall','rooftop'].includes(player.scene))ROUTINES.render(ctx,player.scene,t,weather);
@@ -3810,12 +3815,13 @@ function render(){
   SHOPS.renderHeld(ctx,0,0,player.dir,player.pose,t);ctx.restore();
  }
  if(player.scene!=='back_alley'&&!dungeonScene&&!['lobby','hall','rooftop'].includes(player.scene)&&player.scene!=='main_road'&&player.scene!=='hidden_alley'&&player.scene!=='apartment_path'&&player.scene!=='supermarket'&&player.scene!=='stationery'&&player.scene!=='courtyard'&&player.scene!=='pcroom'&&!(player.scene==='street'&&PlaygroundSpace.contains(player.x))&&!window.A20WORLD?.hidesPlayer())WORLD.drawKid(ctx,player.x,player.y,player.dir,player.walking,player.shirt,false,(['sit','bench','swing'].includes(player.pose)||(player.pose==='eat'&&player.eatRestore!=='stand')),player.pose);
- if(player.scene==='back_alley')window.AlleyEncounter?.draw(ctx,player.alleyFloorY,true);
+ if(window.AlleyEncounter?.enabled(player.scene))window.AlleyEncounter?.draw(ctx,player.scene==='back_alley'?player.alleyFloorY:player.alleyDepth,true);
  if(player.scene==='street'){PlaygroundSpace.render(ctx,player,t);ROUTINES.render(ctx,player.scene,t,weather);}
  if(player.scene!=='back_alley'&&!dungeonScene&&!['lobby','hall','rooftop'].includes(player.scene)&&player.scene!=='main_road'&&player.scene!=='hidden_alley'&&player.scene!=='apartment_path'&&player.scene!=='supermarket'&&player.scene!=='stationery'&&player.scene!=='courtyard'&&player.scene!=='pcroom'&&!(player.scene==='street'&&PlaygroundSpace.contains(player.x)))SHOPS.renderHeld(ctx,player.x,player.y,player.dir,player.pose,t);
  if(player.scene==='main_road')window.CommercialRoad?.foreground(ctx,t);
+ window.AlleyLife?.draw(ctx,player,t);
  window.CombatFeedback?.draw(ctx);
- if(player.scene==='back_alley')window.AlleyEncounter?.drawIndicators(ctx,player);
+ if(window.AlleyEncounter?.enabled(player.scene))window.AlleyEncounter?.drawIndicators(ctx,player);
  window.A25NET?.renderSelfBubble(ctx,player.scene);
  if(running&&!openDialog&&!window.A20WORLD?.hidesPlayer()){let h=nearest();if(h){const xx=h.x;let yy=player.scene==='street'?(h.type==='swing'?126:h.type==='counter'?126:['routineNpc','resNpc'].includes(h.type)?126:h.type==='door'?153:165):154;if(player.scene==='stationery')yy=(h.y??player.stationeryFloorY)-window.StationeryInterior.actorHeight-18;if(player.scene==='pcroom')yy=(h.y??player.pcFloorY)-51*window.PcRoomMap.scale(player.pcFloorY)-18;if(player.scene==='supermarket')yy=(h.y??player.superFloorY)-51*window.SupermarketMap.scale(player.superFloorY)-18;if(player.scene==='courtyard')yy=(h.y??player.yardFloorY)-51*window.CourtyardMap.scale(player.yardFloorY)-20;if(player.scene==='hidden_alley')yy=(h.y??player.narrowFloorY)-51*window.NarrowAlleyMap.scale(player.narrowFloorY)-18;if(player.scene==='back_alley')yy=(h.y??player.alleyFloorY)-51*window.BackAlleyMap.scale(h.y??player.alleyFloorY)-12;if(dungeonScene)yy=h.y-51*window.AlleyDungeon.scale(h.y,player.scene)-13;if(Math.abs(xx-player.x)<22)yy=Math.min(yy,player.y-74);
   let bob=Math.round(Math.sin(t*3)*2);ctx.fillStyle='#f4e3af';ctx.fillRect(Math.round(xx-5),yy+bob,11,11);
@@ -3834,7 +3840,7 @@ function render(){
  // Soft film-edge gradient, still rendered in native pixels.
  const v=ctx.createLinearGradient(0,0,0,270);v.addColorStop(0,'#263b4520');v.addColorStop(.22,'#00000000');v.addColorStop(.76,'#00000000');v.addColorStop(1,'#192e3345');ctx.fillStyle=v;ctx.fillRect(0,0,W,H);
 }
-function frame(now){const dt=Math.min(.033,(now-last)/1000||.016);last=now;if(!window.CombatFeedback?.frame(dt))update(dt);window.CombatHUD?.update(player.scene,cam);window.GameAudio?.tick(dt,player,{running,busy:PLAYROOM.isOpen,ambient:!PLAYROOM.isOpen,time:t});render();requestAnimationFrame(frame)}
+function frame(now){const dt=Math.min(.033,(now-last)/1000||.016);last=now;if(!window.AlleyLife?.isOpen&&!window.CombatFeedback?.frame(dt))update(dt);window.CombatHUD?.update(player.scene,cam);window.GameAudio?.tick(dt,player,{running,busy:PLAYROOM.isOpen,ambient:!PLAYROOM.isOpen,time:t});render();requestAnimationFrame(frame)}
 requestAnimationFrame(frame);
 window.__GAME_DEBUG__={clearInput:()=>input.clear(),nearest:()=>nearest(),playground:()=>window.A20WORLD?.snapshot(),environment:()=>A16SCENE.snapshot(),terrain:()=>A17TERRAIN.snapshot(),changeTerrain:(id,patch)=>A17TERRAIN.change(id,patch),moveEnvironment:(id,x)=>A16SCENE.move(id,x),layout:()=>A13LAYOUT.snapshot(),audit:()=>A13LAYOUT.validate(Object.fromEntries(A13LAYOUT.list().map(d=>[d.id,{x:d.x,w:d.w,h:d.h}]))),movePrefab:(id,x)=>A13LAYOUT.move(id,x),get art(){return A12ART.enabled?'A12':'A11'},player,residential:()=>RESIDENTIAL.debug(phase,weather),routines:()=>ROUTINES.debug(),shops:()=>({coins:SHOPS.coins,bag:SHOPS.inventory,open:SHOPS.isOpen}),playroom:()=>PLAYROOM.debug(),neighborhood:()=>NEIGHBOR.debug(t),routes:()=>({current:player.scene,branch:ROUTES.isRoute(player.scene),width:sceneWidth(),mapOpen:ROUTES.isMapOpen}),setWeather(x){weather=x?1:0;el('weatherLabel').textContent=weather?'비 내림':'맑음'},moveTo(x){player.x=x;player.pose='stand';player.y=GROUND;player.onGround=true;if(player.scene==='supermarket')window.SupermarketMap.enter(player);if(player.scene==='stationery')window.StationeryInterior?.enter(player);if(player.scene==='pcroom')window.PcRoomMap?.enter(player);if(player.scene==='courtyard')window.CourtyardMap?.enter(player);if(player.scene==='back_alley')window.BackAlleyMap?.enter(player);if(player.scene==='hidden_alley')window.NarrowAlleyMap.enter(player);if(player.scene==='apartment_path')window.ApartmentPathMap?.enter(player);cam=Math.max(player.scene==='street'?359:0,Math.min(sceneWidth()-W,x-206))},setScene,get status(){return{running,phase,weather,camera:cam,scene:player.scene,area:D.area.textContent,pose:player.pose,footY:player.y,held:SHOPS.held,notes:MEMO.entries.length}}};
 })();
@@ -4297,14 +4303,17 @@ window.A26NET={get snapshot(){return snapshot},get ready(){return connected()},p
 <script src="src/anycall-nate.js?v=A102"></script>
 <script src="src/anycall-phone.js?v=A102"></script>
 <script src="src/combat-settings.js?v=A118"></script>
+<script src="data/world-config.js?v=A122"></script>
+<script src="src/world-config.js?v=A122"></script>
 <script src="src/combat-sounds.js?v=A118"></script>
-<script src="src/combat-feedback.js?v=A121"></script>
+<script src="src/combat-feedback.js?v=A122"></script>
 <script src="src/combat-frames.js?v=A109"></script>
 <script src="src/taekwondo-motion.js?v=A118"></script>
 <script src="src/enemy-frames.js"></script>
-<script src="src/alley-encounter.js?v=A121"></script>
+<script src="src/alley-encounter.js?v=A122"></script>
 <script src="src/boss-frames.js?v=A118"></script>
-<script src="src/boss-encounter.js?v=A121"></script>
-<script src="src/combat-hud.js?v=A121"></script>
+<script src="src/boss-encounter.js?v=A122"></script>
+<script src="src/combat-hud.js?v=A122"></script>
+<script src="src/alley-life.js?v=A122"></script>
 </body>
 </html>

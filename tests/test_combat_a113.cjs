@@ -4,7 +4,7 @@ class Img extends Image{set src(s){super.src=fs.readFileSync(path.join(base,s.sp
 const events=[];const c={window:null,Image:Img,performance:{now:()=>now},console,Math,addEventListener(){},CombatFeedback:{reset(){},battle(s){events.push(['music',s])},move(){},impact(...x){events.push(x)},swing(){}},CHARART:{selected:'girl_main_dobok'}};c.window=c;vm.createContext(c);
 for(const f of ['combat-settings','combat-frames','enemy-frames','back-alley-map','taekwondo-motion','alley-encounter'])vm.runInContext(fs.readFileSync(base+'/src/'+f+'.js','utf8'),c);
 fs.mkdirSync('evidence',{recursive:true});
-(async()=>{await new Promise(r=>setTimeout(r,200));assert.equal(c.AlleyEncounter.targets.length,6,'six ready sprites');
+(async()=>{for(let i=0;i<100&&c.AlleyEncounter.targets.length<6;i++)await new Promise(r=>setTimeout(r,30));assert.equal(c.AlleyEncounter.targets.length,6,'six ready sprites');
 const p={scene:'back_alley',x:450,y:257,alleyFloorY:257,onGround:true,pose:'stand',dir:1,walking:0};let choose;const ui={ask(d,fn){choose=fn},pay(){return true},notice(){}};
 function tick(n=1){for(let i=0;i<n;i++){now+=16;c.TaekwondoMotion.update(p,true,now);c.AlleyEncounter.update(.016,p,ui);}}
 tick(70);assert.equal(c.AlleyEncounter.status.phase,'choice');assert(choose('refuse'));assert.equal(c.AlleyEncounter.status.phase,'fight');

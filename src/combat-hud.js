@@ -17,7 +17,7 @@
   function update(scene) {
     const state = root.AlleyEncounter.status;
     const config = root.CombatSettings;
-    const inFight = (scene === 'back_alley' && ['fight','won','lost'].includes(state.phase)) || (scene==='hidden_alley' && ['fight','interval','won','lost'].includes(root.BossEncounter?.status.phase));
+    const inFight = (root.AlleyEncounter.enabled(scene) && ['fight','won','lost'].includes(state.phase)) || (scene==='hidden_alley' && ['fight','interval','won','lost'].includes(root.BossEncounter?.status.phase));
     const food = inFight ? root.SHOPS.quickFood() : null;
     quick.hidden = !food;
     if(food){

@@ -145,5 +145,5 @@ function render(c,p,t){
  }
 }
 const signal=scene=>/^alley_d(?:10|11(?:_1)?|12(?:_1)?)$/.test(scene)?'dead':/^alley_d[4-8]$/.test(scene)?'none':'normal';
-w.AlleyDungeon={ENTRY:id('d1'),width,title,limits,walkable,enter,nearest,walk,jump,scale,draw,render,signal};
+w.AlleyDungeon={ENTRY:id('d1'),width,title,limits,top,walkable,enter,nearest,walk,jump,scale,draw,render,signal};
 })(window);

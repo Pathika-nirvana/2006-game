@@ -1,3 +1,8 @@
+# 최신 빌드 A122
+
+변경 내용은 RELEASE_A122.md, 편집툴 사용법은 편집툴_사용법.txt를 보세요.
+게임 실행은 index.html, 편집툴은 editor.html입니다.
+
 # A105 · 계단 원근과 폐교 앞마당 입구
 
 [RELEASE_A105.md](RELEASE_A105.md)

@@ -5,7 +5,7 @@ const poses={underboss:{idle:[0,1,2],ready:[4],guard:[4],walk:[5,6,7,8],punch:[1
 for(const key of ['underboss','boss']){const im=new Image();im.onload=()=>{art[key]={image:im,...w.BossFrames[key]};};im.src='assets/characters/enemies/'+key+'.webp';}
 let shockwaves=[];
 let actors,phase='idle',active=0,clock=0,delay=0,inv=0,lastPlayer,uiRef;
-function reset(){shockwaves=[];actors=['underboss','boss'].map((kind,i)=>({kind,name:i?'거구 불량배':'다부진 슬리퍼 불량배',x:425+i*165,y:250,dir:-1,health:cfg.bosses[kind].health,maxHealth:cfg.bosses[kind].health,stamina:100,motion:'idle',age:0,cooldown:1,seen:null,guardSeen:null,guardCooldown:0,chain:0,pattern:0,hit:false,looted:false,comboHits:0,lastHitAt:-10,punishUntil:0,counterUntil:0,guardHits:0}));phase='idle';active=0;clock=delay=inv=0;}
+function reset(){shockwaves=[];actors=['underboss','boss'].map((kind,i)=>({kind,name:i?'거구 불량배':'다부진 슬리퍼 불량배',x:425+i*165,y:250,...w.WorldConfig?.bosses?.[i],dir:-1,health:cfg.bosses[kind].health,maxHealth:cfg.bosses[kind].health,stamina:100,motion:'idle',age:0,cooldown:1,seen:null,guardSeen:null,guardCooldown:0,chain:0,pattern:0,hit:false,looted:false,comboHits:0,lastHitAt:-10,punishUntil:0,counterUntil:0,guardHits:0}));phase='idle';active=0;clock=delay=inv=0;}
 function anim(n,m){n.motion=m;n.age=0;}
 function fatigue(n){return n.kind!=='boss'?0:n.stamina<=0?3:n.stamina<=30?2:n.stamina<=60?1:0;}
 function clamp(n){n.x=Math.max(52,Math.min(674,n.x));const b=w.NarrowAlleyMap.bounds(n.x);n.y=Math.max(b.top,Math.min(b.bottom,n.y));}
@@ -135,17 +135,17 @@ function update(dt,p,ui){
  for(const n of actors){n.age+=dt;n.guardCooldown=Math.max(0,n.guardCooldown-dt);if(n.motion!=='land')n.cooldown=Math.max(0,n.cooldown-dt);}
  const n=actors[active];
  if(phase==='idle'&&p.x>260&&art.underboss&&art.boss&&w.CHARART?.selected==='girl_main_dobok'){
-  phase='choice';ui.ask({name:n.name,demand:'여기부터는 그냥 못 지나간다. 어디 실력 좀 보자.',price:0,payLabel:'물러난다',fightLabel:'맞선다'},choice=>{if(phase!=='choice')return false;if(choice==='pay'){phase='idle';p.x=230;return true;}phase='fight';anim(n,'ready');fx.battle('back_alley');ui.notice('슬리퍼 불량배 · A 막기/패링 · G 가드 파괴 · Shift 대시');return true;});
+  phase='choice';ui.ask({name:n.name,demand:n.demand||'여기부터는 그냥 못 지나간다. 어디 실력 좀 보자.',price:0,payLabel:'물러난다',fightLabel:'맞선다'},choice=>{if(phase!=='choice')return false;if(choice==='pay'){phase='idle';p.x=230;return true;}phase='fight';anim(n,'ready');fx.battle('back_alley');ui.notice('슬리퍼 불량배 · A 막기/패링 · G 가드 파괴 · Shift 대시');return true;});
  }else if(phase==='fight'){takeHit(n,p);if(phase==='fight')ai(n,p,dt);}
  else if(phase==='interval'){
-  delay-=dt;if(delay<=0){if(active===0){active=1;phase='fight';anim(actors[1],'ready');actors[1].cooldown=1.5;ui.notice('거구가 나선다. 공격선을 피해서 지치게 만들자.');}else{phase='won';fx.battle(null);ui.notice('두 불량배를 제압했다. 쓰러진 상대 곁에서 E로 줍기.');}}
+  delay-=dt;if(delay<=0){if(active===0){active=1;phase='fight';anim(actors[1],'ready');actors[1].cooldown=1.5;ui.notice(actors[1].demand||'거구가 나선다. 공격선을 피해서 지치게 만들자.');}else{phase='won';fx.battle(null);ui.notice('두 불량배를 제압했다. 쓰러진 상대 곁에서 E로 줍기.');}}
  }else if(phase==='lost'){delay-=dt;if(delay<=0){reset();p.x=66;w.NarrowAlleyMap.enter(p,244);w.AlleyEncounter.heal(cfg.player.health,p);pmReset();}}
 }
 function pmReset(){w.TaekwondoMotion.reset();}
 function frame(n){const list=poses[n.kind][n.motion]||poses[n.kind].ready;
  if(n.motion==='punch'||n.motion==='kick'){const bc=cfg.bosses[n.kind],wind=(n.motion==='kick'?bc.kickWindup:bc.punchWindup)*(1+fatigue(n)*.22);return list[n.age<wind?0:n.age<wind+.13?1:2];}
  return list[['idle','walk'].includes(n.motion)?Math.floor(n.age/(n.motion==='walk'?.16:.48))%list.length:Math.min(list.length-1,Math.floor(n.age/.20))];}
-function drawOne(c,n){const sheet=art[n.kind];if(!sheet)return;const a=sheet.frames[frame(n)],s=(n.kind==='boss'?103:86)/sheet.standingHeight*w.NarrowAlleyMap.scale(n.y),lift=n.lift||0;
+function drawOne(c,n){const sheet=art[n.kind];if(!sheet)return;const a=sheet.frames[frame(n)],s=(n.kind==='boss'?103:86)/sheet.standingHeight*w.NarrowAlleyMap.scale(n.y)*(n.size||1),lift=n.lift||0;
  if(n.motion==='charge'){
   for(let i=3;i>0;i--){
    c.save();c.globalAlpha=.09*(4-i);c.translate(n.x-n.dir*i*15,n.y);c.scale(n.dir,1);

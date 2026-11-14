@@ -138,7 +138,7 @@ function listIncoming(cb){
     }));
   });
 }
-const publicPaths = new Set(['/', '/index.html', '/src/', '/assets/']);
+const publicPaths = new Set(['/', '/index.html', '/editor.html', '/data/world-config.js', '/tools/editor.js', '/tools/editor.css']);
 const app = http.createServer((req,res)=>{
   if(req.method!=='GET'){res.writeHead(405);res.end('GET only');return}
   let pathname;
@@ -155,7 +155,7 @@ const app = http.createServer((req,res)=>{
       res.end(JSON.stringify({files}));
     });return;
   }
-  if(!['/','/index.html'].includes(pathname)&&!pathname.startsWith('/src/')&&!pathname.startsWith('/assets/')){res.writeHead(404);res.end();return}
+  if(!publicPaths.has(pathname)&&!pathname.startsWith('/src/')&&!pathname.startsWith('/assets/')){res.writeHead(404);res.end();return}
   const file=pathname==='/'?'/index.html':pathname;
   const full=path.resolve(ROOT,'.'+file);
   if(!full.startsWith(ROOT+path.sep)){res.writeHead(403);res.end();return}
