@@ -118,9 +118,9 @@ function update(dt,p,ui){
       n.guardCooldown=0;
       n.hitsTaken=0;
       animate(n,'strong');
-      fx.impact('npc','break',n.x,n.y-44,0);
+      fx.impact('npc','break',n.x,n.y-44,0,face,n);
      }else if(n.motion==='guard'&&dx*n.dir>=0){
-      fx.impact('npc','block',n.x,n.y-44,0);
+      fx.impact('npc','block',n.x,n.y-44,0,face,n);
       n.cooldown=.12;
       n.counterUntil=timer+profile.counterWindow;
       n.hitsTaken=0;
@@ -131,7 +131,7 @@ function update(dt,p,ui){
      else{
       const heavy=/finisher|backKick|axeKick|punch4|launchKick/.test(impact.name);
       const damage=Math.max(1,Math.round(cfg.player.attack*(root.CombatItems?.multiplier('attack')||1)*(heavy?1.45:impact.name==='guardBreaker'?.72:1)-cfg.bully.defense));n.health=Math.max(0,n.health-damage);
-      fx.impact('npc',n.health?(heavy?'heavy':'hit'):'down',n.x,n.y-44,damage);
+      fx.impact('npc',n.health?(heavy?'heavy':'hit'):'down',n.x,n.y-44,damage,face,n);
       n.x+=face*(heavy?8:3);clamp(n);animate(n,n.health?(heavy?'strong':/^kick/.test(impact.name)?'low':/punch[13]/.test(impact.name)?'weak':'mid'):'down');
       n.hitsTaken++;n.counterUntil=0;n.counterAttack=false;n.cooldown=heavy?.55:.25;
      }
@@ -143,10 +143,10 @@ function update(dt,p,ui){
    if(n.motion==='punch'||n.motion==='kick'){
     const windup=(n.motion==='punch'?.18:.23)/cfg.bully.attackSpeed/n.rate;
     if(n.age>=windup&&n.age-dt<windup&&d<=attackReach(n)&&Math.abs(dy)<14&&dx*n.dir>=0&&p.onGround&&!invulnerable){
-     if(pm?.defend(p,dx,dy)){fx.impact('player','block',p.x,p.y-38,0);n.cooldown=.55;}
+     if(pm?.defend(p,dx,dy)){fx.impact('player','block',p.x,p.y-38,0,n.dir);n.cooldown=.55;}
      else{const damage=Math.max(1,Math.round((cfg.bully.attack*n.attack-cfg.player.defense)*(root.CombatItems?.multiplier('defense')||1)));playerHealth=Math.max(0,playerHealth-damage);invulnerable=cfg.player.hurtInvulnerability;
       if(root.CombatItems?.cancelEating(p))ui.notice('피격으로 먹기가 끊겼다.');
-      fx.impact('player',playerHealth?(n.counterAttack?'counter':'hit'):'down',p.x,p.y-40,damage);pm?.react(playerHealth?(n.motion==='kick'?'hitLow':'hitMid'):'down',p);
+      fx.impact('player',playerHealth?(n.counterAttack?'counter':'hit'):'down',p.x,p.y-40,damage,n.dir);pm?.react(playerHealth?(n.motion==='kick'?'hitLow':'hitMid'):'down',p);
       if(!playerHealth){root.CombatItems?.clear();phase='lost';timer=0;fx.battle(null);ui.notice('쓰러졌다. 골목 입구로 물러난다.');break;}
      }
     }
@@ -237,7 +237,7 @@ function drawOne(c,n){
  const f=source.frames[list[index]];if(!f)return;const s=source.scale*root.BackAlleyMap.scale(n.y);
  n.visualTop=Math.round(n.y)+(f.y-f.anchorY)*s;
  n.visualX=Math.round(n.x)+((f.x-f.anchorX)+f.width/2)*s*n.dir;
- c.save();c.imageSmoothingEnabled=false;c.translate(Math.round(n.x),Math.round(n.y));c.scale(n.dir,1);
+ c.save();c.imageSmoothingEnabled=false;c.translate(Math.round(n.x+(fx.recoil?.(n)||0)),Math.round(n.y));c.scale(n.dir,1);
  c.drawImage(source.image,f.x,f.y,f.width,f.height,(f.x-f.anchorX)*s,(f.y-f.anchorY)*s,f.width*s,f.height*s);c.restore();
 }
 function draw(c,foot,front){for(const n of [...npcs].sort((a,b)=>a.y-b.y))if(foot===undefined||(front?n.y>foot:n.y<=foot))drawOne(c,n);}

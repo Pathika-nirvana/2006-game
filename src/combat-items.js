@@ -1,21 +1,38 @@
 (function (root) {
  'use strict';
- const capacity = 8;
+ const capacity = 16;
  const stats = {
   attack: {label: '공격력', text: '공격'},
   defense: {label: '받는 피해', text: '방어'},
   speed: {label: '이동속도', text: '이속'}
  };
- // Values are game balance only. Durations use active gameplay seconds.
- const catalog = [
-  {id:'cream_bread', name:'크림빵', price:500, heal:26, limit:3, seconds:1.25, color:'#ca833d', wrap:'bread'},
-  {id:'triangle_rice', name:'참치마요 삼각김밥', price:800, heal:48, limit:2, seconds:1.9, color:'#526c50', wrap:'rice'},
-  {id:'red_ginseng', name:'홍삼 음료', price:600, attack:.25, duration:18, limit:2, seconds:1.25, color:'#ad4c40', wrap:'bottle'},
-  {id:'soy_milk', name:'검은콩 두유', price:600, defense:.25, duration:20, limit:2, seconds:1.25, color:'#8c7452', wrap:'carton'},
-  {id:'sports_drink', name:'이온음료', price:500, speed:.20, duration:20, limit:2, seconds:1.25, color:'#408799', wrap:'bottle'},
-  {id:'chocolate_milk', name:'초코우유', price:700, heal:12, attack:.15, speed:.12, duration:16, limit:2, seconds:1.35, color:'#774938', wrap:'carton'}
- ].map(item => Object.freeze({...item,kind:item.id,line:item.name+'을 먹었다.'}));
- const items = new Map(catalog.map(item => [item.id,item]));
+ const stationery = {
+  zzon: {heal:26},
+  cola: {attack:.25,duration:18},
+  chikani: {defense:.25,duration:20},
+  pill: {heal:48,seconds:1.9},
+  straw: {speed:.20,duration:20},
+  fish: {heal:12,attack:.15,speed:.12,duration:16}
+ };
+ const meals = {
+  tteok: {attack:.30,duration:165},
+  odeng: {defense:.20,duration:195},
+  slushred: {speed:.24,duration:135},
+  slushblue: {defense:.15,speed:.16,duration:150},
+  skewer: {attack:.22,speed:.12,duration:150},
+  fry: {attack:.18,defense:.18,duration:180},
+  sundae: {defense:.30,duration:210},
+  gimmari: {defense:.12,speed:.18,duration:165},
+  hotdog: {attack:.32,duration:180},
+  broth: {defense:.15,duration:120}
+ };
+ const retiredPrices = {
+  cream_bread:500,triangle_rice:800,red_ginseng:600,soy_milk:600,sports_drink:500,chocolate_milk:700
+ };
+ function get(id) {
+  return Object.hasOwn(stationery,id) ? stationery[id] : Object.hasOwn(meals,id) ? meals[id] : undefined;
+ }
+ function limit(id) { return Object.hasOwn(stationery,id) ? 6 : 4; }
  const effects = new Map();
 
  function describe(item) {
@@ -28,7 +45,7 @@
  function apply(item, player) {
   const healed = item.heal ? root.AlleyEncounter?.heal(item.heal, player) || 0 : 0;
   for (const stat of Object.keys(stats)) {
-   if (item[stat]) effects.set(stat,{value:item[stat], remaining:item.duration});
+   if (item[stat]) effects.set(stat,{value:item[stat], remaining:item.duration, duration:item.duration});
   }
   const notes = [];
   if (healed) notes.push('체력 +'+healed);
@@ -49,7 +66,12 @@
   return stat === 'defense' ? 1-value : 1+value;
  }
  function status() {
-  return Array.from(effects,([stat, effect])=>stats[stat].text+' '+Math.ceil(effect.remaining)+'초').join(' · ');
+  return Array.from(effects,([stat, effect])=>({
+   stat,label:stats[stat].label,
+   value:(stat==='defense'?'−':'+')+Math.round(effect.value*100)+'%',
+   seconds:Math.ceil(effect.remaining),
+   fraction:effect.remaining/effect.duration
+  }));
  }
  function cancelEating(player) {
   if (player.pose !== 'eat') return false;
@@ -59,7 +81,7 @@
   return true;
  }
  root.CombatItems = {
-  catalog, capacity, get:id=>items.get(id), describe, apply, tick, multiplier, status,
+  capacity, get, limit, retiredPrices, describe, apply, tick, multiplier, status,
   cancelEating, clear:()=>effects.clear()
  };
 })(window);

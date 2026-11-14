@@ -14,7 +14,7 @@ function hurtPlayer(n,p,damage,knock,canBlock=true){
  if(inv>0||w.AlleyEncounter.status.playerHealth<=0)return;
  const pm=w.TaekwondoMotion;
  if(canBlock&&pm.defend(p,p.x-n.x,p.narrowFloorY-n.y)){
-  fx.impact('player','block',p.x,p.y-45,0);
+  fx.impact('player','block',p.x,p.y-45,0,n.dir);
   if(/parry|Arrow/.test(pm.motion||'')){anim(n,'strong');n.cooldown=1.25;n.punishUntil=clock+1.25;n.comboHits=0;n.telegraph=null;}
   return;
  }
@@ -25,7 +25,7 @@ function hurtPlayer(n,p,damage,knock,canBlock=true){
  pm.react(hp?(knock>10?'hitHeavy':'hitMid'):'down',p);
  // Resolve knockback with the same solid floor constraints as normal movement.
  const dir=p.x<n.x?-1:1,oldDash=p.dashMultiplier;p.dashMultiplier=1;w.NarrowAlleyMap.walk(p,dir,0,knock/84);p.dashMultiplier=oldDash;p.walking=0;
- fx.impact('player',hp?(knock>10?'heavy':'hit'):'down',p.x,p.y-45,damage);
+ fx.impact('player',hp?(knock>10?'heavy':'hit'):'down',p.x,p.y-45,damage,n.dir);
  if(!hp){w.CombatItems?.clear();phase='lost';delay=2;fx.battle(null);uiRef?.notice('쓰러졌다. 골목 입구에서 다시 일어난다.');}
 }
 function takeHit(n,p){
@@ -34,13 +34,13 @@ function takeHit(n,p){
  if(Math.abs(dy)>14||dx*face< -3||Math.hypot(dx,dy)>hit.reach*w.NarrowAlleyMap.scale(p.narrowFloorY)/1.3+6)return;
  n.seen=hit;const f=fatigue(n),bc=cfg.bosses[n.kind];
  if(n.motion==='guard'&&face!==n.dir){
-  if(hit.name==='guardBreaker'){anim(n,'strong');n.cooldown=1.25;n.punishUntil=clock+1.25;n.comboHits=0;n.counterUntil=0;fx.impact('npc','break',n.x,n.y-65,0);return;}
-  fx.impact('npc','block',n.x,n.y-65,0);n.guardHits++;n.counterUntil=clock+1;n.cooldown=.08;n.chain=0;n.age=.25;return;
+  if(hit.name==='guardBreaker'){anim(n,'strong');n.cooldown=1.25;n.punishUntil=clock+1.25;n.comboHits=0;n.counterUntil=0;fx.impact('npc','break',n.x,n.y-65,0,face,n);return;}
+  fx.impact('npc','block',n.x,n.y-65,0,face,n);n.guardHits++;n.counterUntil=clock+1;n.cooldown=.08;n.chain=0;n.age=.25;return;
  }
  const heavy=/finisher|backKick|axeKick|punch4|launchKick/.test(hit.name);
  const defense=n.kind==='boss'?(f>=2?bc.exhaustedDefense:bc.defense):bc.defense;
  const damage=Math.max(2,Math.round(cfg.player.attack*(w.CombatItems?.multiplier('attack')||1)*(heavy?1.45:hit.name==='guardBreaker'?.72:1)-defense));
- n.health=Math.max(0,n.health-damage);fx.impact('npc',n.health?(heavy?'heavy':'hit'):'down',n.x,n.y-65,damage);
+ n.health=Math.max(0,n.health-damage);fx.impact('npc',n.health?(heavy?'heavy':'hit'):'down',n.x,n.y-65,damage,face,n);
  if(!n.health){anim(n,'down');n.telegraph=null;phase='interval';delay=2.2;return;}
  // Healthy giant keeps the committed action; exhaustion strips that armour.
  if(clock-n.lastHitAt>1.2)n.comboHits=0;
@@ -48,7 +48,7 @@ function takeHit(n,p){
  const counterArmour=n.kind==='underboss'&&n.counterUntil>clock&&['punch','kick'].includes(n.motion);
  if(n.kind==='underboss'&&clock>=n.punishUntil&&n.comboHits>=bc.comboLimit&&!counterArmour){
   n.comboHits=0;n.dir=p.x<n.x?-1:1;anim(n,'guard');n.cooldown=.12;n.counterUntil=clock+1.3;
-  fx.impact('npc','block',n.x,n.y-65,0);return;
+  fx.impact('npc','block',n.x,n.y-65,0,face,n);return;
  }
  if((n.kind!=='boss'||f>=2)&&!counterArmour){anim(n,heavy?'strong':/^kick/.test(hit.name)?'low':'weak');n.cooldown=heavy?.48:.24;n.telegraph=null;}
 }
@@ -154,7 +154,7 @@ function drawOne(c,n){const sheet=art[n.kind];if(!sheet)return;const a=sheet.fra
   c.save();c.strokeStyle='#f3d9a38a';c.lineWidth=1.5;
   for(let i=0;i<5;i++){const y=n.y-12-i*12;c.beginPath();c.moveTo(n.x-n.dir*20,y);c.lineTo(n.x-n.dir*(45+i*9),y);c.stroke();}c.restore();
  }
- c.save();c.imageSmoothingEnabled=false;c.translate(n.x,n.y-lift+(['tired','spent'].includes(n.motion)?Math.sin(clock*5)*(fatigue(n)+1)*.45:0));c.scale(n.dir,1);
+ c.save();c.imageSmoothingEnabled=false;c.translate(n.x+(fx.recoil?.(n)||0),n.y-lift+(['tired','spent'].includes(n.motion)?Math.sin(clock*5)*(fatigue(n)+1)*.45:0));c.scale(n.dir,1);
  c.drawImage(sheet.image,a.x,a.y,a.width,a.height,(a.x-a.anchorX)*s,(a.y-a.anchorY)*s,a.width*s,a.height*s);c.restore();
  n.visualTop=n.y-lift-a.height*s;
  const f=fatigue(n);if(n.health>0&&f){c.save();c.fillStyle='#b9e9fb';for(let i=0;i<f+1;i++){const fall=(clock*(f+1)*9+i*8)%19;c.fillRect(n.x+(i%2?13:-13),n.visualTop+15+fall,1.5,3);}c.restore();}
