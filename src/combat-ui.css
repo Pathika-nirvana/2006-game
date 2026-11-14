@@ -1,0 +1,36 @@
+.dialog.is-shakedown {
+  width:min(90%,560px); bottom:25px; padding:16px 19px; gap:14px;
+  color:#f7f0e5; background:linear-gradient(110deg,#232d36f7,#17222af7);
+  border:1px solid #ad9670; border-left:4px solid #e1bb7a; outline:none;
+  box-shadow:0 8px 32px #0e151995; z-index:8;
+}
+.dialog.is-shakedown > div { flex:1; }
+.dialog.is-shakedown #dialogIcon { color:#e1bb7a; align-self:flex-start; }
+.dialog.is-shakedown strong { color:#e9c68e; font-size:12px; letter-spacing:.08em; }
+.dialog.is-shakedown p { margin:5px 0 13px; font-size:15px; }
+#alleyChoices:not([hidden]) { display:flex; gap:8px; flex-wrap:wrap; }
+#alleyChoices button {
+  margin:0; font:600 12px sans-serif; border:1px solid #887d69;
+  color:#eee6d9; padding:8px 13px; background:#35424e;
+}
+#alleyChoices #alleyRefuse { border-color:#c9886e; background:#694039; }
+#alleyChoices button:focus-visible { outline:2px solid #f6cf8c; outline-offset:2px; }
+#alleyChoices button:disabled { opacity:.45; cursor:default; }
+#combatHud { position:absolute; inset:0; z-index:6; pointer-events:none; }
+#combatHud[hidden], .fight-chain[hidden] { display:none; }
+
+/* Small instrument-like HUD: enamel red, ivory typography, machined silver edging. */
+.fight-vital{position:absolute;left:1.3%;top:clamp(33px,8%,58px);width:clamp(170px,24%,300px);padding:10px 16px 12px 14px;box-sizing:border-box;background:linear-gradient(120deg,#272a30,#111317 70%);border:1px solid #d1c9b5;border-left:4px solid #c94234;box-shadow:0 2px 0 #090b0f,0 4px 9px #0006,inset 0 1px #ffffff28;clip-path:polygon(0 0,94% 0,100% 24%,96% 100%,0 100%)}
+.vital-title{display:flex;align-items:center;justify-content:space-between;color:#faf6e9;font:700 clamp(11px,1vw,15px)/1.2 sans-serif;font-variant-numeric:tabular-nums}
+.vital-title b:before{content:'●';font-size:9px;color:#ef6652;margin-right:7px}
+.vital-value{font-size:.85em;color:#cbc6bc;letter-spacing:.04em}
+.vital-track{position:relative;display:block;height:10px;margin-top:7px;background:#08090d;box-shadow:0 0 0 1px #746b60,inset 0 2px 4px #000;transform:skewX(-12deg);overflow:hidden}
+.vital-track:after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0,transparent calc(10% - 1px),#10141980 calc(10% - 1px),#10141980 10%);pointer-events:none}
+.vital-track i{display:block;height:100%;transition:width .12s ease-out;background:linear-gradient(#ffb69b 0,#ed6652 20%,#bb302b 65%,#7f2224);box-shadow:2px 0 7px #ffddd2}
+.enemy-label{position:absolute;transform:translate(-50%,-100%);color:#fff9ef;text-align:center;font:700 10px/1.2 sans-serif;white-space:nowrap;padding:2px 3px;text-shadow:0 1px 2px #000,1px 0 #17181a,-1px 0 #17181a}
+.enemy-label b{display:block;margin-bottom:4px;font-weight:600;letter-spacing:.02em}
+.enemy-label i{display:block;height:5px;background:#161719;box-shadow:0 0 0 1px #c8b89b,0 2px 3px #000a;transform:skewX(-12deg);overflow:hidden}
+.enemy-label em{display:block;height:100%;background:linear-gradient(#ffa78a,#de5845 50%,#a12b29 51%);transition:width .1s}
+.fight-chain{position:absolute;bottom:2%;left:1.5%;display:flex;align-items:baseline;gap:8px;padding:4px 24px 9px 13px;min-width:90px;background:url('../assets/ui/combat/combo-flare.svg') center/100% 100% no-repeat;color:#fff7e0;font:italic 900 clamp(12px,1.4vw,20px)/1 sans-serif;text-shadow:2px 2px #15161a,-1px -1px #15161a}
+.fight-chain span{letter-spacing:.05em}.fight-chain b{font-size:2.2em;color:#ffce76;line-height:1}
+@media(max-width:600px){.fight-vital{padding:6px 11px 8px;width:160px}.vital-track{height:7px}.enemy-label{font-size:9px}.enemy-label i{height:4px}}

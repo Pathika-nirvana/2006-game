@@ -1,6 +1,6 @@
 {
   "name": "2006-reminiscence-a38-review",
-  "version": "0.105.0",
+  "version": "0.112.0",
   "private": true,
   "description": "A97 같은 방 친구와 실시간으로 주고받는 싸이월드 미니홈피, 동네를 소재로 한 인터넷 글과 새 사이트, A94 PC방 컴퓨터의 2006년 인터넷 보강(어린이 포털 읽을거리, 소름닷컴 긴 괴담, 인터넷 소설, 학급 홈페이지, 이모티콘, 미스터리 X파일, 숨은 미스터리 홈페이지), 그림판 저장과 바탕 화면, 버디버디 메신저와 공포 효과음을 담은 2006년 동네 회상 멀티플레이 게임",
   "scripts": {
@@ -51,7 +51,8 @@
     "test:world-audio": "node tests/test_world_audio.cjs",
     "test:xp-desktop": "node tests/test_xp_desktop.cjs",
     "test:xp-boot": "node tests/test_xp_boot.cjs",
-    "test:comics": "node tests/test_portal_comics.cjs"
+    "test:comics": "node tests/test_portal_comics.cjs",
+    "test:combat": "node tests/test_combat_a112.cjs"
   },
   "engines": {
     "node": ">=22"

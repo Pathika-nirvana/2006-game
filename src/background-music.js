@@ -3,6 +3,7 @@
 'use strict';
 const durations=[95.6865,205.035083],cycle=durations[0]+durations[1];
 const audio=w.document.createElement('audio');if(typeof audio.play!=='function')return;audio.preload='metadata';audio.id='backgroundMusic';audio.setAttribute('aria-hidden','true');w.document.body.append(audio);
+let suspended=false, frozenPosition=0;
 let localEnabled=true,volume=.35,started=false,room=false,state={enabled:true,position:0,updatedAt:Date.now()},offset=0,current=-1,blocked=false,loading=false,hasPlayed=false;
 try{const pref=JSON.parse(w.localStorage.getItem('2006_bgm_settings')||'null');if(pref){localEnabled=pref.enabled!==false;if(Number.isFinite(pref.volume))volume=Math.max(0,Math.min(1,pref.volume))}}catch(_){}
 const controls=w.document.createElement('div');controls.className='bgm-controls';controls.id='bgmControls';
@@ -15,7 +16,7 @@ function target(){let p=position();return p<durations[0]-1e-6?{track:0,time:p}:{
 function ui(){toggle.textContent=localEnabled?'내 BGM 끄기':'내 BGM 켜기';toggle.setAttribute('aria-pressed',String(localEnabled));shared.textContent=state.enabled?'방 전체 BGM 끄기':'방 전체 BGM 켜기';shared.disabled=!room;amount.textContent=Math.round(volume*100)+'%';status.textContent=blocked?'첫 클릭이나 키 입력으로 음악 시작':!localEnabled?'내 BGM 꺼짐':room&&!state.enabled?'방 BGM 정지':started?'BGM '+(current+1)+' / 2 · 반복':'입장하면 BGM 시작';}
 function sync(){
  audio.volume=volume;audio.muted=!localEnabled;
- if(!started||!localEnabled||!state.enabled){audio.pause();ui();return}
+ if(suspended||!started||!localEnabled||!state.enabled){audio.pause();ui();return}
  const t=target();if(current!==t.track){current=t.track;loading=true;audio.src='assets/music/'+(current+1)+'.mp3';audio.load()}
  if(!loading&&Math.abs((Number(audio.currentTime)||0)-t.time)>.9){try{audio.currentTime=t.time}catch(_){}}
  if(audio.paused){const p=audio.play();if(p?.then)p.then(()=>{hasPlayed=true;blocked=false;ui()}).catch(()=>{blocked=true;ui()})}ui();
@@ -35,7 +36,14 @@ audio.addEventListener('ended',()=>{if(!state.enabled)return;if(!room){const nex
 audio.addEventListener('error',()=>{loading=false;blocked=true;status.textContent='BGM 파일을 불러오지 못했어. 다시 재생해 줘.'});
 w.A25NET?.subscribe(msg=>{if(msg.type==='welcome'||msg.type==='music')receive(msg.music);if(msg.type==='network_close')leave()});
 w.setInterval(()=>{if(started&&room)sync()},5000);
-w.BGM={transport,start,setEnabled,setVolume,setRoomEnabled,receive,leave,target,get audio(){return audio},get state(){return{started,localEnabled,volume,room,sharedEnabled:state.enabled,track:current,position:position(),blocked}}};ui();
-function retryOnGesture(){if(localEnabled&&state.enabled&&(!started||blocked||audio.paused))start()}
+function suspend(value){
+ if(suspended===value)return;
+ if(value) frozenPosition=position();
+ else if(!room) state={...state,position:frozenPosition,updatedAt:Date.now()};
+ suspended=value;
+ sync();
+}
+w.BGM={suspend,transport,start,setEnabled,setVolume,setRoomEnabled,receive,leave,target,get audio(){return audio},get state(){return{started,localEnabled,volume,room,sharedEnabled:state.enabled,track:current,position:position(),blocked}}};ui();
+function retryOnGesture(){if(!suspended&&localEnabled&&state.enabled&&(!started||blocked||audio.paused))start()}
 w.addEventListener?.('pointerdown',retryOnGesture,{capture:true});w.addEventListener?.('keydown',retryOnGesture,{capture:true});if(localEnabled)start();
 })(window);

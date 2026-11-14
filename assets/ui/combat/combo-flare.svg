@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 84">
+<defs><linearGradient id="ember"><stop stop-color="#b33e30"/><stop offset=".58" stop-color="#cf5c3b"/><stop offset="1" stop-color="#f2bb63"/></linearGradient></defs>
+<path d="M3 71l48-20-35-3 62-14-31-5L240 9l-23 12 115-14-56 20 44-2-52 19 24 1-71 17 17 3L29 80l18-11Z" fill="#131b20" stroke="#111519" stroke-width="3"/>
+<path d="M4 72l51-20-22-1 71-17 125-14-20 10 104-15-49 21 24-2-57 19 22 1-42 11-166 13 28-11Z" fill="url(#ember)"/>
+<path d="m49 66 88-13 93-16-22 8 48-6-63 16zM15 75l28-6-21 8z" fill="#f4c880"/>
+<path d="M68 33l72-15-20 9 65-8-22 7zM239 67l39-11-17 10z" fill="#9b5140"/>
+<path d="M44 57 74 44l90-13-32 10 113-11-51 12-76 11-36 10z" fill="#421f21" opacity=".65"/>
+</svg>

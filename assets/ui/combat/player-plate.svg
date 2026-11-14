@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 424 78">
+<defs><linearGradient id="steel" x2="0" y2="1" gradientUnits="objectBoundingBox"><stop stop-color="#42525b"/><stop offset=".34" stop-color="#182329"/><stop offset="1" stop-color="#101819"/></linearGradient><pattern id="grain" width="4" height="4" patternUnits="userSpaceOnUse"><path d="M0 1h4" stroke="#fff" opacity=".035"/></pattern></defs>
+<path d="M1 19 20 2h370l32 24-20 47H1Z" fill="#090f12" stroke="#080d10" stroke-width="4"/>
+<path d="M4 19 21 3h368l30 23-20 43H4Z" fill="url(#steel)" stroke="#9e9a80" stroke-width="2"/>
+<path d="M4 19 21 3h368l30 23-20 43H4Z" fill="url(#grain)"/>
+<path d="M4 20 21 4h39l-9 5H25L10 22v43H4Z" fill="#e6be79"/>
+<path d="M22 59h365l-3 4H22Z" fill="#53645e"/>
+<path d="M398 15l11 10-4 9-10-8z" fill="#dab377" opacity=".8"/>
+</svg>

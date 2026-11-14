@@ -40,6 +40,13 @@
     ['kick1',3,42],['kick2',4,42],['kick3',4,42]]) {
     Object.assign(sequences[key],{strike,reach});
   }
+  const speed = root.CombatSettings.player;
+  for (const [name, sequence] of Object.entries(sequences)) {
+    const rate = /^(guard|release|blockImpact|parry|Arrow)/.test(name) ? speed.guardSpeed
+      : /^(kick|finisher|riseKick|fallKick|launchKick|backKick|axeKick)/.test(name) ? speed.kickSpeed
+      : /^(punch|airPunch|elbow)/.test(name) ? speed.punchSpeed : 1;
+    sequence.times = sequence.times.map(ms => ms / Math.max(.1,rate));
+  }
   const follow = {
     punch1:{KeyS:'punch2',KeyD:'kick1'}, punch2:{KeyS:'punch3',KeyD:'kick1'},
     punch3:{KeyS:'punch4',KeyD:'kick1'}, punch4:{KeyD:'finisher'},
@@ -80,9 +87,10 @@
   function reset() {
     state = null; guardHeld = false; pending = null; queue.length = 0; keys.clear(); guardAt = -Infinity;
   }
-  function start(name, now) {
+  function start(name, now, holdKey) {
     if (!sheets[sequences[name].sheet]) return;
-    state = {name, at: now, reach: sequences[name].reach};
+    state = {name, at: now, reach: sequences[name].reach,holdKey,held:false};
+    root.CombatFeedback?.move(name);
   }
   function eligible(player) {
     return root.CHARART?.selected === 'girl_main_dobok' &&
@@ -90,9 +98,10 @@
   }
   function jump(player) {
     if (!eligible(player) || player.onGround) return;
+    if (state?.held) state = null;
     lastJump = performance.now(); airUsed = false;
     if (pending?.code === 'KeyD' && lastJump - pending.at <= 65) {
-      pending = null; queue.length = 0; airUsed = true; start('launchKick', lastJump);
+      pending = null; queue.length = 0; airUsed = true; start('launchKick', lastJump, 'KeyD');
     }
   }
   function attack(code, now, player) {
@@ -101,17 +110,18 @@
       airUsed = true;
       const rising = (player.alleyVelocity || -player.vy) > 0;
       start(code === 'KeyS' ? 'airPunch' : now - lastJump <= 110
-        ? 'launchKick' : rising ? 'riseKick' : 'fallKick', now);
+        ? 'launchKick' : rising ? 'riseKick' : 'fallKick', now, code);
       return;
     }
     if (!state || ['guard','release'].includes(state.name)) {
-      start(code === 'KeyS' ? 'punch1' : 'kick1', now);
+      start(code === 'KeyS' ? 'punch1' : 'kick1', now, code);
     } else if (follow[state.name] && queue.length < 4) {
       queue.push(code);
     }
   }
   function keyDown(event, player, allowed, directions = new Set()) {
     const code = event.code;
+    if (allowed && state?.held && code.startsWith('Arrow')) state = null;
     if (!['KeyS','KeyD','KeyA'].includes(code) || !allowed || !eligible(player)) return false;
     event.preventDefault();
     if (event.repeat) return true;
@@ -126,9 +136,10 @@
     if (other && player.onGround && (!state || ['guard','release'].includes(state.name))) {
       const move = chords[[code,other[0]].sort().join('+')];
       if (move) {
-        pending = null; queue.length = 0; keys.clear(); start(move, now); return true;
+        pending = null; queue.length = 0; start(move, now, code === 'KeyA' ? other[0] : code); return true;
       }
     }
+    if (state?.held) state = null;
     if (code === 'KeyA') {
       if (player.onGround) {
         guardHeld = true; guardAt = now;
@@ -145,6 +156,10 @@
   }
   function keyUp(event) {
     keys.delete(event.code);
+    if (state?.held && state.holdKey === event.code) {
+      state = null;
+      if (guardHeld && actor?.onGround) start('guard', performance.now());
+    }
     if (event.code !== 'KeyA') return;
     guardHeld = false;
     if (state?.name === 'guard') start('release', performance.now());
@@ -172,10 +187,19 @@
     }
     if (!state) return;
     const duration = sequences[state.name].times.reduce((sum, time) => sum + time, 0);
+    // Chain after contact rather than waiting through every recovery pose.
+    const seq=sequences[state.name];
+    const cancelAt=seq.strike>=0 ? seq.times.slice(0,seq.strike+1).reduce((a,b)=>a+b,0)+25 : duration;
+    if(queue.length && now-state.at>=cancelAt && player.onGround){
+      const next=follow[state.name]?.[queue[0]];
+      if(next){const code=queue.shift();start(next,now,code);return;}
+    }
     if (now - state.at < duration) return;
-    const next = follow[state.name]?.[queue.shift()];
-    if (next && player.onGround) { start(next, now); return; }
+    const input = queue.shift();
+    const next = follow[state.name]?.[input];
+    if (next && player.onGround) { start(next, now, input); return; }
     queue.length = 0;
+    if (state.holdKey && keys.has(state.holdKey)) { state.held = true; return; }
     if (state.name === 'down') { start('getUp', now); return; }
     if (guardHeld && player.onGround) {
       if (state.name !== 'guard') start('guard', now);
@@ -208,8 +232,8 @@
     actor = player; scene = player.scene;
     start(name, performance.now());
   }
-  root.TaekwondoMotion = {react, jump, defend, get impact() {
-    if (!state) return null;
+  root.TaekwondoMotion = {react, jump, defend, freeze(ms) { if (state) state.at += ms; }, get impact() {
+    if (!state || state.held) return null;
     const {strike,times} = sequences[state.name];
     if (!(strike >= 0)) return null;
     const start = times.slice(0,strike).reduce((sum,time) => sum+time,0);

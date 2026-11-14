@@ -377,6 +377,7 @@ body.playing-a5 #bgmControls{position:fixed;z-index:1100;bottom:0;left:0;right:0
 <link rel="stylesheet" href="assets/pc-desktop/web-town.css?v=A97">
 <link rel="stylesheet" href="assets/phone/anycall-phone.css?v=A100">
 <link rel="stylesheet" href="assets/pc-desktop/boot.css">
+<link rel="stylesheet" href="src/combat-ui.css?v=A112">
 </head>
 <body>
   <div class="grain"></div>
@@ -3319,15 +3320,17 @@ function changeTime(){phase=(phase+1)%3;D.time.textContent=['늦은 오후','해
 function changeWeather(){weather=1-weather;el('weatherLabel').textContent=weather?'비 내림':'맑음';MEMO.add(weather?'비가 내리기 시작했다':'비가 그쳤다',weather?'낡은 차양 끝에서 빗물이 떨어진다.':'조금씩 마르는 보도블록 위로 오후가 돌아왔다.',phase);toast(weather?'비가 내린다. 골목길에서 우산을 쓴 사람들이 보인다.':'빗줄기가 그쳤다. 물웅덩이만 조금 남았다.',3.3)}
 function changeOutfit(){shirtIndex=(shirtIndex+1)%shirts.length;player.shirt=shirts[shirtIndex].c;if(D.outfit)D.outfit.textContent=['아이보리','파랑','주황','연두'][shirtIndex];toast(shirts[shirtIndex].name+'로 갈아입었다.');}
 function toast(msg,s=2.6){D.hint.textContent=msg;D.hint.classList.add('show');toastTimer=s}
-function closeDialog(){openDialog=false;D.dialog.classList.add('hidden')}
+function closeDialog(){openDialog=false;D.dialog.classList.remove('is-shakedown');D.dialog.classList.add('hidden')}
 function showDialog(title,msg,icon='✿'){D.title.textContent=title;D.text.textContent=msg;D.icon.textContent=icon;D.dialog.classList.remove('hidden');openDialog=true}
 const alleyChoices = el('alleyChoices');
 const alleyUI = {
  ask(definition, choose) {
   input.clear();
   showDialog(definition.name, definition.demand, '…');
+  D.dialog.classList.add('is-shakedown');
   alleyChoices.hidden = false;
   el('dialogClose').hidden = true;
+  window.TaekwondoMotion?.reset();
   el('alleyPay').disabled = SHOPS.coins < definition.price;
   const finish = choice => {
    if (!choose(choice)) return;
@@ -3656,6 +3659,7 @@ function update(dt){
 function render(){
  ctx.setTransform(RENDER_SCALE,0,0,RENDER_SCALE,0,0);
  ctx.imageSmoothingEnabled=false;
+ if(player.scene==='back_alley'){ctx.fillStyle='#4d5558';ctx.fillRect(0,0,W,H);window.CombatFeedback?.transform(ctx);}
  if(player.scene==='main_road')ctx.translate(0,24);
  // A46: move the street camera up 40 world units; preserve all shared physics coordinates.
  if(player.scene==='street'||player.scene==='side_alley'){ctx.fillStyle=phase===2?'#273b57':phase===1?'#d5aba0':'#78b9eb';ctx.fillRect(0,0,W,H);ctx.translate(0,40);}
@@ -3695,7 +3699,7 @@ function render(){
  if(player.scene==='hidden_alley')window.NarrowAlleyMap.render(ctx,player,t);
  if(player.scene==='apartment_path')window.ApartmentPathMap?.render(ctx,player,t);
  if(player.scene==='supermarket')window.SupermarketMap.render(ctx,player,t);if(player.scene==='stationery')window.StationeryInterior?.render(ctx,player,t);if(player.scene==='pcroom')window.PcRoomMap.render(ctx,player,t);if(['lobby','hall','rooftop'].includes(player.scene))window.Block104.render(ctx,player,t);if(player.scene==='courtyard')window.CourtyardMap.render(ctx,player,t);
- if(player.scene==='back_alley'&&window.AlleyEncounter?.status.y<=player.alleyFloorY)window.AlleyEncounter.draw(ctx);
+ if(player.scene==='back_alley')window.AlleyEncounter?.draw(ctx,player.alleyFloorY,false);
  if(player.scene==='main_road'){ctx.save();ctx.translate(player.x,player.y);ctx.scale(.72,.72);WORLD.drawKid(ctx,0,0,player.dir,player.walking,player.shirt,false,['sit','bench','swing'].includes(player.pose),player.pose);SHOPS.renderHeld(ctx,0,0,player.dir,player.pose,t);ctx.restore();}
  if(player.scene==='back_alley'){
   ctx.save();ctx.translate(player.x,player.y);
@@ -3704,10 +3708,11 @@ function render(){
   SHOPS.renderHeld(ctx,0,0,player.dir,player.pose,t);ctx.restore();
  }
  if(player.scene!=='back_alley'&&!dungeonScene&&!['lobby','hall','rooftop'].includes(player.scene)&&player.scene!=='main_road'&&player.scene!=='hidden_alley'&&player.scene!=='apartment_path'&&player.scene!=='supermarket'&&player.scene!=='stationery'&&player.scene!=='courtyard'&&player.scene!=='pcroom'&&!(player.scene==='street'&&PlaygroundSpace.contains(player.x))&&!window.A20WORLD?.hidesPlayer())WORLD.drawKid(ctx,player.x,player.y,player.dir,player.walking,player.shirt,false,(['sit','bench','swing'].includes(player.pose)||(player.pose==='eat'&&player.eatRestore!=='stand')),player.pose);
- if(player.scene==='back_alley'&&window.AlleyEncounter?.status.y>player.alleyFloorY)window.AlleyEncounter.draw(ctx);
+ if(player.scene==='back_alley')window.AlleyEncounter?.draw(ctx,player.alleyFloorY,true);
  if(player.scene==='street'){PlaygroundSpace.render(ctx,player,t);ROUTINES.render(ctx,player.scene,t,weather);}
  if(player.scene!=='back_alley'&&!dungeonScene&&!['lobby','hall','rooftop'].includes(player.scene)&&player.scene!=='main_road'&&player.scene!=='hidden_alley'&&player.scene!=='apartment_path'&&player.scene!=='supermarket'&&player.scene!=='stationery'&&player.scene!=='courtyard'&&player.scene!=='pcroom'&&!(player.scene==='street'&&PlaygroundSpace.contains(player.x)))SHOPS.renderHeld(ctx,player.x,player.y,player.dir,player.pose,t);
  if(player.scene==='main_road')window.CommercialRoad?.foreground(ctx,t);
+ if(player.scene==='back_alley')window.CombatFeedback?.draw(ctx);
  window.A25NET?.renderSelfBubble(ctx,player.scene);
  if(running&&!openDialog&&!window.A20WORLD?.hidesPlayer()){let h=nearest();if(h){const xx=h.x;let yy=player.scene==='street'?(h.type==='swing'?126:h.type==='counter'?126:['routineNpc','resNpc'].includes(h.type)?126:h.type==='door'?153:165):154;if(player.scene==='stationery')yy=(h.y??player.stationeryFloorY)-window.StationeryInterior.actorHeight-18;if(player.scene==='pcroom')yy=(h.y??player.pcFloorY)-51*window.PcRoomMap.scale(player.pcFloorY)-18;if(player.scene==='supermarket')yy=(h.y??player.superFloorY)-51*window.SupermarketMap.scale(player.superFloorY)-18;if(player.scene==='courtyard')yy=(h.y??player.yardFloorY)-51*window.CourtyardMap.scale(player.yardFloorY)-20;if(player.scene==='hidden_alley')yy=(h.y??player.narrowFloorY)-51*window.NarrowAlleyMap.scale(player.narrowFloorY)-18;if(player.scene==='back_alley')yy=(h.y??player.alleyFloorY)-51*window.BackAlleyMap.scale(h.y??player.alleyFloorY)-12;if(dungeonScene)yy=h.y-51*window.AlleyDungeon.scale(h.y,player.scene)-13;if(Math.abs(xx-player.x)<22)yy=Math.min(yy,player.y-74);
   let bob=Math.round(Math.sin(t*3)*2);ctx.fillStyle='#f4e3af';ctx.fillRect(Math.round(xx-5),yy+bob,11,11);
@@ -3726,7 +3731,7 @@ function render(){
  // Soft film-edge gradient, still rendered in native pixels.
  const v=ctx.createLinearGradient(0,0,0,270);v.addColorStop(0,'#263b4520');v.addColorStop(.22,'#00000000');v.addColorStop(.76,'#00000000');v.addColorStop(1,'#192e3345');ctx.fillStyle=v;ctx.fillRect(0,0,W,H);
 }
-function frame(now){const dt=Math.min(.033,(now-last)/1000||.016);last=now;update(dt);window.GameAudio?.tick(dt,player,{running,busy:PLAYROOM.isOpen,ambient:!PLAYROOM.isOpen,time:t});render();requestAnimationFrame(frame)}
+function frame(now){const dt=Math.min(.033,(now-last)/1000||.016);last=now;if(!window.CombatFeedback?.frame(dt))update(dt);window.CombatHUD?.update(player.scene,cam);window.GameAudio?.tick(dt,player,{running,busy:PLAYROOM.isOpen,ambient:!PLAYROOM.isOpen,time:t});render();requestAnimationFrame(frame)}
 requestAnimationFrame(frame);
 window.__GAME_DEBUG__={clearInput:()=>input.clear(),nearest:()=>nearest(),playground:()=>window.A20WORLD?.snapshot(),environment:()=>A16SCENE.snapshot(),terrain:()=>A17TERRAIN.snapshot(),changeTerrain:(id,patch)=>A17TERRAIN.change(id,patch),moveEnvironment:(id,x)=>A16SCENE.move(id,x),layout:()=>A13LAYOUT.snapshot(),audit:()=>A13LAYOUT.validate(Object.fromEntries(A13LAYOUT.list().map(d=>[d.id,{x:d.x,w:d.w,h:d.h}]))),movePrefab:(id,x)=>A13LAYOUT.move(id,x),get art(){return A12ART.enabled?'A12':'A11'},player,residential:()=>RESIDENTIAL.debug(phase,weather),routines:()=>ROUTINES.debug(),shops:()=>({coins:SHOPS.coins,bag:SHOPS.inventory,open:SHOPS.isOpen}),playroom:()=>PLAYROOM.debug(),neighborhood:()=>NEIGHBOR.debug(t),routes:()=>({current:player.scene,branch:ROUTES.isRoute(player.scene),width:sceneWidth(),mapOpen:ROUTES.isMapOpen}),setWeather(x){weather=x?1:0;el('weatherLabel').textContent=weather?'비 내림':'맑음'},moveTo(x){player.x=x;player.pose='stand';player.y=GROUND;player.onGround=true;if(player.scene==='supermarket')window.SupermarketMap.enter(player);if(player.scene==='stationery')window.StationeryInterior?.enter(player);if(player.scene==='pcroom')window.PcRoomMap?.enter(player);if(player.scene==='courtyard')window.CourtyardMap?.enter(player);if(player.scene==='back_alley')window.BackAlleyMap?.enter(player);if(player.scene==='hidden_alley')window.NarrowAlleyMap.enter(player);if(player.scene==='apartment_path')window.ApartmentPathMap?.enter(player);cam=Math.max(player.scene==='street'?359:0,Math.min(sceneWidth()-W,x-206))},setScene,get status(){return{running,phase,weather,camera:cam,scene:player.scene,area:D.area.textContent,pose:player.pose,footY:player.y,held:SHOPS.held,notes:MEMO.entries.length}}};
 })();
@@ -4182,14 +4187,19 @@ window.A26NET={get snapshot(){return snapshot},get ready(){return connected()},p
 
 
 </script>
-<script src="src/background-music.js"></script>
+<script src="src/background-music.js?v=A112"></script>
 <script src="src/interface.js"></script>
 <script src="src/world-audio.js?v=A94"></script>
 <script src="src/anycall-lcd.js?v=A102"></script>
 <script src="src/anycall-nate.js?v=A102"></script>
 <script src="src/anycall-phone.js?v=A102"></script>
+<script src="src/combat-settings.js?v=A112"></script>
+<script src="src/combat-sounds.js?v=A112"></script>
+<script src="src/combat-feedback.js?v=A112"></script>
 <script src="src/combat-frames.js?v=A109"></script>
-<script src="src/taekwondo-motion.js?v=A109"></script>
-<script src="src/alley-encounter.js?v=A109"></script>
+<script src="src/taekwondo-motion.js?v=A112"></script>
+<script src="src/enemy-frames.js"></script>
+<script src="src/alley-encounter.js?v=A112"></script>
+<script src="src/combat-hud.js?v=A112"></script>
 </body>
 </html>
