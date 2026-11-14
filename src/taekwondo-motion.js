@@ -22,6 +22,8 @@
   add('elbow','heavy',0,[0,1,2,3,4,5],3,29);
   add('backKick','heavy',1,[0,1,2,3,4,5,6,7],5,44);
   add('axeKick','heavy',2,[0,1,2,3,4,5,6,7],5,41);
+  add('guardBreaker','heavy',2,[0,1,2,3,4,5,6,7],5,37);
+  sequences.guardBreaker.times=[65,75,85,80,70,85,110,175];
   add('airPunch','air',0,[0,1,2,3],2,34);
   add('riseKick','air',1,[0,1,3,4,5],2,43);
   add('fallKick','air',2,[0,1,3,4,5],2,41);
@@ -122,12 +124,21 @@
   function keyDown(event, player, allowed, directions = new Set()) {
     const code = event.code;
     if (allowed && state?.held && code.startsWith('Arrow')) state = null;
-    if (!['KeyS','KeyD','KeyA'].includes(code) || !allowed || !eligible(player)) return false;
+    if (!['KeyS','KeyD','KeyA','KeyG'].includes(code) || !allowed || !eligible(player)) return false;
+    if(code==='KeyG'&&(player.scene!=='back_alley'||root.AlleyEncounter?.status.phase!=='fight'))return false;
     event.preventDefault();
     if (event.repeat) return true;
     actor = player; scene = player.scene;
     const now = performance.now();
     if (['down','getUp','hitHigh','hitMid','hitLow','hitHeavy','guardBreak'].includes(state?.name)) return true;
+    if(code==='KeyG'){
+      if(player.onGround&&!pending&&(!state||state.held||state.name==='guard'||state.name==='release')){
+        guardHeld=false;
+        queue.length=0;
+        start('guardBreaker',now);
+      }
+      return true;
+    }
     if (pending && now - pending.at > 65) {
       attack(pending.code, now, player); pending = null;
     }
@@ -232,7 +243,13 @@
     actor = player; scene = player.scene;
     start(name, performance.now());
   }
-  root.TaekwondoMotion = {react, jump, defend, freeze(ms) { if (state) state.at += ms; }, get impact() {
+  root.TaekwondoMotion = {react, jump, defend, freeze(ms) { if (state) state.at += ms; }, get windup() {
+    if (!state || state.held) return null;
+    const {strike,times} = sequences[state.name];
+    if (!(strike >= 0)) return null;
+    const contact = times.slice(0,strike).reduce((sum,time)=>sum+time,0);
+    return performance.now()-state.at < contact ? state : null;
+  }, get impact() {
     if (!state || state.held) return null;
     const {strike,times} = sequences[state.name];
     if (!(strike >= 0)) return null;

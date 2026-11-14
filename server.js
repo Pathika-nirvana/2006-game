@@ -121,7 +121,7 @@ function clubMessage(s,obj){
 }
 const musicRooms=new Map();const MUSIC_DURATION=95.6865+205.035083;
 function musicSnapshot(room){const m=musicRooms.get(room);return m?{enabled:m.enabled,position:m.position,updatedAt:m.updatedAt,serverTime:Date.now()}:null}
-const types = {'.mp3':'audio/mpeg','.html':'text/html; charset=utf-8','.js':'application/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.otf':'font/otf','.woff':'font/woff','.webp':'image/webp','.png':'image/png','.json':'application/json; charset=utf-8','.ico':'image/x-icon','.jpg':'image/jpeg','.jpeg':'image/jpeg','.gif':'image/gif','.bmp':'image/bmp','.txt':'text/plain; charset=utf-8'};
+const types = {'.wav':'audio/wav','.mp3':'audio/mpeg','.html':'text/html; charset=utf-8','.js':'application/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.otf':'font/otf','.woff':'font/woff','.webp':'image/webp','.png':'image/png','.json':'application/json; charset=utf-8','.ico':'image/x-icon','.jpg':'image/jpeg','.jpeg':'image/jpeg','.gif':'image/gif','.bmp':'image/bmp','.txt':'text/plain; charset=utf-8'};
 /* A88 내 문서 Incoming 폴더: assets/pc-desktop/incoming 안의 그림 파일을 그대로 목록으로 알려 준다. 파일을 넣고 빼는 것만으로 게임 안 폴더가 바뀐다. */
 const INCOMING_DIR=path.join(ROOT,'assets','pc-desktop','incoming');
 const INCOMING_EXT=new Set(['.webp','.png','.jpg','.jpeg','.gif','.bmp']);

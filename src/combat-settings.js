@@ -5,11 +5,11 @@ window.CombatSettings = {
     punchSpeed: 1.5, kickSpeed: 1.4, guardSpeed: 1.3
   },
   bully: {
-    health: 155, attack: 19, defense: 4,
+    health: 175, attack: 19, defense: 5,
     attackSpeed: 1.25, attackInterval: 0.82,
-    guardChance: 0.38, guardDuration: 0.48, guardCooldown: 1.35
+    guardDuration: 0.4, guardCooldown: 0.85
   },
-  group: {maxAttackers: 2, attackSpacing: 0.48},
+  group: {rushHealth: .30, rushAttackers: 3, rushSpacing: .13, turnPause: .32, approachTimeout: 2.8},
   hitStop: 0.055,
   shake: 2.8,
   soundVolume: 0.60
