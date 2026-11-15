@@ -15,6 +15,7 @@ const MINI=require('./server_minihome.js');
 const PHONE=require('./server_phone.js');
 const { TextDecoder } = require('node:util');
 const ROOT = __dirname;
+const combat=new (require('./server_combat.js').CombatRooms)(ROOT,send);
 const PORT = Number(process.env.PORT || 3000);
 const HOST = process.env.HOST || '0.0.0.0';
 const MAX_ROOM = 12;
@@ -138,7 +139,7 @@ function listIncoming(cb){
     }));
   });
 }
-const publicPaths = new Set(['/', '/index.html', '/editor.html', '/data/world-config.js', '/tools/editor.js', '/tools/editor.css']);
+const publicPaths = new Set(['/', '/index.html', '/editor.html', '/data/world-config.js', '/tools/editor-extra.js','/tools/editor.js', '/tools/editor.css']);
 const app = http.createServer((req,res)=>{
   if(req.method!=='GET'){res.writeHead(405);res.end('GET only');return}
   let pathname;
@@ -183,15 +184,15 @@ const app = http.createServer((req,res)=>{
 });
 function frame(payload,opcode=1){
   const body=Buffer.isBuffer(payload)?payload:Buffer.from(payload);
-  if(body.length>MAX_FRAME)return null;
+  if(body.length>262144)return null;
   let header;
   if(body.length<126)header=Buffer.from([0x80|opcode,body.length]);
-  else header=Buffer.from([0x80|opcode,126,body.length>>8,body.length&255]);
+  else if(body.length<65536)header=Buffer.from([0x80|opcode,126,body.length>>8,body.length&255]);else{header=Buffer.alloc(10);header[0]=0x80|opcode;header[1]=127;header.writeUInt32BE(body.length,6);}
   return Buffer.concat([header,body]);
 }
 function send(session,obj){if(!session.socket.writable)return;try{const data=frame(JSON.stringify(obj));if(data)session.socket.write(data)}catch{end(session)}}
 function cast(room,msg,except=null){for(const session of rooms.get(room)||[])if(session!==except)send(session,msg)}
-function publicState(s){return {id:s.id,name:s.name,scene:s.state.scene,x:s.state.x,y:s.state.y,pose:s.state.pose,dir:s.state.dir,look:s.state.look,held:s.state.held||null,playground:!!s.state.playground}}
+function publicState(s){return {id:s.id,name:s.name,scene:s.state.scene,x:s.state.x,y:s.state.y,depth:s.state.depth,pose:s.state.pose,dir:s.state.dir,look:s.state.look,held:s.state.held||null,playground:!!s.state.playground}}
 function end(s){
   if(s.closed)return;s.closed=true;sessions.delete(s);
   if(s.room)PLAY.clearUser(physicsRooms.get(s.room),s.id);
@@ -215,11 +216,12 @@ function onMessage(s,obj){
    s.room=room;s.name=name;rooms.set(room,group);
    if(!physicsRooms.has(room))physicsRooms.set(room,PLAY.createRoom());
    if(!musicRooms.has(room))musicRooms.set(room,{enabled:true,position:0,updatedAt:Date.now()});
-   send(s,{type:'welcome',id:s.id,room,players:[...group].map(publicState),music:musicSnapshot(room)});
+   send(s,{type:'welcome',combatProtocol:123,id:s.id,room,players:[...group].map(publicState),music:musicSnapshot(room)});
    group.add(s);send(s,{type:'playground_state',state:PLAY.snapshot(physicsRooms.get(room))});cast(room,{type:'joined',player:publicState(s)},s);
    return;
  }
  if(!s.room)return;
+ if(obj.type==='combat'){combat.action(s,obj);return;}
  if(obj.type==='music'){
    if(typeof obj.enabled!=='boolean'&&!['restart','next'].includes(obj.action))return;
    const now=Date.now();if(now-(s.lastMusic||0)<300)return;s.lastMusic=now;
@@ -241,7 +243,7 @@ function onMessage(s,obj){
    const x=Number(obj.x),y=Number(obj.y);if(!Number.isFinite(x)||!Number.isFinite(y))return;
    const arena=physicsRooms.get(s.room);const occ=PLAY.occupancy(arena,s.id),flight=arena?.flights.get(s.id);
    if(obj.scene!=='street'&&(occ||flight))PLAY.clearUser(arena,s.id);
-   if(!occ&&!flight){s.state={playground:!!obj.playground,scene:obj.scene,x:Math.max(0,Math.min(20000,x)),y:Math.max(-100,Math.min(500,y)),depth:/^alley_d/.test(obj.scene)&&Number.isFinite(obj.depth)?Math.max(130,Math.min(267,obj.depth)):undefined,pose:poses.has(obj.pose)?obj.pose:'stand',dir:obj.dir===0?0:1,look:looks.has(obj.look)?obj.look:'boy_main_blue',held:heldFoods.has(obj.held)?obj.held:null};}
+   if(!occ&&!flight){s.state={playground:!!obj.playground,scene:obj.scene,x:Math.max(0,Math.min(20000,x)),y:Math.max(-100,Math.min(500,y)),depth:Number.isFinite(obj.depth)?Math.max(130,Math.min(267,obj.depth)):undefined,pose:poses.has(obj.pose)?obj.pose:'stand',dir:obj.dir===0?0:1,look:looks.has(obj.look)?obj.look:'boy_main_blue',held:heldFoods.has(obj.held)?obj.held:null};}
    else{s.state.dir=obj.dir===0?0:1;s.state.look=looks.has(obj.look)?obj.look:'boy_main_blue';s.state.held=heldFoods.has(obj.held)?obj.held:null}
    cast(s.room,{type:'state',id:s.id,...s.state},s);return;
  }
@@ -320,5 +322,6 @@ const playgroundClock=setInterval(()=>{physicsNetTicks++;
   if(physicsNetTicks%6===0)cast(room,{type:'playground_state',state:PLAY.snapshot(arena)});
  }
 },1000/60);playgroundClock.unref();
+const combatClock=setInterval(()=>{try{combat.tick(rooms)}catch(e){console.error('Combat:',e)}},1000/30);combatClock.unref();
 if(require.main===module){app.listen(PORT,HOST,()=>console.log(`2006 A27: http://${HOST}:${PORT} — 최대 ${MAX_ROOM}명/방`))}
-module.exports={app,rooms,sessions,physicsRooms,musicRooms,clubs,clubOf,minis};
+module.exports={app,combat,rooms,sessions,physicsRooms,musicRooms,clubs,clubOf,minis};

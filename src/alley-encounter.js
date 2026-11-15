@@ -23,8 +23,8 @@ const defs = root.WorldConfig?.enemies || [
 ];
 for(const skin of new Set(defs.map(d=>d.skin).filter(skin=>skin!=='original'))){
  const im=new Image();
- im.onload=()=>{atlas[skin]={image:im,frames:root.EnemyFrames[skin].frames,scale:82/root.EnemyFrames[skin].standingHeight};};
- im.src='assets/characters/enemies/'+skin+'.webp';
+ im.onload=()=>{atlas[skin]={image:im,frames:root.EnemyFrames[skin].frames,scale:82/root.EnemyFrames[skin].standingHeight,animations:root.EnemyFrames[skin].animations};};
+ im.src=root.EnemyFrames[skin]?.image||'assets/characters/enemies/'+skin+'.webp';
 }
 let npcs=[],phase,playerHealth,timer,attackGate,rushGate,turn,turnDeadline,invulnerable,lastPlayer,dialogueTarget;
 let encounterId,currentScene='back_alley';
@@ -78,6 +78,7 @@ function holdFormation(n,p,dt){
  }else animate(n,'ready');
 }
 function update(dt,p,ui){
+ if(root.CombatNet?.online)return root.CombatNet.update(p,ui);
  if(!enabled(p.scene))return;if(p.scene!==currentScene)reset(false,p.scene);if(p.scene!=='back_alley')p.alleyFloorY=p.alleyDepth;lastPlayer=p;timer+=dt;attackGate=Math.max(0,attackGate-dt);invulnerable=Math.max(0,invulnerable-dt);rushGate=Math.max(0,rushGate-dt);
  const pm=root.TaekwondoMotion,impact=pm?.impact;
  for(const n of npcs){n.age+=dt;n.cooldown=Math.max(0,n.cooldown-dt);n.guardCooldown=Math.max(0,n.guardCooldown-dt);}
@@ -115,9 +116,9 @@ function update(dt,p,ui){
      n.guardCooldown=cfg.bully.guardCooldown;
     }
    }
-   if(impact&&n.seen!==impact){
+   if(impact&&!n.seenImpacts?.has(impact)){
     if(d<=impact.reach*map.scale(p.alleyFloorY)/1.3+3&&Math.abs(dy)<=15&&dx*face<=3){
-     n.seen=impact;
+     n.seen=impact;(n.seenImpacts||(n.seenImpacts=new WeakSet())).add(impact);
      if(n.motion==='guard'&&dx*n.dir>=0&&impact.name==='guardBreaker'){
       n.brokenUntil=timer+.80;
       n.cooldown=.80;
@@ -150,14 +151,15 @@ function update(dt,p,ui){
    if(n.motion==='guard'){if(n.age<cfg.bully.guardDuration)continue;animate(n,'ready');}
    if(n.motion==='punch'||n.motion==='kick'){
     const windup=(n.motion==='punch'?.18:.23)/cfg.bully.attackSpeed/n.rate;
-    if(n.age>=windup&&n.age-dt<windup&&d<=attackReach(n)&&Math.abs(dy)<14&&dx*n.dir>=0&&p.onGround&&!invulnerable){
+    if(n.age>=windup&&n.age-dt<windup){const strike=p=>{const dx=p.x-n.x,dy=p.alleyFloorY-n.y,d=Math.hypot(dx,dy),pm=root.TaekwondoMotion;if(d>attackReach(n)||Math.abs(dy)>=14||dx*n.dir<0||!p.onGround||invulnerable||playerHealth<=0)return;
      if(pm?.defend(p,dx,dy)){fx.impact('player','block',p.x,p.y-38,0,n.dir);n.cooldown=.55;}
      else{const damage=Math.max(1,Math.round(((n.attackPower??cfg.bully.attack*n.attack)-cfg.player.defense)*(root.CombatItems?.multiplier('defense')||1)));playerHealth=Math.max(0,playerHealth-damage);invulnerable=cfg.player.hurtInvulnerability;
       if(root.CombatItems?.cancelEating(p))ui.notice('피격으로 먹기가 끊겼다.');
       fx.impact('player',playerHealth?(n.counterAttack?'counter':'hit'):'down',p.x,p.y-40,damage,n.dir);pm?.react(playerHealth?(n.motion==='kick'?'hitLow':'hitMid'):'down',p);
-      if(!playerHealth){root.CombatItems?.clear();phase='lost';timer=0;fx.battle(null);ui.notice('쓰러졌다. 골목 입구로 물러난다.');break;}
+      if(!playerHealth){root.CombatItems?.clear();if(!root.CombatAuthority){phase='lost';timer=0;fx.battle(null);}ui.notice('쓰러졌다. 골목 입구로 물러난다.');}
      }
-    }
+
+};if(root.CombatAuthority)root.CombatAuthority.each(strike);else strike(p);}
     if(n.age<windup+.25/cfg.bully.attackSpeed)continue;
     animate(n,'ready');
     n.counterAttack=false;
@@ -171,7 +173,7 @@ function update(dt,p,ui){
      animate(n,d>28||n.role==='kicker'?'kick':'punch');
      n.cooldown=.52+Math.random()*.20;
      rushGate=cfg.group.rushSpacing;
-     fx.swing();
+     fx.swing(n);
     }else{
      const lane=(npcs.indexOf(n)%3-1)*6;
      const targetX=p.x+side*(n.role==='kicker'?31:22);
@@ -192,7 +194,7 @@ function update(dt,p,ui){
     n.counterUntil=0;
     n.counterAttack=true;
     n.cooldown=cfg.bully.attackInterval;
-    fx.swing();
+    fx.swing(n);
     continue;
    }
    const index=npcs.indexOf(n);
@@ -206,7 +208,7 @@ function update(dt,p,ui){
     animate(n,n.role==='kicker'||d>29?'kick':'punch');
     n.strikes++;
     n.cooldown=cfg.bully.attackInterval+.08+Math.random()*.16;
-    fx.swing();
+    fx.swing(n);
    }else{
     const preferred=profile.distance;
     const laneOffset=index%2?16:-16;
@@ -238,7 +240,7 @@ function drawOne(c,n){
  if(!ready(n))return;
  let source,list,delay;
  if(n.skin==='original'){const a=legacy[n.motion]||legacy.ready;source=atlas[a[0]];list=a[1];delay=a[2];}
- else{source=atlas[n.skin];list=frames[n.motion]||frames.ready;if(n.skin==='boy3'&&n.motion==='punch')list=[8,10,9];if(n.skin==='boy3'&&n.motion==='kick')list=[12,14,13];delay=n.motion==='walk'?.13/n.rate:n.motion==='idle'?.48:n.motion==='down'?.16:.12;}
+ else{source=atlas[n.skin];list=source.animations?.[n.motion]||frames[n.motion]||frames.ready;if(n.skin==='boy3'&&n.motion==='punch')list=[8,10,9];if(n.skin==='boy3'&&n.motion==='kick')list=[12,14,13];delay=n.motion==='walk'?.13/n.rate:n.motion==='idle'?.48:n.motion==='down'?.16:.12;}
  let index;
  if(['punch','kick'].includes(n.motion)){const windup=(n.motion==='punch'?.18:.23)/cfg.bully.attackSpeed/n.rate;index=n.age<windup?0:n.age<windup+.09?1:2;}
  else index=['walk','idle'].includes(n.motion)?Math.floor(n.age/delay)%list.length:Math.min(list.length-1,Math.floor(n.age/delay));
@@ -251,7 +253,7 @@ function drawOne(c,n){
 function draw(c,foot,front){for(const n of [...npcs].sort((a,b)=>a.y-b.y))if(foot===undefined||(front?n.y>foot:n.y<=foot))drawOne(c,n);}
 
 function lootTarget(p){if(!enabled(p.scene)||!p.onGround||phase==='lost')return null;return npcs.filter(n=>n.health<=0&&!n.looted&&n.age>.5&&Math.hypot(n.x-p.x,n.y-p.alleyFloorY)<34).sort((a,b)=>Math.hypot(a.x-p.x,a.y-p.alleyFloorY)-Math.hypot(b.x-p.x,b.y-p.alleyFloorY))[0]||null;}
-function loot(p,ui){const n=lootTarget(p);if(!n)return false;
+function loot(p,ui){if(root.CombatNet?.online)return root.CombatNet.loot(p,ui);const n=lootTarget(p);if(!n)return false;
  const receipt=root.SHOPS?.grantLoot(encounterId+':'+n.id,n.loot);
  if(receipt==='full'){ui.notice('가방이 꽉 찼다. 자리를 비우고 다시 줍자.');return true;}
  if(!receipt){ui.notice('획득 내역을 저장하지 못했다. 다시 시도해 줘.');return true;}
@@ -281,11 +283,12 @@ function drawIndicators(c,p){
  }c.restore();
 }
 
-function heal(amount,p){
+function heal(amount,p){if(root.CombatNet?.online)return Math.min(amount,Math.max(0,cfg.player.health-playerHealth));
  if(phase==='lost'||!Number.isFinite(amount)||amount<=0)return 0;
  const gained=Math.min(cfg.player.health-playerHealth,amount);
  if(gained>0){playerHealth+=gained;fx.heal?.(p.x,p.y-40,gained);}
  return gained;
 }
-reset();root.AlleyEncounter={enabled,damage(amount){playerHealth=Math.max(0,playerHealth-Math.max(0,amount));return playerHealth;},reset,heal,update,draw,drawIndicators,loot,lootTarget,get choosing(){return phase==='choice'},get targets(){return npcs.filter(ready).map(n=>({...n,height:82*map.scale(n.y)*(n.size||1)}))},get status(){return{phase,playerHealth,...npcs[0]}},get debug(){return{npcs,phase}}};
+reset();root.AlleyEncounter={
+ networkState(){return{npcs,phase,timer,encounterId}},networkApply(s,h){if(s){currentScene=s.scene;npcs=s.npcs;phase=s.phase;timer=s.timer;encounterId=s.encounterId;}if(Number.isFinite(h))playerHealth=h;},healthState(v){if(v){playerHealth=v.health;invulnerable=v.inv||0;}return{health:playerHealth,inv:invulnerable};},enabled,damage(amount){playerHealth=Math.max(0,playerHealth-Math.max(0,amount));return playerHealth;},reset,heal,update,draw,drawIndicators,loot,lootTarget,get choosing(){return phase==='choice'},get targets(){return npcs.filter(ready).map(n=>({...n,height:82*map.scale(n.y)*(n.size||1)}))},get status(){return{phase,playerHealth,...npcs[0]}},get debug(){return{npcs,phase}}};
 })(window);

@@ -26,13 +26,13 @@ function hurtPlayer(n,p,damage,knock,canBlock=true){
  // Resolve knockback with the same solid floor constraints as normal movement.
  const dir=p.x<n.x?-1:1,oldDash=p.dashMultiplier;p.dashMultiplier=1;w.NarrowAlleyMap.walk(p,dir,0,knock/84);p.dashMultiplier=oldDash;p.walking=0;
  fx.impact('player',hp?(knock>10?'heavy':'hit'):'down',p.x,p.y-45,damage,n.dir);
- if(!hp){w.CombatItems?.clear();phase='lost';delay=2;fx.battle(null);uiRef?.notice('쓰러졌다. 골목 입구에서 다시 일어난다.');}
+ if(!hp){w.CombatItems?.clear();if(!w.CombatAuthority){phase='lost';delay=2;fx.battle(null);}uiRef?.notice('쓰러졌다. 골목 입구에서 다시 일어난다.');}
 }
 function takeHit(n,p){
- const pm=w.TaekwondoMotion,hit=pm.impact;if(!hit||n.seen===hit||n.health<=0||n.motion==='air')return;
+ const pm=w.TaekwondoMotion,hit=pm.impact;if(!hit||n.seenImpacts?.has(hit)||n.health<=0||n.motion==='air')return;
  const dx=n.x-p.x,dy=n.y-p.narrowFloorY,face=p.dir===0?-1:1;
  if(Math.abs(dy)>14||dx*face< -3||Math.hypot(dx,dy)>hit.reach*w.NarrowAlleyMap.scale(p.narrowFloorY)/1.3+6)return;
- n.seen=hit;const f=fatigue(n),bc=cfg.bosses[n.kind];
+ n.seen=hit;(n.seenImpacts||(n.seenImpacts=new WeakSet())).add(hit);const f=fatigue(n),bc=cfg.bosses[n.kind];
  if(n.motion==='guard'&&face!==n.dir){
   if(hit.name==='guardBreaker'){anim(n,'strong');n.cooldown=1.25;n.punishUntil=clock+1.25;n.comboHits=0;n.counterUntil=0;fx.impact('npc','break',n.x,n.y-65,0,face,n);return;}
   fx.impact('npc','block',n.x,n.y-65,0,face,n);n.guardHits++;n.counterUntil=clock+1;n.cooldown=.08;n.chain=0;n.age=.25;return;
@@ -53,7 +53,7 @@ function takeHit(n,p){
  if((n.kind!=='boss'||f>=2)&&!counterArmour){anim(n,heavy?'strong':/^kick/.test(hit.name)?'low':'weak');n.cooldown=heavy?.48:.24;n.telegraph=null;}
 }
 function begin(n,kind,p){
- n.hit=false;const bc=cfg.bosses[n.kind];n.dir=p.x<n.x?-1:1;
+ n.hit=false;n.hitPlayers=new Set();const bc=cfg.bosses[n.kind];n.dir=p.x<n.x?-1:1;
  if(kind==='charge'){
   n.stamina=Math.max(0,n.stamina-bc.chargeCost);
   const target=n.dir>0?674:52;
@@ -65,9 +65,10 @@ function begin(n,kind,p){
   n.originX=n.x;n.originY=n.y;anim(n,'jumpTell');
  }else{
   if(n.kind==='boss')n.stamina=Math.max(0,n.stamina-(kind==='kick'?bc.kickCost:bc.punchCost));
-  anim(n,kind);fx.swing();
+  anim(n,kind);fx.swing(n);
  }
 }
+function each(p,fn){if(w.CombatAuthority)w.CombatAuthority.each(fn);else fn(p);}
 function inside(g,x,y){return g.type==='line'?x>=g.x1&&x<=g.x2&&Math.abs(y-g.y)<=g.ry:((x-g.x)/g.rx)**2+((y-g.y)/g.ry)**2<=1;}
 function ai(n,p,dt){
  const bc=cfg.bosses[n.kind],f=fatigue(n),pm=w.TaekwondoMotion;
@@ -81,22 +82,22 @@ function ai(n,p,dt){
  }
  if(n.kind==='underboss'&&clock<n.punishUntil)return;
  if(n.motion==='chargeTell'){
-  if(n.age>=bc.chargeTell){anim(n,'charge');fx.swing();shockwaves.push({x:n.x,y:n.y,at:clock});fx.groundShock?.(n.x,n.y);}return;
+  if(n.age>=bc.chargeTell){anim(n,'charge');fx.swing(n);shockwaves.push({x:n.x,y:n.y,at:clock});fx.groundShock?.(n.x,n.y);}return;
  }
  if(n.motion==='charge'){
   const old=n.x;n.x+=n.dir*bc.chargeSpeed*dt;n.x=n.dir>0?Math.min(n.x,n.targetX):Math.max(n.x,n.targetX);
   // Swept x interval avoids tunnelling past the player at low frame rates.
   const swept={...n.telegraph,x1:Math.min(old,n.x)-10,x2:Math.max(old,n.x)+10};
-  if(!n.hit&&inside(swept,p.x,p.narrowFloorY)){n.hit=true;hurtPlayer(n,p,bc.chargeDamage,23,true);}
+  each(p,q=>{const id=q.id||'local';n.hitPlayers??=new Set();if(!n.hitPlayers.has(id)&&inside(swept,q.x,q.narrowFloorY)){n.hitPlayers.add(id);hurtPlayer(n,q,bc.chargeDamage,23,true);}});
   if(n.motion==='charge'&&Math.abs(n.x-n.targetX)<1){n.telegraph=null;anim(n,f>=2?'tired':'ready');n.cooldown=recover+.35;clamp(n);shockwaves.push({x:n.x,y:n.y,at:clock});fx.groundShock?.(n.x,n.y);}return;
  }
- if(n.motion==='jumpTell'){if(n.age>=bc.bellyTell){anim(n,'air');fx.swing();}return;}
+ if(n.motion==='jumpTell'){if(n.age>=bc.bellyTell){anim(n,'air');fx.swing(n);}return;}
  if(n.motion==='air'){
   const t=Math.min(1,n.age/bc.airTime),g=n.telegraph;
   n.x=n.originX+(g.x-n.originX)*t;n.y=n.originY+(g.y-n.originY)*t;n.lift=95*Math.sin(Math.PI*t);
   if(t>=1){n.lift=0;anim(n,'land');n.cooldown=bc.landRecovery+f*.35;
    shockwaves.push({x:n.x,y:n.y,at:clock});fx.groundShock?.(n.x,n.y);
-   if(inside(g,p.x,p.narrowFloorY))hurtPlayer(n,p,Math.round(cfg.player.health*bc.bellyDamageFraction),25,false);
+   each(p,q=>{if(inside(g,q.x,q.narrowFloorY))hurtPlayer(n,q,Math.round(cfg.player.health*bc.bellyDamageFraction),25,false);});
    n.telegraph=null;
   }return;
  }
@@ -105,7 +106,7 @@ function ai(n,p,dt){
  if(n.motion==='punch'||n.motion==='kick'){
   const kick=n.motion==='kick',wind=(kick?bc.kickWindup:bc.punchWindup)*(1+f*.22);
   if(n.age>=wind&&!n.hit){n.hit=true;
-   if(d<=(kick?bc.kickReach:bc.punchReach)&&Math.abs(dy)<=12&&dx*n.dir>=0&&p.onGround)hurtPlayer(n,p,Math.max(1,Math.round(bc.attack*(kick?1.2:1)-cfg.player.defense)),kick?13:7);
+   each(p,q=>{const dx=q.x-n.x,dy=q.narrowFloorY-n.y;if(Math.hypot(dx,dy)<=(kick?bc.kickReach:bc.punchReach)&&Math.abs(dy)<=12&&dx*n.dir>=0&&q.onGround)hurtPlayer(n,q,Math.max(1,Math.round(bc.attack*(kick?1.2:1)-cfg.player.defense)),kick?13:7);});
   }
   if(n.motion!=='punch'&&n.motion!=='kick')return;
   if(n.age<wind+recover)return;
@@ -131,6 +132,7 @@ function ai(n,p,dt){
  anim(n,f===3?'spent':'walk');move(n,p.x+(dx>0?-1:1)*(bc.punchReach-4),p.narrowFloorY,dt,bc.speed*(f===3?.28:f===2?.48:f===1?.82:1));
 }
 function update(dt,p,ui){
+ if(w.CombatNet?.online)return w.CombatNet.update(p,ui);
  if(p.scene!==scene)return;lastPlayer=p;uiRef=ui;clock+=dt;inv=Math.max(0,inv-dt);
  for(const n of actors){n.age+=dt;n.guardCooldown=Math.max(0,n.guardCooldown-dt);if(n.motion!=='land')n.cooldown=Math.max(0,n.cooldown-dt);}
  const n=actors[active];
@@ -206,6 +208,6 @@ function floor(c){
 function indicators(c,p){c.save();c.textAlign='center';c.font='bold 7px sans-serif';for(const n of actors){if(n.health>0){if(n!==actors[active]||!['fight','interval'].includes(phase))continue;const y=n.visualTop-10;if(n.kind==='underboss'&&n.counterUntil>clock){c.fillStyle='#ffcb72';c.fillText('반격',n.x,y+13);}c.fillStyle='#171a20';c.fillRect(n.x-34,y,68,5);c.fillStyle='#dbad70';c.fillRect(n.x-34,y,68,1);c.fillStyle='#da4b39';c.fillRect(n.x-33,y+1,66*n.health/n.maxHealth,3);c.fillStyle='#fff1d8';c.fillText(n.name,n.x,y-3);if(fatigue(n)>=2){c.fillStyle='#a8e7ef';c.fillText(fatigue(n)===3?'완전 탈진':'탈진 · 빈틈',n.x,y+13);}}
  else if(!n.looted){c.fillStyle='#f3c478';c.fillRect(n.x-2,n.y-5,4,4);if(lootTarget(p)===n)c.fillText('E 줍기',n.x,n.y-13);}}c.restore();}
 function lootTarget(p){return p.scene===scene?actors.find(n=>!n.health&&!n.looted&&n.age>.6&&Math.hypot(n.x-p.x,n.y-p.narrowFloorY)<36):null;}
-function loot(p,ui){const n=lootTarget(p);if(!n)return false;const coins=n.kind==='boss'?600:300;const receipt=w.SHOPS?.grantLoot('boss117:'+n.kind,{coins,item:'stars'});if(receipt==='full'){ui.notice('가방이 꽉 찼다. 자리를 비우고 다시 줍자.');return true;}if(!receipt)return true;n.looted=true;fx.pickup?.(n.x,n.y-15,coins,'별사탕');ui.notice(coins+'원 · 별사탕 획득');return true;}
-reset();w.BossEncounter={update,draw,drawFloor:floor,drawIndicators:indicators,loot,lootTarget,reset,get choosing(){return phase==='choice'},get active(){return ['fight','interval'].includes(phase)},get status(){return{phase,index:active}},get debug(){return{actors,begin,inside,fatigue}}};
+function loot(p,ui){if(w.CombatNet?.online)return w.CombatNet.loot(p,ui);const n=lootTarget(p);if(!n)return false;const coins=n.kind==='boss'?600:300;const receipt=w.SHOPS?.grantLoot('boss117:'+n.kind,{coins,item:'stars'});if(receipt==='full'){ui.notice('가방이 꽉 찼다. 자리를 비우고 다시 줍자.');return true;}if(!receipt)return true;n.looted=true;fx.pickup?.(n.x,n.y-15,coins,'별사탕');ui.notice(coins+'원 · 별사탕 획득');return true;}
+reset();w.BossEncounter={networkState(){return{actors,phase,active,clock,shockwaves}},networkApply(s){actors=s.actors;phase=s.phase;active=s.active;clock=s.clock;shockwaves=s.shockwaves||[];},healthState(v){if(v!==undefined)inv=v;return inv;},update,draw,drawFloor:floor,drawIndicators:indicators,loot,lootTarget,reset,get choosing(){return phase==='choice'},get active(){return ['fight','interval'].includes(phase)},get status(){return{phase,index:active}},get debug(){return{actors,begin,inside,fatigue}}};
 })(window);

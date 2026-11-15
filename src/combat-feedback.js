@@ -42,7 +42,8 @@
     previous.set(key,next);
     sound(key+next,rate);
   }
-  function move(name) {
+  function move(name,look) {
+ if(root.CustomAudio?.playPlayer(name,look))return;
     if (moveSounds[name]) sound('base_tkd_'+moveSounds[name]);
   }
   function impact(side, type, x, y, damage, direction = 1, target = null) {
@@ -61,11 +62,11 @@
     }
     const accent = confirmed && comboAccent;
     if (broken || blocked) {
-      varied('base_combat_deffense',3,broken?.86:1.15);
+      if(side!=='npc'||!root.CustomAudio?.playNpc(target,'guard'))varied('base_combat_deffense',3,broken?.86:1.15);
       if (broken) sound('base_combat_knockdown');
     } else {
       varied('base_combat_hit',5,strong?.85:1+Math.min(4,combo)*.035);
-      varied(side==='npc'?'base_combat_hurt':'base_combat_player_hurt',3);
+      if(!(side==='npc'?root.CustomAudio?.playNpc(target,type==='down'?'down':'hurt'):root.CustomAudio?.playPlayer(type==='down'?'down':'hurt',target?.look)))varied(side==='npc'?'base_combat_hurt':'base_combat_player_hurt',3);
       if (type==='down') sound('base_combat_knockdown');
     }
     const pause = config.hitStop * (broken?1.55:blocked?.42:strong?1.65:accent?1.22:.70);
@@ -139,10 +140,10 @@
     else if (music.paused && !music.ended) music.play()?.catch(()=>{});
   }
   function battle(scene) {
-    const next = themes[scene];
+    const custom=root.CustomAudio?.battle(!!scene);const next = custom?undefined:themes[scene];
     if (playlist === next) return;
     music.pause(); playlist = next; track = 0;
-    root.BGM?.suspend(!!next);
+    root.BGM?.suspend(!!next||!!root.CustomAudio?.ownsMusic);
     if (next) { music.src = files[next[0]]; syncMusic(); }
   }
   function frame(dt) {
@@ -155,7 +156,7 @@
     for(const p of pops)p.life-=dt; pops=pops.filter(p=>p.life>0);
     if (!stop) return false;
     stop = Math.max(0,stop-dt);
-    root.TaekwondoMotion?.freeze(dt*1000);
+    if(!root.CombatNet?.online)root.TaekwondoMotion?.freeze(dt*1000);
     return true;
   }
   function transform(c) {
@@ -243,5 +244,5 @@
   function reset() { stop=shake=combo=comboTime=0; pops=[]; wave=null; reactions.clear(); comboAge=0; comboAccent=false; battle(null); }
   root.CombatFeedback = {groundShock(x,y){sound('base_combat_knockdown');stop=Math.max(stop,.075);shake=Math.max(shake,.38);burst('heavy',x,y,'쿵!',.7);},move, impact, pickup, heal, frame, transform, draw, battle, syncMusic, reset,
     recoil, get chain(){return {hits:combo,age:comboAge,accent:comboAccent,remaining:comboTime/1.65};},
-    swing:()=>varied('base_combat_swing',2), get combo(){return combo}};
+    swing:n=>{if(!root.CustomAudio?.playNpc(n,n?.motion==='kick'?'kick':'punch'))varied('base_combat_swing',2)}, get combo(){return combo}};
 })(window);

@@ -33,7 +33,7 @@
     const combo = root.CombatFeedback.chain;
     chain.hidden = !inFight || combo.hits < 1;
     if (chain.hidden) return;
-    chainCount.textContent = combo.hits;
+    chainCount.textContent = combo.hits;chain.querySelector('span').textContent=root.CombatNet?.online?'TEAM COMBO':'COMBO';
     const pulse = reducedMotion?.matches ? 0 : Math.max(0,1-combo.age/.22)**2;
     chain.style.setProperty('--chain-scale',1+pulse*(combo.accent?.45:.28));
     chain.style.setProperty('--chain-lift',-pulse*5+'px');

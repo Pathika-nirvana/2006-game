@@ -68,10 +68,14 @@ link('d11','d11_1',784,122,{ay:232,by:249});
 link('d11','d12',296,185,{ay:229,by:241});
 link('d12','d12_1',292,114,{ay:227,by:248});
 gates.d1.push({type:'routeGate',x:at('d1',92),y:249,r:24,to:'hidden_alley',spawn:661,spawnY:252,title:'주택 사이 좁은 뒷골목으로'});
-const images=new Map();
+const images=new Map(),customImages={},customKeys=new Set();
+function register(config){for(const k of customKeys){delete rooms[k];delete gates[k];delete customImages[k];images.delete(k);}customKeys.clear();for(const k in gates)gates[k]=gates[k].filter(g=>!g.custom);
+for(const m of config.maps||[]){const k=key(m.id);if(!k||rooms[k])continue;rooms[k]=[m.title,m.width,m.bottom,m.edge[0][0],m.edge.at(-1)[0],m.edge];gates[k]=[];customImages[k]=m.image;customKeys.add(k);}
+for(const g of config.links||[]){if(!room(g.from)||!room(g.to))continue;for(const [from,to,x,y,sx,sy]of [[g.from,g.to,g.x,g.y,g.spawn,g.spawnY],[g.to,g.from,g.spawn,g.spawnY,g.x,g.y]])gates[key(from)].push({type:'routeGate',custom:true,x,y,r:g.r||14,to,spawn:sx,spawnY:sy,title:title(to)});}}
+
 function load(scene){
  const name=key(scene);if(!room(scene)||images.has(name))return;
- const im=new w.Image();images.set(name,im);im.src='assets/maps/alley-dungeon/'+name+'.webp'+(name==='d2'?'?v=A103':'');
+ const im=new w.Image();images.set(name,im);im.src=customImages[name]||'assets/maps/alley-dungeon/'+name+'.webp'+(name==='d2'?'?v=A103':'');
 }
 function enter(p,y){
  const {left,right,bottom}=limits(p.scene);
@@ -138,12 +142,12 @@ function render(c,p,t){
   c.restore();
   if(!a.self){
    c.save();c.textAlign='center';c.font='bold 9px sans-serif';c.fillStyle='#fff1d9';
-   c.fillText(a.name||'친구',a.x,a.y-51*s-8);
-   if(a.bubble&&performance.now()<a.bubbleUntil)c.fillText(a.bubble.slice(0,24),a.x,a.y-51*s-22);
+   c.fillText(a.name||'친구',a.x,a.y-51*s*(w.CombatSettings?.player.size||1)-8);
+   if(a.bubble&&performance.now()<a.bubbleUntil)c.fillText(a.bubble.slice(0,24),a.x,a.y-51*s*(w.CombatSettings?.player.size||1)-22);
    c.restore();
   }
  }
 }
 const signal=scene=>/^alley_d(?:10|11(?:_1)?|12(?:_1)?)$/.test(scene)?'dead':/^alley_d[4-8]$/.test(scene)?'none':'normal';
-w.AlleyDungeon={ENTRY:id('d1'),width,title,limits,top,walkable,enter,nearest,walk,jump,scale,draw,render,signal};
+w.AlleyDungeon={register,ENTRY:id('d1'),width,title,limits,top,walkable,enter,nearest,walk,jump,scale,draw,render,signal};
 })(window);

@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ko">
 <head>
-<script src="src/boot-gate.js?v=A122"></script>
+<script src="src/boot-gate.js?v=A123"></script>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
   <meta name="theme-color" content="#172b40"/>
@@ -378,7 +378,7 @@ body.playing-a5 #bgmControls{position:fixed;z-index:1100;bottom:0;left:0;right:0
 <link rel="stylesheet" href="assets/pc-desktop/web-town.css?v=A97">
 <link rel="stylesheet" href="assets/phone/anycall-phone.css?v=A100">
 <link rel="stylesheet" href="assets/pc-desktop/boot.css">
-<link rel="stylesheet" href="src/combat-ui.css?v=A122">
+<link rel="stylesheet" href="src/combat-ui.css?v=A123">
 </head>
 <body>
   <div class="grain"></div>
@@ -1905,7 +1905,7 @@ window.ROUTINES={update,render,hotspots,reactWave,clothCount,debug};
 
 
 /* END src/07_memo.js */
-</script><script src="assets/food/manifest.js"></script><script src="src/food-art.js"></script><script src="src/stationery-products.js"></script><script src="src/combat-items.js?v=A122"></script><script>
+</script><script src="assets/food/manifest.js"></script><script src="src/food-art.js"></script><script src="src/stationery-products.js"></script><script src="src/combat-items.js?v=A123"></script><script>
 /* BEGIN src/08_shops.js */
 
 /* ART A4 — street food from an outdoor counter, scrollable 2006 menu, multi-bite food, take-away, soup service. */
@@ -2142,6 +2142,7 @@ function consumeHeld(consumer){
  const item=findItem(held);
  if(!item||!inventory[item.id]){held=null;heldBites=0;persist();status();return null}
  const supply=supplies.get(item.id);
+ if(consumer)window.CombatNet?.consume(item.id,item.bites>1||!supply||!!supply.heal,heldBites===1);
  // Multi-bite meals heal per completed bite and grant the buff on the final bite.
  let recovery=item.bites>1||!supply?recoverFromBite(item,consumer):'';
  if(supply&&consumer&&heldBites===1)recovery+=supplies.apply(supply,consumer);
@@ -2153,7 +2154,7 @@ function consumeHeld(consumer){
 }
 const spriteCache={};function renderHeld(c,x,foot,dir,pose,t){if(!held)return;if(window.CarryEatAtlas?.ready(window.CHARART?.selected))return;const item=findItem(held);if(!item)return;let s=spriteCache[item.kind]||(spriteCache[item.kind]=makePixel(item.kind));const sit=pose==='sit'||pose==='bench'||pose==='swing'||pose==='eat';const yy=pose==='eat'?foot-28:foot-22;const xx=x+(pose==='eat'?(dir?3:-16):(dir?8:-18));c.drawImage(s,0,0,s.width,s.height,Math.round(xx),Math.round(yy),13,13)}
 status();
-window.SHOPS={get bagFoodCount(){return foodCount()},quickFood,grantLoot,spendCoins,renderHeld,consumeHeld,holdItem,handleKey,get held(){return held},get heldBites(){return heldBites},get brothCredit(){return brothCredit},get heldName(){return findItem(held)?.name||null},get heldKind(){return findItem(held)?.kind||null},get isOpen(){return open},openShop,openPc,openBag,close,get coins(){return coins},get inventory(){return {...inventory}},stock,renderIcon:makePixel};
+window.SHOPS={hasReceipt:id=>!!lootReceipts[id],get bagFoodCount(){return foodCount()},quickFood,grantLoot,spendCoins,renderHeld,consumeHeld,holdItem,handleKey,get held(){return held},get heldBites(){return heldBites},get brothCredit(){return brothCredit},get heldName(){return findItem(held)?.name||null},get heldKind(){return findItem(held)?.kind||null},get isOpen(){return open},openShop,openPc,openBag,close,get coins(){return coins},get inventory(){return {...inventory}},stock,renderIcon:makePixel};
 })();
 
 
@@ -3309,7 +3310,7 @@ window.A12ART={retouch,retouchRoute,dynamic,get enabled(){return enabled},set en
 })();
 
 /* END src/16_pilot_art.js */
-</script><script src="assets/maps/after-school/manifest.js"></script><script src="src/after-school-map.js"></script><script src="src/playground-space.js"></script><script src="src/side-alley-map.js"></script><script src="src/apartment-path-map.js"></script><script src="src/back-alley-map.js?v=A103"></script><script src="src/narrow-alley-map.js?v=A103"></script><script src="src/alley-dungeon.js?v=A105"></script><script src="src/stationery-interior.js"></script><script src="src/supermarket-map.js"></script><script src="src/courtyard-map.js"></script><script src="src/pcroom-map.js"></script><script src="src/portal-comics.js?v=A89"></script><script src="src/portal-news.js?v=A94"></script><script src="src/portal-boards.js?v=A97"></script><script src="src/portal-pages.js?v=A95"></script><script src="src/pc-system.js?v=A89"></script><script src="src/club-seed.js?v=A88"></script><script src="src/club-core.js?v=A88"></script><script src="src/club.js?v=A88"></script><script src="src/kids-data.js?v=A97"></script><script src="src/kids-games.js?v=A95"></script><script src="src/kids-portal.js?v=A95"></script><script src="src/kids-more.js?v=A97"></script><script src="src/kids-extra.js?v=A97"></script><script src="src/desk-smash.js?v=A89"></script><script src="src/xp-shell.js?v=A94"></script><script src="src/xp-setup.js?v=A94"></script><script src="src/xp-apps.js?v=A94"></script><script src="src/xp-messenger.js?v=A96"></script><script src="src/xp-net.js?v=A94"></script><script src="src/web-data.js?v=A94"></script><script src="src/web-stories.js?v=A94"></script><script src="src/web-ghost.js?v=A94"></script><script src="src/web-flash.js?v=A94"></script><script src="src/web-sites.js?v=A101"></script><script src="src/web-more.js?v=A94"></script><script src="src/web-fun.js?v=A95"></script><script src="src/web-town.js?v=A98"></script><script src="src/pc-games.js?v=A95"></script><script src="src/xp-minihome.js?v=A101"></script><script src="src/pc-mail.js?v=A95"></script><script src="src/xp-desktop.js?v=A95"></script><script src="src/block104.js"></script><script src="src/commercial-road.js"></script><script>
+</script><script src="assets/maps/after-school/manifest.js"></script><script src="src/after-school-map.js"></script><script src="src/playground-space.js"></script><script src="src/side-alley-map.js"></script><script src="src/apartment-path-map.js"></script><script src="src/back-alley-map.js?v=A123"></script><script src="src/narrow-alley-map.js?v=A123"></script><script src="src/alley-dungeon.js?v=A123"></script><script src="src/stationery-interior.js"></script><script src="src/supermarket-map.js"></script><script src="src/courtyard-map.js"></script><script src="src/pcroom-map.js"></script><script src="src/portal-comics.js?v=A89"></script><script src="src/portal-news.js?v=A94"></script><script src="src/portal-boards.js?v=A97"></script><script src="src/portal-pages.js?v=A95"></script><script src="src/pc-system.js?v=A89"></script><script src="src/club-seed.js?v=A88"></script><script src="src/club-core.js?v=A88"></script><script src="src/club.js?v=A88"></script><script src="src/kids-data.js?v=A97"></script><script src="src/kids-games.js?v=A95"></script><script src="src/kids-portal.js?v=A95"></script><script src="src/kids-more.js?v=A97"></script><script src="src/kids-extra.js?v=A97"></script><script src="src/desk-smash.js?v=A89"></script><script src="src/xp-shell.js?v=A94"></script><script src="src/xp-setup.js?v=A94"></script><script src="src/xp-apps.js?v=A94"></script><script src="src/xp-messenger.js?v=A96"></script><script src="src/xp-net.js?v=A94"></script><script src="src/web-data.js?v=A94"></script><script src="src/web-stories.js?v=A94"></script><script src="src/web-ghost.js?v=A94"></script><script src="src/web-flash.js?v=A94"></script><script src="src/web-sites.js?v=A101"></script><script src="src/web-more.js?v=A94"></script><script src="src/web-fun.js?v=A95"></script><script src="src/web-town.js?v=A98"></script><script src="src/pc-games.js?v=A95"></script><script src="src/xp-minihome.js?v=A101"></script><script src="src/pc-mail.js?v=A95"></script><script src="src/xp-desktop.js?v=A95"></script><script src="src/block104.js"></script><script src="src/commercial-road.js"></script><script>
 /* BEGIN src/13_game_core.js */
 
 /* 《2006년.. 90년대생의 회상》 ART STAGE 10 (everyday neighborhood detours + A8 routines)
@@ -3540,7 +3541,7 @@ function keydown(e){const k=e.code;const target=e.target||document.activeElement
  }
  if(k==='Enter'&&['BUTTON','SUMMARY','A'].includes(target?.tagName))return;
  if(window.GameInterface?.isMenuOpen){if(k==='Escape'){e.preventDefault();window.GameInterface.closeMenus()}return;}
- if(window.TaekwondoMotion?.keyDown(e,player,running&&!openDialog&&!window.AnycallPhone?.shown&&document.getElementById('charEditor').classList.contains('hidden'),input))return;
+ if(window.TaekwondoMotion?.keyDown(e,player,window.CombatNet?.canAct!==false&&running&&!openDialog&&!window.AnycallPhone?.shown&&document.getElementById('charEditor').classList.contains('hidden'),input))return;
  if(k==='KeyW'){
   if(running&&combatScene()&&!openDialog&&!window.AnycallPhone?.shown&&el('charEditor').classList.contains('hidden')){
    e.preventDefault();if(!e.repeat)useQuickFood(e.shiftKey);
@@ -3642,12 +3643,12 @@ function landBetween(x,oldY,newY){
  const list=[{x1:0,x2:WORLD.WIDTH,y:GROUND,kind:'road'},...WORLD.platforms];
  return list.filter(s=>inRange(x,s)&&s.y>=oldY-1&&s.y<=newY+0.01).sort((a,b)=>a.y-b.y)[0]||null;
 }
-function inputH(){if(window.TaekwondoMotion?.active)return 0;return Number(input.has('ArrowRight'))-Number(input.has('ArrowLeft'))}
-function inputV(){if(window.TaekwondoMotion?.active)return 0;return Number(input.has('ArrowDown'))-Number(input.has('ArrowUp'))}
+function inputH(){if(window.CombatNet?.canAct===false||window.TaekwondoMotion?.active)return 0;return Number(input.has('ArrowRight'))-Number(input.has('ArrowLeft'))}
+function inputV(){if(window.CombatNet?.canAct===false||window.TaekwondoMotion?.active)return 0;return Number(input.has('ArrowDown'))-Number(input.has('ArrowUp'))}
 function update(dt){
  player.dashMultiplier=(input.has('ShiftLeft')||input.has('ShiftRight'))&&!window.TaekwondoMotion?.active&&player.pose!=='eat'?(window.CombatSettings?.dashMultiplier||1.8):1;
  player.dashMultiplier*=window.CombatItems.multiplier('speed')*(window.CombatSettings?.player.moveSpeed||1);
- window.TaekwondoMotion?.update(player,running&&!SHOPS.isOpen&&!MEMO.isOpen&&!PLAYROOM.isOpen&&!ROUTES.isMapOpen&&!openDialog&&!window.GameInterface?.isMenuOpen&&!window.AnycallPhone?.shown&&document.getElementById('charEditor').classList.contains('hidden'));
+ window.TaekwondoMotion?.update(player,window.CombatNet?.canAct!==false&&running&&!SHOPS.isOpen&&!MEMO.isOpen&&!PLAYROOM.isOpen&&!ROUTES.isMapOpen&&!openDialog&&!window.GameInterface?.isMenuOpen&&!window.AnycallPhone?.shown&&document.getElementById('charEditor').classList.contains('hidden'));
  if(player.scene==='street'){player.x=Math.max(372,player.x);cam=Math.max(359,cam)}
  t+=dt;window.A25NET?.tick(dt,player,running);ROUTINES.update(dt,phase,weather,t);if(toastTimer>0){toastTimer-=dt;if(toastTimer<=0)D.hint.classList.remove('show')}
  if(sound.enabled&&player.scene==='street'&&t-sound.lastChirp>8+Math.sin(t)*4){sound.lastChirp=t;chirp()}
@@ -3840,7 +3841,7 @@ function render(){
  // Soft film-edge gradient, still rendered in native pixels.
  const v=ctx.createLinearGradient(0,0,0,270);v.addColorStop(0,'#263b4520');v.addColorStop(.22,'#00000000');v.addColorStop(.76,'#00000000');v.addColorStop(1,'#192e3345');ctx.fillStyle=v;ctx.fillRect(0,0,W,H);
 }
-function frame(now){const dt=Math.min(.033,(now-last)/1000||.016);last=now;if(!window.AlleyLife?.isOpen&&!window.CombatFeedback?.frame(dt))update(dt);window.CombatHUD?.update(player.scene,cam);window.GameAudio?.tick(dt,player,{running,busy:PLAYROOM.isOpen,ambient:!PLAYROOM.isOpen,time:t});render();requestAnimationFrame(frame)}
+function frame(now){const dt=Math.min(.033,(now-last)/1000||.016);last=now;if(!window.AlleyLife?.isOpen&&!window.CombatFeedback?.frame(dt))update(dt);window.CombatNet?.interpolate();window.CombatHUD?.update(player.scene,cam);window.GameAudio?.tick(dt,player,{running,busy:PLAYROOM.isOpen,ambient:!PLAYROOM.isOpen,time:t});render();requestAnimationFrame(frame)}
 requestAnimationFrame(frame);
 window.__GAME_DEBUG__={clearInput:()=>input.clear(),nearest:()=>nearest(),playground:()=>window.A20WORLD?.snapshot(),environment:()=>A16SCENE.snapshot(),terrain:()=>A17TERRAIN.snapshot(),changeTerrain:(id,patch)=>A17TERRAIN.change(id,patch),moveEnvironment:(id,x)=>A16SCENE.move(id,x),layout:()=>A13LAYOUT.snapshot(),audit:()=>A13LAYOUT.validate(Object.fromEntries(A13LAYOUT.list().map(d=>[d.id,{x:d.x,w:d.w,h:d.h}]))),movePrefab:(id,x)=>A13LAYOUT.move(id,x),get art(){return A12ART.enabled?'A12':'A11'},player,residential:()=>RESIDENTIAL.debug(phase,weather),routines:()=>ROUTINES.debug(),shops:()=>({coins:SHOPS.coins,bag:SHOPS.inventory,open:SHOPS.isOpen}),playroom:()=>PLAYROOM.debug(),neighborhood:()=>NEIGHBOR.debug(t),routes:()=>({current:player.scene,branch:ROUTES.isRoute(player.scene),width:sceneWidth(),mapOpen:ROUTES.isMapOpen}),setWeather(x){weather=x?1:0;el('weatherLabel').textContent=weather?'비 내림':'맑음'},moveTo(x){player.x=x;player.pose='stand';player.y=GROUND;player.onGround=true;if(player.scene==='supermarket')window.SupermarketMap.enter(player);if(player.scene==='stationery')window.StationeryInterior?.enter(player);if(player.scene==='pcroom')window.PcRoomMap?.enter(player);if(player.scene==='courtyard')window.CourtyardMap?.enter(player);if(player.scene==='back_alley')window.BackAlleyMap?.enter(player);if(player.scene==='hidden_alley')window.NarrowAlleyMap.enter(player);if(player.scene==='apartment_path')window.ApartmentPathMap?.enter(player);cam=Math.max(player.scene==='street'?359:0,Math.min(sceneWidth()-W,x-206))},setScene,get status(){return{running,phase,weather,camera:cam,scene:player.scene,area:D.area.textContent,pose:player.pose,footY:player.y,held:SHOPS.held,notes:MEMO.entries.length}}};
 })();
@@ -4099,7 +4100,7 @@ function sendState(){
  if(!ready)return;
  const pose=(player.pose==='stand'&&Math.abs(player.walking)>0.2&&['stand','street'].includes(player.pose)?'walk':player.pose);
  // Walking is a presentation-only pose; its physics remains local.
- send({type:'state',playground:!!player.playground,scene:player.scene,x:Math.round(player.x*10)/10,y:Math.round(player.y*10)/10,depth:window.AlleyDungeon.width(player.scene)?player.alleyDepth:undefined,pose,dir:player.dir,look:window.CHARART?.selected||'boy_main_blue',held:window.SHOPS?.heldKind||null});
+ send({type:'state',playground:!!player.playground,scene:player.scene,x:Math.round(player.x*10)/10,y:Math.round(player.y*10)/10,depth:window.AlleyDungeon.width(player.scene)?player.alleyDepth:player.scene==='back_alley'?player.alleyFloorY:player.scene==='hidden_alley'?player.narrowFloorY:undefined,pose,dir:player.dir,look:window.CHARART?.selected||'boy_main_blue',held:window.SHOPS?.heldKind||null});
 }
 connectBtn.addEventListener('click',()=>ready?close():connect());
 share.addEventListener('click',async()=>{
@@ -4141,23 +4142,23 @@ function renderSelfBubble(c,scene){
  drawBubble(c,player.x,player.y-(window.AlleyDungeon.width(scene)?51*window.AlleyDungeon.scale(player.alleyDepth,scene)+30:scene==='supermarket'?(51*window.SupermarketMap.scale(player.superFloorY)+30):scene==='hidden_alley'?(51*window.NarrowAlleyMap.scale(player.narrowFloorY)+30):scene==='main_road'?72:scene==='pcroom'?(51*window.PcRoomMap.scale(player.pcFloorY)+30):scene==='courtyard'?(51*window.CourtyardMap.scale(player.yardFloorY)+30):scene==='stationery'?(window.StationeryInterior.actorHeight+30):97),selfBubble);c.restore();
 }
 function render(c,cam,scene){
- if(!ready)return;
+ if(!ready||scene==='hidden_alley'||window.AlleyDungeon.width(scene))return;
  c.save();c.textAlign='center';c.textBaseline='bottom';
  for(const f of friends.values()){
   if(f.scene==='street'&&window.PlaygroundSpace?.contains(f.renderX))continue;
   if(f.scene!==scene || window.A26NET?.skipAvatar?.(f.id) || !Number.isFinite(f.renderX)||!Number.isFinite(f.renderY))continue;
   const rx=f.renderX-cam;if(rx< -45||rx>525)continue;
-  if(scene==='main_road'){c.save();c.translate(f.renderX,f.renderY);c.scale(.72,.72)}
-  let ok=window.CHARART?.drawRemote?.(c,f.look,scene==='main_road'?0:f.renderX,scene==='main_road'?0:f.renderY,f.dir,f.pose,f.id,f.held);if(scene==='main_road')c.restore();
+  const netScale=scene==='back_alley'?window.BackAlleyMap.scale(f.depth??f.renderY):scene==='main_road'?.72:1;c.save();c.translate(f.renderX,f.renderY);c.scale(netScale,netScale);
+  let ok=window.CHARART?.drawRemote?.(c,f.look,0,0,f.dir,f.pose,f.id,f.held);c.restore();
   if(!ok){c.fillStyle='#36516e';c.fillRect(Math.round(f.renderX-7),Math.round(f.renderY-26),14,26);c.fillStyle='#f0bba0';c.fillRect(Math.round(f.renderX-6),Math.round(f.renderY-36),12,11)}
-  const w=Math.min(95,Math.max(28,f.name.length*8+12)),ny=f.renderY-(scene==='main_road'?49:66);
+  const w=Math.min(95,Math.max(28,f.name.length*8+12)),ny=f.renderY-(51*netScale*(window.CombatSettings?.player.size||1)+12);
   c.fillStyle='#20374bcc';c.fillRect(Math.round(f.renderX-w/2),Math.round(ny-12),w,13);
   c.fillStyle='#fff2d5';c.font='bold 9px sans-serif';c.fillText(f.name,Math.round(f.renderX),Math.round(ny-1));
   if(f.bubble && performance.now()<f.bubbleUntil)drawBubble(c,f.renderX,ny-39,f.bubble);
  }
  c.restore();
 }
-window.A25NET={connect,close,tick,render,renderSelfBubble,send,beginChat,subscribe(fn){subscribers.add(fn);return()=>subscribers.delete(fn)},get state(){return{ready,room:currentRoom,id:myId,peers:friends.size}},get drawPeers(){return [...friends.values()].map(f=>({id:f.id,name:f.name,scene:f.scene,x:f.renderX,y:f.renderY,depth:f.depth,pose:f.pose,look:f.look,dir:f.dir,held:f.held,bubble:f.bubble,bubbleUntil:f.bubbleUntil}))},get peers(){return [...friends.values()].map(f=>({id:f.id,name:f.name,scene:f.scene,x:f.x,y:f.y,pose:f.pose,look:f.look,dir:f.dir,held:f.held,playground:f.playground}))}};
+window.A25NET={connect,close,tick,render,renderSelfBubble,send,flushState:sendState,beginChat,subscribe(fn){subscribers.add(fn);return()=>subscribers.delete(fn)},get state(){return{ready,room:currentRoom,id:myId,peers:friends.size}},get drawPeers(){return [...friends.values()].map(f=>({id:f.id,name:f.name,scene:f.scene,x:f.renderX,y:f.renderY,depth:f.depth,pose:f.pose,look:f.look,dir:f.dir,held:f.held,bubble:f.bubble,bubbleUntil:f.bubbleUntil}))},get peers(){return [...friends.values()].map(f=>({id:f.id,name:f.name,scene:f.scene,x:f.x,y:f.y,pose:f.pose,look:f.look,dir:f.dir,held:f.held,playground:f.playground}))}};
 updateCount();
 })();
 
@@ -4303,17 +4304,20 @@ window.A26NET={get snapshot(){return snapshot},get ready(){return connected()},p
 <script src="src/anycall-nate.js?v=A102"></script>
 <script src="src/anycall-phone.js?v=A102"></script>
 <script src="src/combat-settings.js?v=A118"></script>
-<script src="data/world-config.js?v=A122"></script>
-<script src="src/world-config.js?v=A122"></script>
+<script src="data/world-config.js?v=A123"></script>
+<script src="src/world-config.js?v=A123"></script>
 <script src="src/combat-sounds.js?v=A118"></script>
-<script src="src/combat-feedback.js?v=A122"></script>
+<script src="src/combat-feedback.js?v=A123"></script>
 <script src="src/combat-frames.js?v=A109"></script>
-<script src="src/taekwondo-motion.js?v=A118"></script>
+<script src="src/taekwondo-motion.js?v=A123"></script>
 <script src="src/enemy-frames.js"></script>
-<script src="src/alley-encounter.js?v=A122"></script>
+<script src="src/custom-world.js?v=A123"></script>
+<script src="src/alley-encounter.js?v=A123"></script>
 <script src="src/boss-frames.js?v=A118"></script>
-<script src="src/boss-encounter.js?v=A122"></script>
-<script src="src/combat-hud.js?v=A122"></script>
-<script src="src/alley-life.js?v=A122"></script>
+<script src="src/boss-encounter.js?v=A123"></script>
+<script src="src/custom-audio.js?v=A123"></script>
+<script src="src/combat-net.js?v=A123"></script>
+<script src="src/combat-hud.js?v=A123"></script>
+<script src="src/alley-life.js?v=A123"></script>
 </body>
 </html>

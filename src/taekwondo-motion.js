@@ -217,11 +217,12 @@
     } else state = null;
   }
   function draw(context, id, x, foot, direction, now, actorKey) {
-    if (actorKey !== 'local' || id !== 'girl_main_dobok' || !state || !actor) return false;
-    const sequence = sequences[state.name];
+    const remote=actorKey==='local'?root.CombatNet?.localReaction():root.CombatNet?.motion(actorKey);const shown=remote?{name:remote.name,at:now-remote.elapsed}:state;
+ if(id!=='girl_main_dobok'||(actorKey!=='local'&&!remote)||!shown||!sequences[shown.name])return false;
+    const sequence = sequences[shown.name];
     const sheet = sheets[sequence.sheet];
     if (!sheet) return false;
-    let elapsed = now - state.at;
+    let elapsed = now - shown.at;
     let index = 0;
     while (index < sequence.times.length - 1 && elapsed >= sequence.times[index]) {
       elapsed -= sequence.times[index++];
@@ -243,7 +244,7 @@
     actor = player; scene = player.scene;
     start(name, performance.now());
   }
-  root.TaekwondoMotion = {react, jump, defend, freeze(ms) { if (state) state.at += ms; }, get windup() {
+  root.TaekwondoMotion = {snapshot(){return state?{name:state.name,elapsed:Math.max(0,performance.now()-state.at),held:state.held}:null},react, jump, defend, freeze(ms) { if (state) state.at += ms; }, get windup() {
     if (!state || state.held) return null;
     const {strike,times} = sequences[state.name];
     if (!(strike >= 0)) return null;
