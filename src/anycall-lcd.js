@@ -1,4 +1,6 @@
-/* A101 애니콜 액정 화면 (버전 A101 · 2026-11-13 KST), A124 고침 (2026-11-17 KST)
+/* A101 애니콜 액정 화면 (버전 A101 · 2026-11-13 KST), A124 고침 (2026-11-17 KST), A125 고침 (2026-11-18 KST), A126 고침 (2026-11-18 KST)
+   A126: 새 게임 「모바일 신맞고」(src/anycall-gostop.js)를 게임 목록과 NATE에 넣음.
+   A125: 새 게임 「반 헬싱 : 흡혈귀전」(src/anycall-vh.js)을 게임 목록과 NATE에 넣음. 몸체가 알려 주는 '키를 뗌'과 자판 바꿔 읽기를 게임 화면에 전달.
    A124: 전화와 문자 놀이 더하기.
          전화: 발신 번호 표시 제한(*23# + 번호), 소리샘(못 받으면 음성 메시지 남기기, 1번 길게 = 음성 사서함), 콜키퍼(꺼져 있을 때 온 전화 알림 문자),
                ARS 안내(1588-0530, 숫자를 눌러 고르기, 상담원 연결 대기), 114 안내(가게 번호 찾고 바로 연결), 080 광고 수신 거부,
@@ -137,7 +139,7 @@ const SCENES={street:'동네 큰길',pcroom:'동네 PC방',stationery:'별빛문
 const STREET=[[950,'동일초등학교 앞'],[1290,'담장길 · 은하분식'],[1690,'문방구가 있는 골목'],[2310,'주택가'],[3040,'큰길과 골목 경계'],[1e9,'아파트 단지 쪽']];
 const INDOOR=new Set(['pcroom','stationery','supermarket','lobby','hall']);
 const GAMES=[{id:'mole',name:'두더지 잡기',free:true},{id:'snake',name:'지렁이 게임',free:true},{id:'run',name:'점프 달리기',price:2000},{id:'ball',name:'숫자 야구',price:2000},
- {id:'rhythm',name:'쿵짝 리듬왕',price:3000,big:true},{id:'rpg',name:'골목대장 전설',price:3500,big:true}];
+ {id:'rhythm',name:'쿵짝 리듬왕',price:3000,big:true},{id:'rpg',name:'골목대장 전설',price:3500,big:true},{id:'vh',name:'반 헬싱 : 흡혈귀전',price:5000,big:true},{id:'gostop',name:'모바일 신맞고',price:3000,big:true}];
 const PRICE={sms:30,callPer10:18,ring:700,wall:500,theme:1000,color:300};
 /* 메뉴 색 테마 (NATE 폰꾸미기에서 받음) */
 const THEMES={blue:{name:'기본 파랑',title:['#3d82e0','#1546a0'],sel:['#ffae4a','#f07a10']},pink:{name:'딸기 우유',title:['#ff8ac0','#d6407a'],sel:['#ff9ad0','#e84d8a']},black:{name:'블랙 메탈',title:['#5a5f6a','#1a1d24'],sel:['#6ac8ff','#2a7ad8']},green:{name:'풀잎 초록',title:['#5ac06a','#2a7a3a'],sel:['#ffd34a','#e8a400']}};
@@ -236,7 +238,7 @@ function create(host){
  function back(){stopTune();S.confirm=null;leaveCur('back');if(!S.stack.length){home();return}const p=S.stack.pop();S.scr=p.scr;S.arg=p.arg;S.sel=p.sel;S.ed=p.ed||null;afterNav();dirty()}
  function home(){stopTune();leaveCur('home');S.stack=[];S.scr='idle';S.arg=null;S.sel=0;S.ed=null;S.confirm=null;afterNav();dirty()}
  /* 전화가 오면 게임 화면을 기억해 두었다가, 끊으면 돌아간다 */
- const GAME_SCR=new Set(['rhythm','rpg','mole','snake','run','ball']);
+ const GAME_SCR=new Set(['rhythm','rpg','vh','gostop','mole','snake','run','ball']);
  function keepForResume(){if(GAME_SCR.has(S.scr)&&!S.resume){S.resume={scr:S.scr,arg:S.arg,stack:S.stack.slice(),sel:S.sel};leaveCur('call')}else if(S.scr==='nate'&&NB)NB.exit(true)}
  function finishCall(){S.call=null;host.stopVibrate?.();const r=S.resume;S.resume=null;if(r&&(SCR[r.scr]||appOf(r.scr))&&host.powered!==false){S.scr=r.scr;S.arg=r.arg;S.stack=r.stack;S.sel=r.sel;S.ed=null;const sc=cur();try{sc?.resume?.call(sc,api)}catch(_){}afterNav();dirty()}else home()}
  function enter(){const sc=cur();sc?.enter?.call(sc,api)}
@@ -745,7 +747,7 @@ function create(host){
     if(id==='menu')D.ring='mel:'+mel.id;save();stopTune();pop(id==='menu'?'‘'+mel.name+'’\n벨소리로 정했어요':'‘'+mel.name+'’\n저장했어요 (벨소리 목록)');M.notes=[];return true}return true}};
 
  /* ---------- 게임 ---------- */
- SCR.games={items(){return GAMES.map(gm=>{const own=has(gm.id),sum=own&&GX?.summary?.(gm.id);return{label:gm.name+(gm.big?' ★':''),sub:own?(sum||'최고 '+(D.best[gm.id]||0)):'NATE '+gm.price.toLocaleString('ko-KR')+'원',dim:!own,gm}})},
+ SCR.games={items(){return GAMES.map(gm=>{const own=has(gm.id),sum=own&&(gm.id==='vh'?VH?.summary?.():gm.id==='gostop'?GS?.summary?.():GX?.summary?.(gm.id));return{label:gm.name+(gm.big?' ★':''),sub:own?(sum||'최고 '+(D.best[gm.id]||0)):'NATE '+gm.price.toLocaleString('ko-KR')+'원',dim:!own,gm}})},
   draw(g){status(g);title(g,'게임');list(g,this.items(),S.sel);T(g,'★ 새 게임은 NATE 게임에서 받아요',W/2,H-BOT-6,{size:8,color:'#6b778a',align:'center'});soft(g,'','시작','')},
   key(id){return listKey(id,this.items(),x=>{const gm=x.gm;if(has(gm.id)){if(SCR[gm.id])go(gm.id);else pop('게임 파일을\n찾을 수 없어요');return}
    if(gm.big)ask('‘'+gm.name+'’은(는) NATE 게임에서 받아요.\n지금 NATE에 접속할까요?\n(데이터 통화료 별도)',()=>go('nate','game:'+gm.id));
@@ -934,6 +936,8 @@ function create(host){
   if(type==='slide'&&!v&&S.scr==='idle'&&S.dial)S.dial='';if(type==='hide'&&!S.call)stopTune();if(type==='show')syncLabel();dirty()}
  function ownsSound(id){const sc=cur();return!!(sc?.ownsSound&&sc.ownsSound(id))}
  function repeats(id){const sc=cur();return!!(sc?.repeats&&sc.repeats.call(sc,id))}
+ /* A125: 자판 글자 키를 휴대폰 키로 바꿔 읽기 (게임 화면이 원할 때만) */
+ function keyAlias(code){const sc=cur();try{const a=sc?.keyAlias?sc.keyAlias.call(sc,code):null;return typeof a==='string'?a:null}catch(_){return null}}
  /* ---------- NATE 브라우저(src/anycall-nate.js)와 게임(src/anycall-games.js)에 주는 도구 ---------- */
  const kit={W,H,TOP,BOT,TITLE,R,T,grad,rr,circ,fit,wrap,fnt,clamp,ICON,host,D,now,save,charge,has,rings,allRings,ringById,playRing,stopTune,pop,ask,nowStr,
   NET,friends,placeOf,fakeNum,Editor,THEMES,allWalls,FREE_WALLS,GAMES,PRICE,EMO,status,soft,drawEditor,billTotal,edChanged,dirty,receive,
@@ -948,11 +952,16 @@ function create(host){
  const NB=w.AnycallNate?.create?.(kit)||null;
  const GX=w.AnycallGames?.create?.(kit)||null;
  if(GX)for(const [id,sc] of Object.entries(GX.screens||{}))SCR[id]=sc;
- const api={W,H,data:D,state:S,get nate(){return NB},get games(){return GX},go,back,home,pop,call,receive,sendSms,unread,book,friends,rings,walls,draw,key,needs,event,save,ownsSound,repeats,onNet,billTotal,npcCall,tick,
+ const VH=w.AnycallVH?.create?.(kit)||null;
+ if(VH)for(const [id,sc] of Object.entries(VH.screens||{}))SCR[id]=sc;
+ /* A126 (2026-11-18 KST) 모바일 신맞고 (src/anycall-gostop.js) */
+ const GS=w.AnycallGostop?.create?.(kit)||null;
+ if(GS)for(const [id,sc] of Object.entries(GS.screens||{}))SCR[id]=sc;
+ const api={W,H,data:D,state:S,get nate(){return NB},get games(){return GX},get vh(){return VH},get gostop(){return GS},keyAlias,go,back,home,pop,call,receive,sendSms,unread,book,friends,rings,walls,draw,key,needs,event,save,ownsSound,repeats,onNet,billTotal,npcCall,tick,
   get photos(){return PH},get screen(){return S.scr},get dial(){return S.dial},get editor(){return S.ed},destroy(){unsub?.();if(ivl)w.clearInterval?.(ivl)}};
  kit.api=api;
  syncLabel();
  return api}
 
-w.AnycallLCD={version:'A124',THEMES,W,H,create,registerApp,apps:APPS,book:BOOK,phrases:PHRASES,Editor,composeJamo,fakeNum,placeOf,SCRIPTS,PAGER,SPAM,ARS_NUM:{'114':'114','0805300000':'optout','15880530':'info'}};
+w.AnycallLCD={version:'A126',THEMES,W,H,create,registerApp,apps:APPS,book:BOOK,phrases:PHRASES,Editor,composeJamo,fakeNum,placeOf,SCRIPTS,PAGER,SPAM,ARS_NUM:{'114':'114','0805300000':'optout','15880530':'info'}};
 })(window);

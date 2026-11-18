@@ -10,7 +10,7 @@ const ROOT=path.join(__dirname,'..'),read=f=>fs.readFileSync(path.join(ROOT,f),'
 const html=read('index.html');
 const at=f=>html.search(new RegExp('<script src="'+f+'[?]v=A1\\d\\d"></script>'));
 assert.ok(at('src/anycall-lcd.js')>0&&at('src/anycall-nate.js')>at('src/anycall-lcd.js')&&at('src/anycall-phone.js')>at('src/anycall-nate.js'),'읽는 순서: 액정 → NATE → 몸체');
-assert.ok(html.includes('assets/phone/anycall-phone.css?v=A100'));
+assert.ok(/assets\/phone\/anycall-phone\.css\?v=A1\d\d/.test(html));
 for(const f of ['src/anycall-nate.js','src/anycall-lcd.js','src/anycall-phone.js','assets/phone/anycall-phone.css','server_phone.js']){const s=read(f);assert.ok(/A10[01]/.test(s)&&s.includes('2026-11-13'),'버전과 날짜 '+f);assert.ok(!s.includes(String.fromCharCode(0x2014)),'긴 줄표 없음 '+f)}
 assert.ok(/send:\(kind,o\)=>/.test(read('src/xp-minihome.js')),'미니홈피 보내기 내보냄');
 const SP=require(path.join(ROOT,'server_phone.js'));

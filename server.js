@@ -13,6 +13,7 @@ const CLUB=require('./src/club-core.js');
 const CLUB_SEED=require('./src/club-seed.js');
 const MINI=require('./server_minihome.js');
 const PHONE=require('./server_phone.js');
+const ARCADE=require('./server_arcade.js'); /* A126 (2026-11-18 KST) 문방구 오락기 「동네 태권 대전」 온라인 2인 대전 짝짓기와 신호 전달 */
 const { TextDecoder } = require('node:util');
 const ROOT = __dirname;
 const combat=new (require('./server_combat.js').CombatRooms)(ROOT,send);
@@ -24,6 +25,7 @@ const MAX_FRAME = 8192;
 const G = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
 const sessions = new Set();
 const rooms = new Map();
+const arcade = ARCADE.create({send:(to,msg)=>send(to,msg),members:room=>[...(rooms.get(room)||[])]});
 const physicsRooms=new Map();
 /* A88 동네 아지트: 방마다 게시판, 낙서, 출석부, 채팅 기록, 쪽지가 있다. 서버 메모리에만 있고 방이 비면 6시간 뒤에 지운다. */
 const clubs=new Map();const CLUB_TTL=6*3600*1000,MAX_CLUBS=200,CLUB_ALIVE=50000;
@@ -195,6 +197,7 @@ function cast(room,msg,except=null){for(const session of rooms.get(room)||[])if(
 function publicState(s){return {id:s.id,name:s.name,scene:s.state.scene,x:s.state.x,y:s.state.y,depth:s.state.depth,pose:s.state.pose,dir:s.state.dir,look:s.state.look,held:s.state.held||null,playground:!!s.state.playground}}
 function end(s){
   if(s.closed)return;s.closed=true;sessions.delete(s);
+  if(s.room)arcade.leave(s);
   if(s.room)PLAY.clearUser(physicsRooms.get(s.room),s.id);
   if(s.room){const group=rooms.get(s.room);group?.delete(s);if(group?.size===0){rooms.delete(s.room);buddyKeys.delete(s.room);physicsRooms.delete(s.room);musicRooms.delete(s.room);const ce=clubs.get(s.room);if(ce)ce.expires=Date.now()+CLUB_TTL;const me=minis.get(s.room);if(me)me.expires=Date.now()+CLUB_TTL}else{cast(s.room,{type:'left',id:s.id});if(s.clubSeen)clubWho(s.room);if(s.buddySeen)buddyWho(s.room,true);if(s.miniHid)miniList(s.room)}}
   try{s.socket.destroy()}catch{}
@@ -256,6 +259,7 @@ function onMessage(s,obj){
  if(obj.type==='club'){clubMessage(s,obj);return}
  if(obj.type==='buddy'){buddyMessage(s,obj);return}
  if(obj.type==='mini'){miniMessage(s,obj);return}
+ if(obj.type==='duel'){arcade.message(s,obj);return}
  if(obj.type==='phone'){if(s.room)for(const [to,msg] of PHONE.relay(s,obj,[...(rooms.get(s.room)||[])],Date.now()))send(to,msg);return}
 }
 function onData(s,chunk){
@@ -324,4 +328,4 @@ const playgroundClock=setInterval(()=>{physicsNetTicks++;
 },1000/60);playgroundClock.unref();
 const combatClock=setInterval(()=>{try{combat.tick(rooms)}catch(e){console.error('Combat:',e)}},1000/30);combatClock.unref();
 if(require.main===module){app.listen(PORT,HOST,()=>console.log(`2006 A27: http://${HOST}:${PORT} — 최대 ${MAX_ROOM}명/방`))}
-module.exports={app,combat,rooms,sessions,physicsRooms,musicRooms,clubs,clubOf,minis};
+module.exports={app,combat,rooms,sessions,physicsRooms,musicRooms,clubs,clubOf,minis,arcade};

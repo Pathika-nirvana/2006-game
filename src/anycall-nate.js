@@ -1,4 +1,6 @@
-/* A100 애니콜 NATE: 2006년 휴대폰 무선 인터넷 (버전 A100 · 2026-11-13 KST), A124 고침 (2026-11-17 KST)
+/* A100 애니콜 NATE: 2006년 휴대폰 무선 인터넷 (버전 A100 · 2026-11-13 KST), A124 고침 (2026-11-17 KST), A125 고침 (2026-11-18 KST), A126 고침 (2026-11-18 KST)
+   A126: 신규 게임 「모바일 신맞고」(컴퓨터와 맞고)를 NATE 게임에서 받는다. 예전 장식용 「고스톱 한판」 자리를 진짜 게임으로 바꿈.
+   A125: 신규 게임 「반 헬싱 : 흡혈귀전」(쿼터뷰 고딕 호러 액션 롤플레잉)을 NATE 게임에서 받는다. 설명서, 후기, 공략, 선물하기.
    A124: 신규 게임 두 개(쿵짝 리듬왕, 골목대장 전설)를 NATE 게임에서 받는다. 게임 설명서, 후기, 공략, 랭킹, 친구에게 선물하기.
          벨소리 선물하기(같은 방 친구에게 진짜로 감), 가요 순위 투표(100원), 이름 궁합, 사다리 타기, OX 퀴즈, 묻고 답하기,
          학교·생활(급식, 알림장, 아파트 공지, 동네 투표), 오늘의 TV, 문자 그림 받기, 유머와 소설과 심리 테스트 더, MY NATE 선물함.
@@ -24,12 +26,19 @@ const CATALOG=[
   how:'[조작]\n2 4 6 8 또는 방향 버튼: 걷기 (누르고 있으면 계속)\n5 또는 확인: 말 걸기, 조사하기\n매뉴: 상태, 가방, 저장\n싸움: 숫자로 명령 (1 공격 2 기술 3 가방 4 도망)\n\n집에서 엄마에게 말을 걸면 힘이 다 차고 저장돼요.\n문방구에서 무기와 옷, 분식집에서 먹을 것을 사요.',
   tips:'1. 뒷산에서 레벨 4까지 올리고 폐교에 가세요.\n2. 문방구 리코더(공격 +7)는 꼭 사세요!\n3. 과학실 해골 모형을 이기면 2층 열쇠를 얻어요.\n4. 도깨비 대장은 피가 반쯤 남으면 ‘뚝딱!’으로 한 번 회복해요. 컵떡볶이를 넉넉히!',
   reviews:[['골목대장','★★★★★','엔딩 봄 ㅠㅠ 도깨비 대장 진짜 셈'],['떡꼬치러버','★★★★','떡꼬치로 피 채우는 거 너무 웃김 ㅋㅋ'],['민호친구','★★★★★','리코더로 때리는 게 제일 웃김'],['초딩고수','★★★','저장 자주 하세요. 폐교에서 죽음 ㅠ']]},
+ {id:'vh',name:'반 헬싱 : 흡혈귀전',genre:'액션 롤플레잉',price:5000,kb:960,play:true,big:true,isNew:true,pop:61880,desc:'1897년 트란실바니아. 사라진 아버지를 찾아 비스트리차 마을에 온 흡혈귀 사냥꾼 아벨 반 헬싱! 쿼터뷰로 펼쳐지는 고딕 호러 액션 롤플레잉. 은 지팡이칼과 석궁, 성수로 늑대와 구울과 흡혈귀를 사냥하고, 쓰러진 흡혈귀의 심장에 말뚝을 박아라! 제1장 「비스트리차의 안개」 수록, 다음 장은 업데이트로 이어집니다.',
+  how:'[걷기] 방향 버튼, 숫자 1~9 (여덟 방향)\n[베기] 5, 확인: 연타하면 세 번 이어 베기, 꾹 누르면 모아 베기\n[구르기] 0, 통화: 구르는 순간은 무적. 아슬아슬하게 피하면 완벽 회피!\n[보조 무기] *, 취소: 석궁, 성수, 십자가 (은 조각을 쓴다)\n[기술] #, NATE: 익힌 기술. 혈기가 가득 차면 꾹 눌러 각성\n[멈춤] 메뉴: 물약, 장비, 기술, 전보(할 일), 지도, 도감\n[말뚝] 쓰러진 흡혈귀 곁에서 5\n[컴퓨터 자판] Z 베기, X 구르기, C 보조 무기, V 기술, M 멈춤\n\n여관 침대, 성당 제단, 모닥불에서 쉬면 기록돼요. 다른 곳으로 넘어갈 때마다 저절로도 기록돼요.',
+  tips:'1. 늑대가 몸을 낮추면 곧 달려든다. 그때 구르기!\n2. 해골은 무너진 뒤 한 번 더 내려쳐야 끝난다.\n3. 흡혈귀는 쓰러진 뒤 3초 안에 말뚝을 박지 않으면 다시 일어난다.\n4. 뼈 기사의 방패는 모아 베기나 성수로 깨진다.\n5. 은 촛대 세 개를 대장장이에게 가져가면 사슬 채찍!\n6. 납골당 화로에는 성수를 던져 보자.\n7. 금 간 벽 속의 통닭은... 직접 찾아보자.',
+  reviews:[['뱀파이어헌터','★★★★★','폰 게임으로 이 정도 분위기라니 ㄷㄷ 납골당 음악 듣고 소름 돋음'],['밤의사냥꾼','★★★★★','벽 부수니까 통닭 나옴 ㅋㅋㅋㅋ 옛날 게임 하던 사람은 다 알 듯'],['말뚝장인','★★★★','말뚝 박을 때 손맛 최고. 진동 켜고 하세요'],['겁쟁이','★★★','무서워서 밤에 못 하겠어요 ㅠㅠ 하얀 옷 언니 너무 무서움'],['반쪽피','★★★★★','스포 안 함. 1장 끝 반전 대박. 2장 언제 나와요??']]},
  {id:'run',name:'점프 달리기',genre:'액션',price:2000,kb:180,play:true,pop:41230,desc:'쓰레기통과 강아지를 뛰어넘으며 달리는 한 손가락 게임. 5번이나 위 버튼으로 점프!'},
  {id:'ball',name:'숫자 야구',genre:'두뇌',price:2000,kb:90,play:true,pop:28890,desc:'1부터 9까지 서로 다른 세 숫자를 열 번 안에 맞혀 보세요. 스트라이크와 볼로 힌트를 줍니다.'},
  {id:'g3',name:'미니게임 나라 2',genre:'미니게임',price:2500,kb:320,pop:52110,desc:'줄넘기, 양궁, 장애물 달리기 등 미니게임 열두 가지. 친구 점수와 겨뤄 보세요.'},
  {id:'g4',name:'붕붕 카트 모바일',genre:'레이싱',price:3000,kb:450,pop:47320,desc:'드리프트로 코너를 도는 카트 레이싱. 새 트랙 ‘은하아파트 한 바퀴’ 추가!'},
  {id:'g5',name:'삼국 영웅전',genre:'롤플레잉',price:3000,kb:620,pop:21800,desc:'영웅 셋을 모아 천하를 통일하는 롤플레잉. 엔딩까지 약 20시간.'},
- {id:'g6',name:'고스톱 한판',genre:'보드',price:2000,kb:210,pop:39470,desc:'컴퓨터와 맞고 한판. 엄마 아빠가 더 좋아하는 그 게임.'},
+ {id:'gostop',name:'모바일 신맞고',genre:'보드',price:3000,kb:540,play:true,big:true,isNew:true,pop:73350,desc:'국민 게임 맞고가 애니콜 속으로! 옆집 할머니, 복덕방 김 사장, 전설의 꾼 박 씨와 한 판. 쪽, 뻑, 따닥, 싹쓸이, 폭탄, 흔들기, 총통까지 진짜 규칙 그대로. 패를 칠 때마다 손맛 나는 소리와 진동, 고! 스톱! 큰 글씨 연출. 돈은 게임 머니라 마음껏!',
+  how:'[조작]\n1~9, 0: 그 자리 패를 바로 낸다\n좌우: 패 고르기, 확인: 내기\n노란 점: 바닥에 같은 달이 있는 패\n고르기 창(고/스톱, 흔들기, 폭탄, 먹을 패): 좌우와 확인\n메뉴 또는 취소: 잠깐 멈춤\n\n7점부터 고 또는 스톱. 1고 +1점, 2고 +2점, 3고부터 두 배씩.\n흔들기, 폭탄, 멍따, 피박, 광박, 고박, 나가리 다음 판은 두 배!',
+  tips:'1. 상대가 고를 불렀으면 무리하지 말고 7점에서 스톱. 고박은 두 배로 물어 준다.\n2. 같은 달 세 장이 들어오면 흔들기! 바닥에 넉 장째가 있으면 폭탄!\n3. 피는 열 장부터 점수. 쌍피와 보너스 피를 놓치지 말 것.\n4. 상대 피가 다섯 장 이하면 피박. 피를 꾸준히 모으자.\n5. 박 씨는 고를 잘 부른다. 박 씨가 고 하면 긴장할 것.',
+  reviews:[['맞고왕','★★★★★','폰으로 맞고를 ㅋㅋ 뻑 소리 너무 찰짐'],['피박전문','★★★★★','할머니 이기고 박 씨한테 다 털림 ㅠㅠ'],['고고고','★★★★','3고 했다가 고박 당함... 욕심은 금물'],['출근길','★★★★★','지하철에서 몰래 함. 진동 꼭 켜세요 손맛 최고'],['동네아저씨','★★★','김 사장 말투가 너무 얄미움 ㅋㅋ']]},
  {id:'g7',name:'프로야구 2006',genre:'스포츠',price:3000,kb:380,pop:33650,desc:'여덟 구단과 2006년 선수 명단이 들어간 야구 게임. 홈런 더비 모드 포함.'},
  {id:'g8',name:'블록 쌓기 퍼즐',genre:'퍼즐',price:1500,kb:120,pop:26120,desc:'떨어지는 블록을 돌려 한 줄을 채우면 사라지는 퍼즐.'}];
 const EMO_CATS=[['웃음',['^^','^_^','*^^*','^o^','^.^','ㅋㅋㅋ','ㅎㅎㅎ','(^▽^)']],['슬픔',['ㅠㅠ','ㅜ_ㅜ','T_T','ㅠ.ㅠ','(ㅠ_ㅠ)']],['당황',['-_-;','ㅡㅡ;','ㄱ-','=_=','-_-a',';;;']],['사랑',['♡','♥','♡.♡','*♥o♥*','(*^^*)♡']],['인사',['m(_ _)m','(^^)/','^^v','^^b','안냥~']],['특수문자',['★','☆','♪','♬','▶','◀','※','☎','☞']],['응원',['대~한민국!','짝짝짝 짝짝','오 필승 코리아','파이팅!!']]];
@@ -133,7 +142,7 @@ function create(K){
  P.newGames=()=>({title:'신규 게임',kb:3.2,crumb:'게임 > 신규',text:'이번 주 NATE가 고른 새 게임!\n(정보이용료와 별도로 게임 크기만큼 데이터 통화료가 나와요)',items:()=>CATALOG.filter(g=>g.isNew).map(g=>it(g.name,['gameItem',g],{sub:K.has(g.id)?'받음':g.genre}))});
  P.gameTop=()=>({title:'인기 게임',kb:3.6,crumb:'게임 > TOP',items:()=>CATALOG.slice().sort((a,b)=>b.pop-a.pop).map(g=>it(g.name,['gameItem',g],{sub:K.has(g.id)?'받음':g.genre}))});
  P.gameItem=g=>({title:g.name,kb:g.big?4.8:2.6,crumb:'게임 > '+g.name,text:g.name+' ('+g.genre+')\n'+g.desc+'\n\n정보이용료 '+won(g.price)+'\n용량 '+g.kb+'KB (데이터 통화료 약 '+won(Math.ceil(g.kb/PKT_KB)*PKT_WON)+' 별도)\n지원 기종: '+(g.play?'애니콜 SCH-A99 지원':'일부 컬러 기종만'),
-  draw:g.big?(gg,t,top)=>{const pv=w.AnycallGames?.preview;if(!pv)return 0;const ww=72,hh=88,x0=(W-ww)/2;gg.save();gg.beginPath();gg.rect(x0,top+2,ww,hh);gg.clip();gg.translate(x0,top+2);try{pv(gg,g.id,t,ww,hh)}catch(_){}gg.restore();gg.strokeStyle='#333';gg.lineWidth=.8;gg.strokeRect(x0,top+2,ww,hh);T(gg,'게임 화면',W/2,top+hh+11,{size:7.5,color:'#8a6a4a',align:'center'});return hh+15}:null,
+  draw:g.big?(gg,t,top)=>{const pv=(g.id==='vh'&&w.AnycallVH?.preview)||(g.id==='gostop'&&w.AnycallGostop?.preview)||w.AnycallGames?.preview;if(!pv)return 0;const ww=72,hh=88,x0=(W-ww)/2;gg.save();gg.beginPath();gg.rect(x0,top+2,ww,hh);gg.clip();gg.translate(x0,top+2);try{pv(gg,g.id,t,ww,hh)}catch(_){}gg.restore();gg.strokeStyle='#333';gg.lineWidth=.8;gg.strokeRect(x0,top+2,ww,hh);T(gg,'게임 화면',W/2,top+hh+11,{size:7.5,color:'#8a6a4a',align:'center'});return hh+15}:null,
   items:()=>[it(K.has(g.id)?(g.big?'게임 시작하기 (접속 끊음)':'이미 받은 게임이에요'):'게임 받기',null,{act:()=>{if(K.has(g.id)){if(g.big){exit(false);K.goScreen(g.id);return}K.pop('게임 메뉴에서 할 수 있어요');return}if(!g.play){K.pop('이 휴대폰(SCH-A99)은\n지원하지 않는 게임이에요\n(용량이 큰 게임)',2600);return}buy(g.name,g.price,g.kb,()=>{D.got[g.id]=1;K.save();if(g.big)setTimeout(()=>K.ask('‘'+g.name+'’ 받기 완료!\n지금 해 볼까요? (접속 끊음)',()=>{exit(false);K.goScreen(g.id)}),1700)})}}),
    ...(g.big?[it('게임 설명서 (조작법)',['plain',{title:'설명서',crumb:g.name+' > 설명서',kb:1.6,text:g.how}]),it('게임 후기 ('+g.reviews.length+')',['plain',{title:'후기',crumb:g.name+' > 후기',kb:1.8,text:g.reviews.map(r=>r[0]+'  '+r[1]+'\n'+r[2]).join('\n\n')}]),it('공략 · 비법',['plain',{title:'공략',crumb:g.name+' > 공략',kb:1.4,text:g.tips}]),it('친구에게 선물하기 ('+won(g.price)+')',['giftTo',{item:g.id,name:'게임 '+g.name,price:g.price}])]:[])]});
  P.gameRank=()=>({title:'게임 랭킹',kb:2,crumb:'게임 > 랭킹',text:(()=>{const b=D.best||{};const row=(n,me,list)=>n+'\n'+list.map((x,i)=>(i+1)+'. '+x[0]+' '+x[1]).join('\n');const mole=[['두더지킹',41],['은하아파트짱',35],['나 (내 기록)',b.mole||0],['초딩고수',28]].sort((a,b)=>b[1]-a[1]);const run=[['점프의신',312],['나 (내 기록)',b.run||0],['동일초달리기',210],['강아지무서워',150]].sort((a,b)=>b[1]-a[1]);
@@ -365,5 +374,5 @@ function create(K){
   return n}
  function ownsSound(){return false}
  return{open,draw,key,needs,typing,exit,ownsSound,nav,back,get state(){return B},pages:P,CODES,CATALOG,index}}
-w.AnycallNate={version:'A124',create,CODES,CATALOG,OX,matchScore,strokes};
+w.AnycallNate={version:'A126',create,CODES,CATALOG,OX,matchScore,strokes};
 })(window);

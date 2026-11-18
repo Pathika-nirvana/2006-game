@@ -3,7 +3,7 @@
  * 부모 게임과는 postMessage로만 대화한다. (INTEGRATION.md 참고) */
 (function () {
 'use strict';
-const BUILD = 'v7.6 2026-11-08 01:53';
+const BUILD = 'v7.7 2026-11-18 18:10';
 const W = 320, H = 224, GY = 192, SC = 2, WL = 18, WR = 302, GRAV = 0.34;
 const FONT = '"Malgun Gothic","Apple SD Gothic Neo","Noto Sans CJK KR","Noto Sans KR","Nanum Gothic",sans-serif';
 const cv = document.getElementById('screen');
@@ -298,7 +298,9 @@ const G = {
   scene: 'title', t: 0, mode: 1, menu: 0, sel: [0, 1], done: [false, false], ladder: [], lad: 0, stage: 0, score: 0, best: 0,
   round: 1, wins: [0, 0], timer: 60, tc: 0, rs: 'ready', rt: 0, hitstop: 0, slow: 0, shake: 0, paused: false, pauseSel: 0, conts: 0,
   msg: '', winner: -1, f: [null, null], mprev: [null, null], cheer: 0, combo: { n: 0, t: 0, side: 0 }, ctd: 9, ctf: 0, toast: '', toastT: 0,
-  perfect: [true, true], mirror: false, pts: [0, 0], golden: false, notice: { s: '', t: 0 }, koSlow: false
+  perfect: [true, true], mirror: false, pts: [0, 0], golden: false, notice: { s: '', t: 0 }, koSlow: false,
+  /* v7.7: netAvail 바깥 게임이 같은 방 친구가 있다고 알려 줌, sub 2인 대전 고르기 칸(-1 닫힘), netq 제목에서 온라인 상대 찾기 */
+  netAvail: false, sub: -1, netq: false
 };
 try { G.best = +localStorage.getItem('taekwon.best') || 0; } catch (e) {}
 let projs = [], fx = [];
@@ -1005,11 +1007,21 @@ const TITLE_ITEMS = ['1인 도전', '2인 대전', '조작법', '나가기'];
 function tickTitle(ME) {
   const m = ME[0];
   if (G.menu === 10) { if (m.ok || m.u || m.d || pressedKeys.has('Escape')) { G.menu = 2; sfx.back(); } return; }
+  if (G.sub >= 0) {
+    if (m.u || m.d) { G.sub = 1 - G.sub; sfx.select(); }
+    if (m.ok) {
+      sfx.ok();
+      if (G.sub === 0) { G.sub = -1; G.netq = true; post('net-queue', {}); go('netwait'); }
+      else { G.sub = -1; G.mode = 2; G.done = [false, false]; go('select'); }
+    }
+    return;
+  }
   if (m.u) { G.menu = (G.menu + 3) % 4; sfx.select(); }
   if (m.d) { G.menu = (G.menu + 1) % 4; sfx.select(); }
   if (m.ok) {
     sfx.ok();
-    if (G.menu === 0 || G.menu === 1) { G.mode = G.menu + 1; G.done = [false, false]; go('select'); }
+    if (G.menu === 1 && G.netAvail && embedded) { G.sub = 0; }
+    else if (G.menu === 0 || G.menu === 1) { G.mode = G.menu + 1; G.done = [false, false]; go('select'); }
     else if (G.menu === 2) G.menu = 10;
     else { post('exit', { score: G.best }); if (!embedded) toast('오락기 안에서 쓰는 메뉴예요'); }
   }
@@ -1031,9 +1043,18 @@ function drawTitle() {
       txt(s, 160, y, 12, on ? '#ffe45a' : '#fff', 'center', '#16121c');
     });
   }
-  if (Math.floor(G.t / 30) % 2 === 0 && G.menu !== 10) txt('버튼을 눌러 선택', 160, 214, 8, '#c8c0d8', 'center');
+  if (Math.floor(G.t / 30) % 2 === 0 && G.menu !== 10) txt(G.sub >= 0 ? '↑↓ 고르기   버튼 결정   Esc 뒤로' : '버튼을 눌러 선택', 160, 214, 8, '#c8c0d8', 'center');
   txt(BUILD, 316, 221, 6, '#8b7fa0', 'right');
   if (G.best > 0) txt('최고 점수 ' + String(G.best).padStart(7, '0'), 160, 124, 9, '#ffe45a', 'center', '#16121c');
+  if (G.sub >= 0) {
+    R(70, 118, 180, 74, 'rgba(10,6,20,.94)'); c.strokeStyle = '#ffe45a'; c.lineWidth = 1; c.strokeRect(70.5, 118.5, 179, 73);
+    txt('누구와 겨룰까요?', 160, 133, 10, '#ffe45a', 'center', '#16121c');
+    ['같은 방 친구와 온라인', '한 키보드로 둘이'].forEach((s, i) => {
+      const on = G.sub === i, y = 155 + i * 20;
+      if (on) { R(80, y - 12, 160, 16, 'rgba(255,228,90,.25)'); txt('▶', 86, y, 11, '#ffe45a', 'left'); }
+      txt(s, 164, y, 11, on ? '#ffe45a' : '#fff', 'center', '#16121c');
+    });
+  }
 }
 function tickSelect(ME) {
   const n = G.mode === 2 ? 2 : 1;
@@ -1053,8 +1074,9 @@ function drawNetWait() {
   txt('온라인 대전', 160, 70, 18, '#ffe45a', 'center', '#16121c', 900);
   const dots = '.'.repeat(1 + Math.floor(G.t / 20) % 3);
   txt('같은 방의 상대를 기다리는 중' + dots, 160, 120, 11, '#fff', 'center', '#16121c');
-  txt('친구도 오락기에서 온라인 대전을 누르면 바로 시작합니다', 160, 146, 8, '#c8c0d8', 'center');
-  txt('Esc 나가기', 160, 210, 8, '#c8c0d8', 'center');
+  txt('친구도 오락기에서 온라인 대전을 고르면 바로 시작합니다', 160, 146, 8, '#c8c0d8', 'center');
+  txt('(2인 대전 → 같은 방 친구와 온라인)', 160, 160, 8, '#8b7fa0', 'center');
+  txt(G.netq ? 'Esc 제목으로' : 'Esc 나가기', 160, 210, 8, '#c8c0d8', 'center');
   txt(BUILD, 316, 221, 6, '#8b7fa0', 'right');
 }
 function drawSelect() {
@@ -1084,7 +1106,7 @@ function drawSelect() {
     if (blink) { for (let t = 0; t < 3; t++) { c.strokeStyle = col; c.lineWidth = 2; c.strokeRect(x - 47 + (i ? 3 : 0), 41 + (i ? 3 : 0), 94 - (i ? 6 : 0), 132 - (i ? 6 : 0)); break; } }
     R(x - 46 + (i ? 52 : 0), 33, 40, 9, col); txt((i + 1) + 'P' + (G.done[i] ? ' 결정' : ''), x - 26 + (i ? 52 : 0), 41, 8, '#fff', 'center');
   }
-  if (G.net) txt(!G.net.hear ? '상대 연결 확인 중...' : (G.net.rp >= 0 ? '상대 선택 완료' : '상대가 고르는 중'), 160, 206, 9, G.net.hear ? '#7CFC9A' : '#ffe45a', 'center', '#16121c');
+  if (G.net) txt((G.net.foe ? G.net.foe + ' · ' : '') + (!G.net.hear ? '상대 연결 확인 중...' : (G.net.rp >= 0 ? '상대 선택 완료' : '상대가 고르는 중')), 160, 206, 9, G.net.hear ? '#7CFC9A' : '#ffe45a', 'center', '#16121c');
   txt('← → 고르기   아무 공격 버튼으로 결정   Esc 뒤로', 160, 218, 8, '#c8c0d8', 'center');
 }
 function drawFigureAt(x, y, pose, ch, pal, sc) {
@@ -1104,7 +1126,8 @@ function hashState() {
 }
 function netStart(d) {
   G.mode = 3; G.paused = false;
-  G.net = { side: d.side ? 1 : 0, seed: d.seed | 0, delay: Math.max(1, Math.min(12, d.delay || 4)), mid: 0, loc: {}, remM: {}, nf: 0, rp: -1, hear: 0, sent: false, again: false, againR: false, waiting: false, cur: [emptyRaw(), emptyRaw()], myh: {}, remh: {} };
+  G.net = { side: d.side ? 1 : 0, seed: d.seed | 0, delay: Math.max(1, Math.min(12, d.delay || 4)), mid: 0, loc: {}, remM: {}, nf: 0, rp: -1, hear: 0, sent: false, again: false, againR: false, waiting: false, cur: [emptyRaw(), emptyRaw()], myh: {}, remh: {}, foe: String(d.foe || '').slice(0, 14) };
+  G.netq = false; G.sub = -1;
   G.sel = [0, 1]; G.done = [false, false]; G.starting = 0; G.mprev = [null, null];
   go('select'); bgmPlay('menu');
   const q = netPending.splice(0); q.forEach(netRecv);
@@ -1112,7 +1135,7 @@ function netStart(d) {
 function netLeave(notify) {
   netPending.length = 0;
   if (G.net && notify) netSend({ k: 'leave' });
-  G.net = null; G.mode = 1; G.starting = 0; bgmStop(); go('title'); G.menu = 0;
+  G.net = null; G.netq = false; G.mode = 1; G.starting = 0; bgmStop(); go('title'); G.menu = 0;
   post('net-end', {});
 }
 function startNetMatch() {
@@ -1139,7 +1162,7 @@ function netRecv(msg) {
     else N.remh[key] = msg.h;
   }
   else if (msg.k === 'again') N.againR = true;
-  else if (msg.k === 'leave') { toast('상대가 나갔습니다'); netLeave(false); post('exit', { score: G.best }); }
+  else if (msg.k === 'leave') { netLeave(false); toast('상대가 나갔습니다'); }
 }
 /* 싸움 장면의 한 프레임을 계산하기 전에 호출: 양쪽 입력이 다 모이면 true */
 function netGate() {
@@ -1234,7 +1257,7 @@ function drawIntro() {
   drawFigure(lerp(380, 230, e), 176, -1, lerpPose(POSE.idle0, POSE.idle1, (Math.sin(t / 10 + 1) + 1) / 2), b.ch, b.pal, b.sc * 1.6, false, t);
   txt('VS', 160, 100, 36, '#ffe45a', 'center', '#7a1a10', 900);
   txt(a.ch.name, 70, 36, 18, '#fff', 'center', '#16121c', 900); txt(b.ch.name, 250, 36, 18, '#fff', 'center', '#16121c', 900);
-  txt(G.mode === 1 ? (G.lad + 1) + '번째 상대 / ' + G.ladder.length : '2인 대전', 160, 18, 9, '#c8c0d8', 'center');
+  txt(G.mode === 1 ? (G.lad + 1) + '번째 상대 / ' + G.ladder.length : G.net ? '온라인 대전' + (G.net.foe ? ' · ' + G.net.foe : '') : '2인 대전', 160, 18, 9, '#c8c0d8', 'center');
   txt(STAGES[G.stage].name, 160, 214, 9, '#fff', 'center', '#16121c');
 }
 
@@ -1387,8 +1410,8 @@ function tick() {
   if (G.net && (pressedKeys.has('Escape') || pressedKeys.has('Backspace')) && (G.scene === 'select' || G.scene === 'intro' || G.scene === 'result2')) { netLeave(true); post('exit', { score: G.best }); pressedKeys.clear(); return; }
   if (pressedKeys.has('Escape') || pressedKeys.has('Backspace')) {
     if (G.net) { /* 온라인 싸움 중에는 무시 */ }
-    else if (G.scene === 'netwait') { post('exit', { score: G.best }); }
-    else if (G.scene === 'title') { if (G.menu === 10) { G.menu = 2; sfx.back(); } else post('exit', { score: G.best }); }
+    else if (G.scene === 'netwait') { if (G.netq) { G.netq = false; post('net-cancel', {}); go('title'); G.menu = 1; sfx.back(); } else post('exit', { score: G.best }); }
+    else if (G.scene === 'title') { if (G.menu === 10) { G.menu = 2; sfx.back(); } else if (G.sub >= 0) { G.sub = -1; sfx.back(); } else post('exit', { score: G.best }); }
     else if (G.scene === 'select') { go('title'); G.menu = G.mode - 1; G.starting = 0; sfx.back(); }
     else if (G.scene === 'intro' || G.scene === 'continue' || G.scene === 'over' || G.scene === 'ending' || G.scene === 'result2') { bgmStop(); go('title'); G.menu = 0; sfx.back(); }
   }
@@ -1447,7 +1470,9 @@ addEventListener('message', e => {
   else if (d.type === 'reset') { netPending.length = 0; bgmStop(); G.net = null; G.mode = 1; go('title'); G.menu = 0; running = true; }
   else if (d.type === 'net-start') { running = true; netStart(d); window.focus(); }
   else if (d.type === 'net-msg') netRecv(d.msg);
-  else if (d.type === 'net-leave') { if (G.net) { toast('상대가 나갔습니다'); netLeave(false); post('exit', { score: G.best }); } }
+  else if (d.type === 'net-leave') { if (G.net) { netLeave(false); toast(d.why === 'gone' ? '상대의 연결이 끊어졌습니다' : '상대가 나갔습니다'); } }
+  else if (d.type === 'net-avail') { G.netAvail = !!d.on; if (!G.netAvail && G.sub >= 0) G.sub = -1; }
+  else if (d.type === 'net-unavail') { if (G.scene === 'netwait' && !G.net) { G.netq = false; go('title'); G.menu = 1; } toast(String(d.text || '온라인 대전을 할 수 없어요').slice(0, 30)); }
 });
 window.TaekwonFighter = {
   version: BUILD,

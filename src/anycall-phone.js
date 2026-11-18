@@ -1,9 +1,13 @@
 /* A101 · 애니콜 상판은 움직이고 하판은 고정된다. 좌표 기준은 새 상판 원본. (2026-11-13 KST)
    A124 (2026-11-17 KST): 휴대전화로 접속하면 진짜 진동이 같이 울린다(매너모드 진동, 누를 때 짧은 떨림, 전원, 게임).
         설정에서 끄기 · 알림만 · 알림과 누를 때 중에서 고른다. 숫자 키를 길게 누르면 알려 준다(단축 번호, # 길게 = 매너모드).
-        게임 화면이 원하면 버튼을 누르고 있는 동안 같은 키가 계속 들어간다(롤플레잉 걷기). */
+        게임 화면이 원하면 버튼을 누르고 있는 동안 같은 키가 계속 들어간다(롤플레잉 걷기).
+   A125 (2026-11-18 KST): 키를 뗀 순간도 화면에 알려 준다(액션 게임에서 누르고 있는 동안만 걷기, 모아 베기).
+        전체 화면일 때 게임 화면이 원하면 키보드 글자 키를 휴대폰 키로 바꿔 준다(반 헬싱: Z 공격, X 구르기, C 보조 무기, V 기술).
+   A126 (2026-11-18 KST): 컴퓨터 전체화면에 「액정 크기」 옵션 창. 액정 크게 / 액정 화면 가득을 고르면 몸통 없이 액정만 크게 보이고,
+        아래판(숫자판)은 열린 것으로 쳐서 키보드 숫자와 넘패드로 바로 누른다. 휴대전화 접속에서는 예전 그대로. */
 (function(w){'use strict';
-const doc=w.document,VERSION='A124';
+const doc=w.document,VERSION='A126';
 const SRC={front:'assets/phone/anycall_front.webp',back:'assets/phone/anycall_back.webp'};
 const G=Object.freeze({
  stage:Object.freeze({x:100,y:20,w:740,h:2176}),slide:646,
@@ -42,8 +46,8 @@ const KEYMAP={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',
 for(let d=0;d<10;d++){KEYMAP['Digit'+d]=String(d);KEYMAP['Numpad'+d]=String(d)}
 
 const UI_KEY='2006_anycall_ui_v1';
-const prefs={mode:'mini',h:0,x:null,y:null,keyTone:true,keyVol:3,slideTone:true,powerOn:true,vib:null};
-try{const s=JSON.parse(w.localStorage?.getItem(UI_KEY)||'null');if(s&&typeof s==='object'){for(const k of Object.keys(prefs))if(k in s)prefs[k]=s[k];if(prefs.mode!=='full')prefs.mode='mini';prefs.keyVol=Math.max(1,Math.min(5,Number(prefs.keyVol)||3))}}catch(_){}
+const prefs={mode:'mini',h:0,x:null,y:null,keyTone:true,keyVol:3,slideTone:true,powerOn:true,vib:null,big:0};
+try{const s=JSON.parse(w.localStorage?.getItem(UI_KEY)||'null');if(s&&typeof s==='object'){for(const k of Object.keys(prefs))if(k in s)prefs[k]=s[k];if(prefs.mode!=='full')prefs.mode='mini';prefs.keyVol=Math.max(1,Math.min(5,Number(prefs.keyVol)||3));prefs.big=[0,1,2].includes(prefs.big)?prefs.big:0}}catch(_){}
 function savePrefs(){try{w.localStorage?.setItem(UI_KEY,JSON.stringify(prefs))}catch(_){}}
 
 /* ---------- 진짜 진동 (A124) ----------
@@ -82,11 +86,16 @@ function keyBeep(id){if(!prefs.keyTone)return null;const f=toneFor(id),v=prefs.k
 function slideSound(open){if(!prefs.slideTone)return;const v=.05+.05*prefs.keyVol/5;if(open){beep([1319],45,v,'triangle');beep([1976],70,v,'triangle',.05)}else{beep([1568],45,v,'triangle');beep([988],70,v,'triangle',.05)}}
 
 /* ---------- 상태 ---------- */
+const DOWNKEY={};
 const P={built:false,ready:false,loading:false,shown:false,mode:prefs.mode,pos:G.slide,open:false,anim:null,press:null,dirty:true,lcdDirty:true,k:0,cssW:0,cssH:0,raf:0,hint:null,gesture:null,power:prefs.powerOn===false?'off':'on',powerAt:0,hold:null,rep:null,khold:null,lastRim:null,resize:null};
 let clock=()=>(w.performance?.now?w.performance.now():Date.now());
 const IMG={front:null,back:null};
 const C={front:null,back:null,lcd:null,lcdG:null,k:0};
-let root,win,canvas,g,bar,segMini,segFull,typ,typIn,lcd=null;
+let root,win,canvas,g,bar,segMini,segFull,typ,typIn,lcd=null,lcdBtn=null,optBox=null,tipEl=null;const bigBtns=[];
+/* A126 (2026-11-18 KST) 큰 액정: 컴퓨터 전체화면에서만. 휴대폰 몸통 없이 액정만 크게 보이고, 아래판(숫자판)은 열린 것으로 친다.
+   prefs.big 0 휴대폰 그대로, 1 액정 크게, 2 액정 화면 가득. 휴대전화(모바일)에서는 예전 그대로 */
+const BIG_NAMES=['휴대폰 그대로','액정 크게','액정 화면 가득'];
+function bigOn(){return P.mode==='full'&&prefs.big>0&&!VIB.mobile}
 
 function E(tag,cls,text){const e=doc.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e}
 function canvasOf(wd,ht){const c=doc.createElement('canvas');c.width=Math.max(1,wd);c.height=Math.max(1,ht);return c}
@@ -100,10 +109,16 @@ function build(){if(P.built||!doc?.body)return;P.built=true;
  const seg=E('div','ac-seg');seg.setAttribute('role','group');seg.setAttribute('aria-label','휴대폰 보기 방식');
  segMini=E('button','','간편모드');segMini.type='button';segMini.dataset.mode='mini';
  segFull=E('button','','전체화면');segFull.type='button';segFull.dataset.mode='full';seg.append(segMini,segFull);
- const minus=E('button','ac-size','－'),plus=E('button','ac-size','＋'),tip=E('span','ac-tip','종료 버튼 길게: 전원'),close=E('button','ac-close','넣기');
+ const minus=E('button','ac-size','－'),plus=E('button','ac-size','＋'),tip=E('span','ac-tip','종료 버튼 길게: 전원'),close=E('button','ac-close','넣기');tipEl=tip;
+ lcdBtn=E('button','ac-lcd','액정 크기');lcdBtn.type='button';lcdBtn.title='전체화면에서 액정을 크게 보기';lcdBtn.setAttribute('aria-haspopup','dialog');if(VIB.mobile)lcdBtn.hidden=true;
+ optBox=E('div','ac-opt');optBox.hidden=true;optBox.setAttribute('role','dialog');optBox.setAttribute('aria-label','액정 크기');
+ {const h=E('strong','','액정 크기');const list=E('div','ac-opt-list');BIG_NAMES.forEach((n,i)=>{const bt=E('button','',n);bt.type='button';bt.dataset.big=String(i);bt.addEventListener('click',e=>{e.preventDefault();setBig(i);bt.blur?.()});bt.addEventListener('pointerdown',e=>e.stopPropagation());bigBtns.push(bt);list.append(bt)});
+  const note=E('p','','액정을 크게 보면 휴대폰 몸통은 감추고 아래판(숫자판)이 열려 있는 것으로 칩니다. 숫자 키는 키보드 숫자나 넘패드(0~9, * 는 *, # 은 /)로 누르세요. 방향키·Enter·Backspace·Esc 는 그대로입니다.');
+  const ok=E('button','ac-opt-close','닫기');ok.type='button';ok.addEventListener('click',e=>{e.preventDefault();optBox.hidden=true;lcdBtn.setAttribute('aria-expanded','false')});ok.addEventListener('pointerdown',e=>e.stopPropagation());
+  optBox.append(h,list,note,ok);optBox.addEventListener('pointerdown',e=>e.stopPropagation())}
  minus.type=plus.type=close.type='button';minus.title='작게';plus.title='크게';close.title='휴대폰을 가방에 넣기 (N)';minus.setAttribute('aria-label','휴대폰 작게');plus.setAttribute('aria-label','휴대폰 크게');
  const grip=E('span','ac-grip');grip.title='끌어서 크기 조절';grip.setAttribute('aria-hidden','true');
- bar.append(seg,minus,plus,tip,close,grip);
+ bar.append(seg,minus,plus,tip,lcdBtn,close,grip);
  typ=E('div','ac-type');typ.hidden=true;typIn=E('input');typIn.type='text';typIn.setAttribute('aria-label','휴대폰 글 자판으로 쓰기');typIn.autocomplete='off';typIn.spellcheck=false;
  const typGo=E('button','','보내기');typGo.type='button';typ.append(typIn,typGo);
  typIn.addEventListener('input',e=>{const c=P.typing;if(!c)return;c.onInput?.(typIn.value);if(!e.isComposing){const v=c.get?.();if(v!=null&&v!==typIn.value)typIn.value=v}});
@@ -112,10 +127,10 @@ function build(){if(P.built||!doc?.body)return;P.built=true;
  typGo.addEventListener('pointerdown',e=>e.stopPropagation());typGo.addEventListener('click',e=>{e.preventDefault();P.typing?.onEnter?.();const v=P.typing?.get?.();if(v!=null)typIn.value=v});
  typ.addEventListener('pointerdown',e=>e.stopPropagation());
  const click=(b,fn)=>b.addEventListener('click',e=>{e.preventDefault();fn();b.blur?.()});
- click(segMini,()=>setMode('mini'));click(segFull,()=>setMode('full'));click(minus,()=>resizeBy(-60));click(plus,()=>resizeBy(60));click(close,()=>hide());
- for(const b of [segMini,segFull,minus,plus,close])b.addEventListener('pointerdown',e=>e.stopPropagation());
+ click(segMini,()=>setMode('mini'));click(segFull,()=>setMode('full'));click(lcdBtn,()=>{optBox.hidden=!optBox.hidden;lcdBtn.setAttribute('aria-expanded',String(!optBox.hidden));syncBig()});click(minus,()=>resizeBy(-60));click(plus,()=>resizeBy(60));click(close,()=>hide());
+ for(const b of [segMini,segFull,lcdBtn,minus,plus,close])b.addEventListener('pointerdown',e=>e.stopPropagation());
  bar.addEventListener('pointerdown',barDown);grip.addEventListener('pointerdown',gripDown);
- win.append(canvas,typ,bar);root.append(back,win);doc.body.append(root);
+ win.append(canvas,typ,bar,optBox);root.append(back,win);doc.body.append(root);
  canvas.addEventListener('pointerdown',down);canvas.addEventListener('pointermove',move);canvas.addEventListener('pointerup',up);canvas.addEventListener('pointercancel',cancelPointer);canvas.addEventListener('lostpointercapture',cancelPointer);
  canvas.addEventListener('contextmenu',e=>e.preventDefault());
  w.addEventListener('resize',()=>{if(P.shown)layout()});
@@ -133,12 +148,13 @@ function frameRect(){const fr=doc.querySelector('.game-frame')?.getBoundingClien
 /* 게임 화면이 휴대폰을 품을 만큼 크면 그 안 오른쪽 아래, 작으면(휴대전화 화면) 게임 화면 바로 아래에 둔다 */
 function frameRoom(H){const fr=frameRect();return!fr||fr.height>=H+BAR+8}
 function defaultMiniH(){const {vh}=vp();let h=Math.round(vh*.6);if(!frameRoom(h)){const fr=frameRect(),below=Math.round(vh-fr.bottom-BAR-90);if(below>=MIN_H)h=Math.min(h,below)}return clamp(h,MIN_H,Math.min(520,maxMiniH()))}
-function layout(){if(!P.built)return;const {vw,vh}=vp();let H;
- if(P.mode==='full')H=Math.round(clamp(vh-BAR-24,MIN_H,G.stage.h*.75));else{if(!prefs.h)prefs.h=defaultMiniH();H=Math.round(clamp(prefs.h,MIN_H,maxMiniH()))}
- if(P.mode==='full'&&H*G.stage.w/G.stage.h>vw-16)H=Math.round((vw-16)*G.stage.h/G.stage.w);
- const cssW=Math.round(H*G.stage.w/G.stage.h),dpr=Math.min(3,Math.max(1,w.devicePixelRatio||1)),pw=Math.round(cssW*dpr),ph=Math.round(H*dpr);
+function layout(){if(!P.built)return;const {vw,vh}=vp();let H;const big=bigOn();
+ if(big){const room=vh-BAR-24-(P.typing?TYPE_H:0);H=Math.max(MIN_H,prefs.big===2?room:Math.round(room*.8));if(H*G.lcd.w/G.lcd.h>vw-16)H=Math.round((vw-16)*G.lcd.h/G.lcd.w)}
+ else if(P.mode==='full')H=Math.round(clamp(vh-BAR-24,MIN_H,G.stage.h*.75));else{if(!prefs.h)prefs.h=defaultMiniH();H=Math.round(clamp(prefs.h,MIN_H,maxMiniH()))}
+ if(!big&&P.mode==='full'&&H*G.stage.w/G.stage.h>vw-16)H=Math.round((vw-16)*G.stage.h/G.stage.w);
+ const cssW=Math.round(H*(big?G.lcd.w/G.lcd.h:G.stage.w/G.stage.h)),dpr=Math.min(3,Math.max(1,w.devicePixelRatio||1)),pw=Math.round(cssW*dpr),ph=Math.round(H*dpr);
  canvas.style.width=cssW+'px';canvas.style.height=H+'px';if(canvas.width!==pw||canvas.height!==ph){canvas.width=pw;canvas.height=ph}
- P.cssW=cssW;P.cssH=H;P.k=ph/G.stage.h;if(C.k!==P.k)buildCache();
+ P.cssW=cssW;P.cssH=H;P.k=ph/(big?G.lcd.h:G.stage.h);if(big&&P.pos!==0&&!P.anim){P.pos=0;P.open=true;try{lcd?.event?.('slid',true)}catch(_){}}if(C.k!==P.k||!!C.big!==big)buildCache();root.classList.toggle('ac-big',big);syncBig();
  const winW=Math.max(cssW,P.mode==='full'?Math.min(vw-16,430):214),winH=H+BAR+(P.typing?TYPE_H:0);win.style.width=winW+'px';typ.style.width=Math.min(winW,Math.max(cssW+40,230))+'px';
  if(P.mode==='full'){win.style.left=Math.round((vw-winW)/2)+'px';win.style.top=Math.max(4,Math.round((vh-winH)/2))+'px'}
  else{if(prefs.x==null||prefs.y==null){const fr=frameRect(),right=fr?Math.min(vw,fr.right):vw,bottom=fr?Math.min(vh,fr.bottom):vh;prefs.x=right-winW-8+(fr&&!frameRoom(H)?8:0);prefs.y=fr&&!frameRoom(H)?bottom+6:bottom-winH-8}
@@ -154,7 +170,8 @@ function layer(x,id,k,ox,oy){
  x.drawImage(im,((front?0:b.x)-ox)*k,((front?0:b.y)-oy)*k,im.width*scale*k,im.height*scale*k);
 }
 function buildCache(){
- const k=P.k;C.k=k;if(!P.ready||!g)return;
+ const k=P.k;C.k=k;C.big=bigOn();if(!P.ready||!g)return;
+ if(C.big){C.front=C.back=null;C.lcd=canvasOf(Math.round(G.lcd.w*k),Math.round(G.lcd.h*k));C.lcdG=C.lcd.getContext('2d');P.lcdDirty=true;return}
  const {x,y,w,h}=G.stage;
  C.front=canvasOf(Math.round(w*k),Math.round(G.front.h*k));
  C.back=canvasOf(Math.round(w*k),Math.round(h*k));
@@ -203,7 +220,8 @@ function drawPower(g,now,width,height){
  }
  g.globalAlpha=1;
 }
-function paint(now){if(!g||!P.ready||!C.front)return;if(P.lcdDirty){P.lcdDirty=false;drawLcd(now)}
+function paint(now){if(!g||!P.ready||!C.lcd||(!C.front&&!C.big))return;if(P.lcdDirty){P.lcdDirty=false;drawLcd(now)}
+ if(C.big){g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,canvas.width,canvas.height);g.drawImage(C.lcd,0,0,canvas.width,canvas.height);canvas.style.clipPath='none';return}
  const k=P.k,off=Math.round(P.pos*k);g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,canvas.width,canvas.height);
  g.drawImage(C.back,0,0);
  g.drawImage(C.lcd,Math.round((G.lcd.x-G.stage.x)*k),Math.round((G.lcd.y-G.stage.y)*k)+off);
@@ -231,7 +249,7 @@ function step(now){
  if(P.dirty){P.dirty=false;paint(now)}}
 
 /* ---------- 슬라이드 ---------- */
-const keypadOpen=()=>P.pos===0&&!P.anim;
+const keypadOpen=()=>bigOn()||(P.pos===0&&!P.anim);
 function slide(open){if(P.anim)return false;const want=open==null?!(P.pos===0):!!open;const to=want?0:G.slide;if(P.pos===to)return false;
  P.anim={from:P.pos,to,t0:clock(),dur:DUR};P.open=false;if(signal()!=='dead'&&P.power==='on'){slideSound(want);vibrate([12,60,16],'touch');lcd?.event?.('slide',want)}P.dirty=true;schedule();return true}
 
@@ -271,21 +289,24 @@ function releaseHold(id,src){
  }
  return true;
 }
+/* 손가락(마우스)이 누르던 키를 떼면 화면에 'keyup' 으로 알려 준다 */
+function keyRelease(pid){const k=DOWNKEY[pid];if(!k)return;delete DOWNKEY[pid];try{lcd?.event?.('keyup',k)}catch(_){}}
 function cancelPointer(e){
+ keyRelease(e.pointerId);
  if(P.hold?.id===e.pointerId)P.hold=null;
  if(P.gesture?.id===e.pointerId)P.gesture=null;
  if(P.rep?.pid===e.pointerId)P.rep=null;
  if(P.khold?.pid===e.pointerId)P.khold=null;
 }
-function down(e){if(e.button>0||P.gesture||P.hold)return;const n=toNative(e),h=hit(n.x,n.y);e.preventDefault();w.GameAudio?.unlock?.();if(typIn&&doc.activeElement===typIn)typIn.blur();
+function down(e){if(C.big){e.preventDefault();return}if(e.button>0||P.gesture||P.hold)return;const n=toNative(e),h=hit(n.x,n.y);e.preventDefault();w.GameAudio?.unlock?.();if(typIn&&doc.activeElement===typIn)typIn.blur();
  if(!h){P.gesture=null;return}
  if(h.kind==='btn'||h.kind==='key'){
   if(h.id==='end'){
    beginHold(e.pointerId,e.clientX,e.clientY);try{canvas.setPointerCapture(e.pointerId)}catch(_){}
-  }else{const ok=press(h.id,'pointer');
+  }else{const ok=press(h.id,'pointer');if(ok)DOWNKEY[e.pointerId]=h.id;
    if(ok&&PAD.includes(h.id))P.khold={id:h.id,pid:e.pointerId,at:clock(),fired:false,x:e.clientX,y:e.clientY};
    if(ok&&wantsRepeat(h.id))P.rep={id:h.id,pid:e.pointerId,next:clock()+REP_WAIT,x:e.clientX,y:e.clientY};
-   if(P.khold||P.rep)try{canvas.setPointerCapture(e.pointerId)}catch(_){}}
+   if(P.khold||P.rep||DOWNKEY[e.pointerId])try{canvas.setPointerCapture(e.pointerId)}catch(_){}}
   return;
  }
  P.gesture={kind:h.kind,x:e.clientX,y:e.clientY,ox:prefs.x,oy:prefs.y,drag:false,id:e.pointerId};try{canvas.setPointerCapture(e.pointerId)}catch(_){}}
@@ -295,7 +316,7 @@ function move(e){
  for(const k of ['rep','khold']){const r=P[k];if(r&&r.pid===e.pointerId&&Math.hypot(e.clientX-r.x,e.clientY-r.y)>14)P[k]=null}
  const s=P.gesture;if(!s||s.id!==e.pointerId||P.mode==='full')return;const dx=e.clientX-s.x,dy=e.clientY-s.y;if(!s.drag&&Math.hypot(dx,dy)>6)s.drag=true;
  if(s.drag){prefs.x=s.ox+dx;prefs.y=s.oy+dy;layout()}}
-function up(e){if(P.rep?.pid===e.pointerId)P.rep=null;if(P.khold?.pid===e.pointerId)P.khold=null;if(releaseHold(e.pointerId,'pointer'))return;const s=P.gesture;if(!s||s.id!==e.pointerId)return;P.gesture=null;if(s.drag){savePrefs();return}
+function up(e){keyRelease(e.pointerId);if(P.rep?.pid===e.pointerId)P.rep=null;if(P.khold?.pid===e.pointerId)P.khold=null;if(releaseHold(e.pointerId,'pointer'))return;const s=P.gesture;if(!s||s.id!==e.pointerId)return;P.gesture=null;if(s.drag){savePrefs();return}
  if(s.kind==='body'){slide();P.lastRim=null;return}
  const now=clock(),L=P.lastRim;if(L&&now-L.t<420&&Math.hypot(e.clientX-L.x,e.clientY-L.y)<28){P.lastRim=null;setMode(P.mode==='full'?'mini':'full');return}
  P.lastRim={t:now,x:e.clientX,y:e.clientY}}
@@ -312,21 +333,26 @@ function resizeBy(d){prefs.h=clamp((P.cssH||defaultMiniH())+d,MIN_H,maxMiniH());
    간편모드: 숫자, *, #, 백스페이스만 휴대폰으로 가고, 방향키 점프 상호작용은 그대로 게임으로 간다. */
 function gameBusy(){return!!(w.PLAYROOM?.isOpen||w.SHOPS?.isOpen||w.MEMO?.isOpen||w.ROUTES?.isMapOpen||w.GameInterface?.isMenuOpen||doc.getElementById('charEditor')&&!doc.getElementById('charEditor').classList.contains('hidden'))}
 function keyId(e){if(e.key&&/^[0-9*#]$/.test(e.key))return e.key;return KEYMAP[e.code]||null}
+const keyAlias=code=>{try{const a=lcd?.keyAlias?.(code);return typeof a==='string'?a:null}catch(_){return null}};
 function onKey(e){if(!P.shown)return;const t=e.target||doc.activeElement;if(e.isComposing||e.keyCode===229||['INPUT','TEXTAREA','SELECT'].includes(t?.tagName)||t?.isContentEditable)return;if(e.ctrlKey||e.metaKey||e.altKey)return;
  const code=e.code;
- if(P.mode==='full'){if(/^F\d+$/.test(code)||code==='Tab')return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation?.();const id=keyId(e);
+ if(P.mode==='full'){if(/^F\d+$/.test(code)||code==='Tab')return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation?.();const id=keyId(e)||keyAlias(code);
   if(e.repeat){if(id&&PAD.includes(id))keyRepeat(id);else if(id&&(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Backspace'].includes(code)||wantsRepeat(id)))press(id,'repeat');return}
-  if(code==='KeyN'){hide();return}if(code==='Space'){slide();return}if(id==='end')beginHold('Escape');else if(id)press(id,'key');return}
+  if(code==='KeyN'){hide();return}if(code==='Space'){if(!bigOn())slide();return}if(id==='end')beginHold('Escape');else if(id)press(id,'key');return}
  if(gameBusy())return;const id=keyId(e);if(!id)return;
  if(PAD.includes(id)||id==='clr'&&code==='Backspace'){e.preventDefault();e.stopPropagation();e.stopImmediatePropagation?.();if(!e.repeat)press(id,'key');else if(id==='clr')press(id,'repeat');else keyRepeat(id)}}
 /* 키보드로 숫자 키를 누르고 있으면: 처음 한 번은 '길게 누름', 게임이 원하면 계속 들어감 */
 function keyRepeat(id){if(wantsRepeat(id))press(id,'repeat');if(P.kbHeld!==id){P.kbHeld=id;holdKey(id)}}
 w.addEventListener('keydown',onKey,true);
-w.addEventListener('keyup',e=>{const id=keyId(e);if(id&&P.kbHeld===id)P.kbHeld=null;if(e.code==='Escape'&&releaseHold('Escape','key')){e.preventDefault();e.stopImmediatePropagation?.()}},true);
-w.addEventListener('blur',()=>{P.hold=null;P.gesture=null;P.rep=null;P.khold=null;P.kbHeld=null});
+w.addEventListener('keyup',e=>{const id=keyId(e)||(P.mode==='full'?keyAlias(e.code):null);if(id&&P.kbHeld===id)P.kbHeld=null;if(id&&P.shown)try{lcd?.event?.('keyup',id)}catch(_){}if(e.code==='Escape'&&releaseHold('Escape','key')){e.preventDefault();e.stopImmediatePropagation?.()}},true);
+w.addEventListener('blur',()=>{P.hold=null;P.gesture=null;P.rep=null;P.khold=null;P.kbHeld=null;for(const k of Object.keys(DOWNKEY))delete DOWNKEY[k];try{lcd?.event?.('keyup','*all')}catch(_){}});
 
+/* 액정 크기 고르기 (전체화면, 컴퓨터) */
+function setBig(n){prefs.big=[0,1,2].includes(n)?n:0;savePrefs();if(prefs.big>0&&P.mode!=='full')setMode('full');if(bigOn()&&P.pos!==0){P.anim=null;P.pos=0;P.open=true;try{lcd?.event?.('slid',true)}catch(_){}}if(P.shown)layout();syncBig()}
+function syncBig(){if(!lcdBtn)return;const full=P.mode==='full'&&!VIB.mobile;lcdBtn.hidden=!full;if(!full&&optBox)optBox.hidden=true;lcdBtn.textContent=prefs.big>0&&full?'액정: '+BIG_NAMES[prefs.big].replace('액정 ',''):'액정 크기';
+ for(const b of bigBtns)b.setAttribute('aria-pressed',String(Number(b.dataset.big)===prefs.big));if(tipEl)tipEl.textContent=bigOn()?'숫자 키·넘패드로 누르기 · Esc 길게: 전원':'종료 버튼 길게: 전원'}
 /* ---------- 보이기 ---------- */
-function setMode(m){P.mode=m==='full'?'full':'mini';prefs.mode=P.mode;savePrefs();if(P.mode==='full')w.__GAME_DEBUG__?.clearInput?.();if(P.shown)layout()}
+function setMode(m){P.mode=m==='full'?'full':'mini';prefs.mode=P.mode;savePrefs();if(P.mode==='full')w.__GAME_DEBUG__?.clearInput?.();if(bigOn()&&P.pos!==0){P.anim=null;P.pos=0;P.open=true;try{lcd?.event?.('slid',true)}catch(_){}}if(P.shown)layout();syncBig()}
 function signal(scene=w.__GAME_DEBUG__?.player?.scene){return w.AlleyDungeon?.signal(scene)||'normal'}
 function sceneChanged(scene){
  const next=signal(scene);if(P.signal===next)return;P.signal=next;P.hold=null;P.press=null;if(next==='dead')P.hint=null;
@@ -407,7 +433,7 @@ w.AnycallPhone={version:VERSION,geometry:G,duration:DUR,keymap:KEYMAP,pad:PAD.sl
  show,hide,toggle,setMode,slide,press,sceneChanged,bagCard,bagDetail,
  get lcd(){build();return lcd},
  get state(){return{power:P.power,shown:P.shown,mode:P.mode,pos:P.pos,open:keypadOpen(),sliding:!!P.anim,ready:P.ready,cssW:P.cssW,cssH:P.cssH,k:P.k,x:prefs.x,y:prefs.y,h:prefs.h,keyTone:prefs.keyTone,keyVol:prefs.keyVol,vib:prefs.vib,vibMobile:VIB.mobile,vibCan:VIB.can}},
- _test:{cache:C,hit,toneFor,beeps:()=>A.log.slice(),beepCount:()=>A.count,step:now=>step(now),setClock(fn){clock=fn},sil:SIL,front:FRONT,nav:NAV,padCols:PAD_COLS,padRows:PAD_ROWS,layout,paint:()=>paint(clock()),get canvas(){return canvas},
+ _test:{cache:C,setBig,bigOn:()=>bigOn(),get prefs(){return{...prefs}},hit,toneFor,beeps:()=>A.log.slice(),beepCount:()=>A.count,step:now=>step(now),setClock(fn){clock=fn},sil:SIL,front:FRONT,nav:NAV,padCols:PAD_COLS,padRows:PAD_ROWS,layout,paint:()=>paint(clock()),get canvas(){return canvas},
   vib:VIB,vibLog:()=>VIB.log.slice(),vibrate,setVibSupport(o){Object.assign(VIB,o)},down:e=>down(e),up:e=>up(e),onKey:e=>onKey(e),get P(){return P}}};
 if(doc?.body)build();else doc?.addEventListener?.('DOMContentLoaded',build);
 })(window);

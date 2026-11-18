@@ -90,7 +90,7 @@
 .shop-detail:has(.stationery-product) .selected-art{height:158px;min-height:158px}
 .shop-detail .selected-art .stationery-product{width:150px;height:150px}
 .shop-grid.shelf-board{grid-auto-rows:minmax(117px,1fr)}
-.fighter-intro{max-width:620px;margin:auto;padding:12px 6px;line-height:1.8}.fighter-intro h3{font-size:25px;color:#574338}.fighter-intro p{font-size:14px}.fighter-intro .primary{padding:13px 25px;font:700 16px inherit;background:#4c7165;color:#fff4da;border:2px solid #314c43;cursor:pointer}.fighter-intro .primary:disabled{opacity:.5;cursor:not-allowed}
+.fighter-intro{max-width:620px;margin:auto;padding:12px 6px;line-height:1.8}.fighter-intro h3{font-size:25px;color:#574338}.fighter-intro p{font-size:14px}.fighter-intro .primary{padding:13px 25px;font:700 16px inherit;background:#4c7165;color:#fff4da;border:2px solid #314c43;cursor:pointer}.fighter-intro .primary:disabled{opacity:.5;cursor:not-allowed}.fighter-buttons{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px}.fighter-intro .pr-button.fighter-online{background:#5d4f86;border-color:#3f355f}.fighter-intro .pr-button.fighter-online:hover{background:#6c5d99}.fighter-net-note{margin-top:8px;font-size:13px!important;color:#6a5747}
 #playroom.fighter-playing{z-index:1000;padding:0;background:#08070c}
 .fighter-playing .playroom-panel{width:100%;height:100%;max-height:100%;border:0;background:#08070c;box-shadow:none}
 .fighter-playing .playroom-header{flex:0 0 40px;padding:3px 12px;border-bottom:0}.fighter-playing .playroom-header small{display:none}.fighter-playing .playroom-header strong{font-size:14px}.fighter-playing .playroom-header button{width:auto;font-size:14px;padding:0 12px}.fighter-playing .playroom-content{flex:1;min-height:0;padding:0;overflow:hidden;background:#08070c;display:block}.fighter-frame{width:100%;height:100%;border:0;display:block;background:#000}.fighter-playing .playroom-footer{flex:0 0 auto;min-height:0;padding:4px 12px;font-size:11px;border:0;background:#1c1827;color:#d9d1e6}
@@ -376,7 +376,7 @@ body.playing-a5 #bgmControls{position:fixed;z-index:1100;bottom:0;left:0;right:0
 <link rel="stylesheet" href="assets/pc-desktop/pc-fun.css?v=A101">
 <link rel="stylesheet" href="assets/pc-desktop/web-fun.css?v=A95">
 <link rel="stylesheet" href="assets/pc-desktop/web-town.css?v=A97">
-<link rel="stylesheet" href="assets/phone/anycall-phone.css?v=A100">
+<link rel="stylesheet" href="assets/phone/anycall-phone.css?v=A126">
 <link rel="stylesheet" href="assets/pc-desktop/boot.css">
 <link rel="stylesheet" href="src/combat-ui.css?v=A123">
 </head>
@@ -2179,6 +2179,10 @@ const prizes=[
 ];
 let collection={},best=0,pcMessage='',open=false,mode='',lastPrize=null,spinning=false,seat=12,pcActive=false,pcTimer=null,guestPass=null,requestedSeat=12;
 let fighterFrame=null,fighterPaid=false,fighterLoading=false,fighterBest=0,fighterTimer=null;
+/* A126 (2026-11-18 KST) 온라인 2인 대전: 같은 방 친구 둘이 각자 오락기에 100원을 넣으면 서버(server_arcade.js)가 짝지어 주고,
+   두 오락기 화면이 주고받는 입력 신호를 건네준다. fighterOnline 상대를 찾는 중이거나 대전 중, duelLive 짝이 지어져 대전 중,
+   duelPending 화면 준비 전에 온 시작 신호, duelLobby 같은 방에서 상대를 기다리는 사람들 */
+let fighterOnline=false,duelLive=false,duelPending=null,duelLobby=[],duelFoe='';
 try{fighterBest=Number(localStorage.getItem('taekwon.best'))||0}catch(_){}
 try{const o=JSON.parse(localStorage.getItem('memory_2006_play_a5')||'null');if(o){collection=o.collection||{};best=Number(o.best)||0;pcMessage=typeof o.pcMessage==='string'?o.pcMessage.slice(0,220):''}}catch(e){}
 function save(){try{localStorage.setItem('memory_2006_play_a5',JSON.stringify({collection,best,pcMessage,guestPass}))}catch(e){}}
@@ -2191,34 +2195,94 @@ const b=(label,fn,cls='')=>{let e=h('button','pr-button '+cls,label);e.type='but
 const price=n=>n.toLocaleString('ko-KR')+'원';
 function pay(n){if(!SHOPS.spendCoins(n)){foot.textContent='동전이 모자란다. 구경만 해도 괜찮아.';return false}return true}
 function show(type,ttl,sub){close();open=true;mode=type;backdrop.classList.remove('hidden');panel.dataset.mode=type;title.textContent=ttl;kicker.textContent=sub;document.body.classList.add('playing-a5');window.dispatchEvent(new CustomEvent('arcade-focus-change'));body.replaceChildren();foot.textContent='';$('playroomClose').focus({preventScroll:true});}
-function close(){if(!open)return;window.XPDesktop?.current?.destroy();panel.classList.remove('xp-screen-panel');open=false;spinning=false;pcActive=false;if(fighterTimer){clearTimeout(fighterTimer);fighterTimer=null}if(fighterFrame){fighterFrame.remove();fighterFrame=null}fighterPaid=false;fighterLoading=false;backdrop.classList.remove('fighter-playing');$('playroomClose').textContent='×';window.dispatchEvent(new CustomEvent('arcade-focus-change'));if(pcTimer){clearInterval(pcTimer);pcTimer=null}backdrop.classList.add('hidden');document.body.classList.remove('playing-a5');window.focus?.();$('game')?.focus?.();}
+function close(){if(!open)return;window.XPDesktop?.current?.destroy();panel.classList.remove('xp-screen-panel');open=false;spinning=false;pcActive=false;if(fighterOnline||duelLive)window.A25NET?.send({type:'duel',op:'cancel'});fighterOnline=false;duelLive=false;duelPending=null;if(fighterTimer){clearTimeout(fighterTimer);fighterTimer=null}if(fighterFrame){fighterFrame.remove();fighterFrame=null}fighterPaid=false;fighterLoading=false;backdrop.classList.remove('fighter-playing');$('playroomClose').textContent='×';window.dispatchEvent(new CustomEvent('arcade-focus-change'));if(pcTimer){clearInterval(pcTimer);pcTimer=null}backdrop.classList.add('hidden');document.body.classList.remove('playing-a5');window.focus?.();$('game')?.focus?.();}
 function requestPlayroomClose(){if(fighterFrame){if(!confirm('오락기 게임을 끝내고 나갈까?')){focusFighter();return}}close()}
 $('playroomClose').addEventListener('click',requestPlayroomClose);backdrop.addEventListener('pointerdown',e=>{if(e.target===backdrop&&!fighterFrame)close()});
 function openArcade(){show('arcade','동네 태권 대전','문구점 오락기 · 100원');drawArcadeIntro()}
+function duelNet(){const n=window.A25NET?.state;return{ready:!!n?.ready,me:n?.id||'',peers:n?.peers||0}}
+function duelAvail(){const n=duelNet();return n.ready&&n.peers>0}
+function toFighter(msg){try{fighterFrame?.contentWindow?.postMessage({source:'arcade-host',...msg},location.origin)}catch(_){}}
+function duelNote(){
+ const n=duelNet(),waiting=duelLobby.filter(x=>x.id!==n.me);
+ if(!n.ready)return'온라인 대전은 함께 걷기 방에 들어가 있을 때 할 수 있어. 혼자 하거나 한 키보드 2인 대전은 언제든 돼.';
+ if(n.peers<1)return'같은 방에 친구가 들어오면 온라인 대전을 할 수 있어.';
+ if(waiting.length)return waiting.map(x=>x.name).slice(0,3).join(', ')+' 님이 오락기 앞에서 상대를 기다리는 중! 온라인 대전을 누르면 바로 붙어.';
+ return'친구도 오락기에서 온라인 대전을 누르면 바로 붙어. 먼저 누른 사람이 기다려.';
+}
+function refreshArcade(){
+ if(!open||mode!=='arcade')return;
+ if(fighterFrame){if(fighterPaid)toFighter({type:'net-avail',on:duelAvail()});return}
+ const on=$('fighterOnline'),note=$('fighterNetNote');if(!on||!note)return;
+ const n=duelNet(),waiting=duelLobby.filter(x=>x.id!==n.me);
+ on.disabled=SHOPS.coins<100||!duelAvail();on.textContent=waiting.length?waiting[0].name+' 님과 온라인 대전 · 100원':'온라인 대전 · 100원';note.textContent=duelNote();
+}
 function drawArcadeIntro(){
- body.replaceChildren();const info=h('div','fighter-intro');info.append(h('h3','','동네 태권 대전'),h('p','','도장과 아파트 옥상에서 펼치는 태권도 겨루기. 1인 도전 또는 한 키보드 2인 대전을 고를 수 있어.'),h('p','','방향키 이동 · S 왼발 · D 오른발 · Q 풋워크 · A 훼이크'),h('p','','↑ + 발차기: 얼굴 공격 · S + D: 강한 기술 · Esc: 일시정지'),h('p','',`최고 점수 ${fighterBest.toLocaleString('ko-KR')}점`));
- const start=b('동전 넣고 시작 · 100원',startArcade,'primary');start.id='fighterStart';start.disabled=SHOPS.coins<100;info.append(start);body.append(info);foot.textContent=SHOPS.coins<100?'동전이 부족해. 100원이 필요해.':'게임 화면이 준비되면 100원을 넣습니다. 끝내려면 제목 화면의 나가기 또는 위쪽 나가기를 누르세요.';
+ body.replaceChildren();const info=h('div','fighter-intro');info.append(h('h3','','동네 태권 대전'),h('p','','도장과 아파트 옥상에서 펼치는 태권도 겨루기. 1인 도전, 한 키보드 2인 대전, 같은 방 친구와 온라인 대전을 고를 수 있어.'),h('p','','방향키 이동 · S 왼발 · D 오른발 · Q 풋워크 · A 훼이크'),h('p','','↑ + 발차기: 얼굴 공격 · S + D: 강한 기술 · Esc: 일시정지'),h('p','',`최고 점수 ${fighterBest.toLocaleString('ko-KR')}점`));
+ const start=b('동전 넣고 시작 · 100원',()=>startArcade(false),'primary');start.id='fighterStart';start.disabled=SHOPS.coins<100;
+ const online=b('온라인 대전 · 100원',()=>startArcade(true),'primary fighter-online');online.id='fighterOnline';
+ const row=h('div','fighter-buttons');row.append(start,online);const note=h('p','fighter-net-note',duelNote());note.id='fighterNetNote';info.append(row,note);body.append(info);refreshArcade();foot.textContent=SHOPS.coins<100?'동전이 부족해. 100원이 필요해.':'게임 화면이 준비되면 100원을 넣습니다. 끝내려면 제목 화면의 나가기 또는 위쪽 나가기를 누르세요.';
 }
 function focusFighter(){fighterFrame?.contentWindow?.focus()}
-function startArcade(){
+function startArcade(online){
+ online=online===true;
  if(!open||mode!=='arcade'||fighterFrame||fighterLoading||SHOPS.coins<100)return;
+ if(online&&!duelAvail()){foot.textContent=duelNote();return}
+ fighterOnline=online;duelLive=false;duelPending=null;duelFoe='';
  fighterLoading=true;fighterPaid=false;body.replaceChildren();backdrop.classList.add('fighter-playing');
- const fr=fighterFrame=h('iframe','fighter-frame');fr.id='fighterGame';fr.title='동네 태권 대전';$('playroomClose').textContent='나가기';fr.setAttribute('allow','autoplay; gamepad');fr.src='assets/games/fighter/index.html';
+ const fr=fighterFrame=h('iframe','fighter-frame');fr.id='fighterGame';fr.title='동네 태권 대전';$('playroomClose').textContent='나가기';fr.setAttribute('allow','autoplay; gamepad');fr.src='assets/games/fighter/index.html'+(online?'?online=1':'');
  fr.addEventListener('load',focusFighter);fr.addEventListener('error',failFighter);body.append(fr);foot.textContent='오락기 화면을 준비하는 중…';
  fighterTimer=setTimeout(failFighter,15000);
 }
-function failFighter(){if(!fighterFrame||fighterPaid)return;if(fighterTimer){clearTimeout(fighterTimer);fighterTimer=null}fighterFrame.remove();fighterFrame=null;fighterLoading=false;backdrop.classList.remove('fighter-playing');drawArcadeIntro();foot.textContent='게임 화면을 불러오지 못했어. 동전은 사용하지 않았어. 다시 눌러 봐.'}
+function failFighter(){if(!fighterFrame||fighterPaid)return;fighterOnline=false;duelLive=false;duelPending=null;if(fighterTimer){clearTimeout(fighterTimer);fighterTimer=null}fighterFrame.remove();fighterFrame=null;fighterLoading=false;backdrop.classList.remove('fighter-playing');drawArcadeIntro();foot.textContent='게임 화면을 불러오지 못했어. 동전은 사용하지 않았어. 다시 눌러 봐.'}
 window.addEventListener('message',e=>{
  const d=e.data;if(!fighterFrame||e.source!==fighterFrame.contentWindow||e.origin!==location.origin||!d||d.source!=='arcade-game'||d.game!=='fighter')return;
  if(d.type==='ready'&&!fighterPaid){
   if(fighterTimer){clearTimeout(fighterTimer);fighterTimer=null}
   if(!SHOPS.spendCoins(100)){close();return}
-  fighterPaid=true;fighterLoading=false;fighterFrame.contentWindow.postMessage({source:'arcade-host',type:'external-music'},location.origin);foot.textContent='Esc · 일시정지 / 제목에서 나가기 · M 소리 · 선택 Enter · 2P 선택 H · 1P 방향키 Q A S D · 2P I J K L U O P ;';
+  fighterPaid=true;fighterLoading=false;fighterFrame.contentWindow.postMessage({source:'arcade-host',type:'external-music'},location.origin);foot.textContent='Esc · 일시정지 / 제목에서 나가기 · M 소리 · 선택 Enter · 1P 방향키 Q A S D · 2P I J K L U O P ; (2P 결정은 U O P ; 아무거나)';
   window.MEMO?.add('문구점 오락기','100원을 넣고 동네 태권 대전을 시작했다.',0);focusFighter();
+  toFighter({type:'net-avail',on:duelAvail()});
+  if(fighterOnline){window.A25NET?.send({type:'duel',op:'queue'});foot.textContent='같은 방 친구를 찾는 중 · 친구도 문구점 오락기에서 온라인 대전을 누르면 붙어요 · Esc 나가기'}
+  if(duelPending){toFighter(duelPending);duelPending=null}
  }
+ if(d.type==='net-queue'&&fighterPaid){
+  if(!duelAvail()){toFighter({type:'net-unavail',text:duelNet().ready?'같은 방에 친구가 없어요':'함께 걷기 방에 먼저 들어가세요'});return}
+  fighterOnline=true;duelLive=false;window.A25NET.send({type:'duel',op:'queue'});foot.textContent='같은 방 친구를 찾는 중 · 친구도 오락기에서 온라인 대전을 고르면 붙어요 · Esc 제목으로';
+ }
+ if(d.type==='net-cancel'){if(fighterOnline||duelLive)window.A25NET?.send({type:'duel',op:'cancel'});fighterOnline=false;duelLive=false;duelPending=null;foot.textContent='Esc · 일시정지 / 제목에서 나가기 · M 소리 · 선택 Enter · 1P 방향키 Q A S D · 2P I J K L U O P ;'}
+ if(d.type==='net-send'&&duelLive&&d.msg&&typeof d.msg==='object'&&!Array.isArray(d.msg))window.A25NET?.send({type:'duel',op:'relay',msg:d.msg});
+ if(d.type==='net-end'){if(fighterOnline||duelLive)window.A25NET?.send({type:'duel',op:'cancel'});fighterOnline=false;duelLive=false;duelPending=null}
+ if(d.type==='net-desync')window.MEMO?.add('문구점 오락기','온라인 대전 화면이 잠깐 어긋났다.',0);
+ if(d.type==='net-result'&&duelFoe)window.MEMO?.add('동네 태권 대전',duelFoe+' 님과의 온라인 대전에서 '+(d.youWon?'이겼다.':'졌다.'),0);
  if(d.type==='score'&&fighterPaid&&Number.isFinite(d.score)&&d.score>=0){fighterBest=Math.max(fighterBest,Math.min(999999999,Math.floor(d.score)));try{localStorage.setItem('taekwon.best',String(fighterBest))}catch(_){}window.MEMO?.add('동네 태권 대전',Math.floor(d.score)+'점을 기록했다.'+(d.cleared?' 모든 상대를 이겼다.':''),0)}
  if(d.type==='exit'){requestPlayroomClose();}
 });
+function duelMessage(m){
+ if(!m||typeof m!=='object')return;
+ if(m.type==='welcome'||m.type==='joined'||m.type==='left'){if(m.type==='welcome')duelLobby=[];refreshArcade();return}
+ if(m.type==='network_close'){
+  duelLobby=[];
+  if(duelLive){duelLive=false;toFighter({type:'net-leave',why:'gone'})}
+  else if(fighterOnline&&fighterFrame)toFighter({type:'net-unavail',text:'서버 연결이 끊어졌어요'});
+  fighterOnline=false;duelPending=null;refreshArcade();return;
+ }
+ if(m.type!=='duel')return;
+ if(m.op==='lobby'){duelLobby=(Array.isArray(m.waiting)?m.waiting:[]).filter(x=>x&&typeof x.id==='string').slice(0,12).map(x=>({id:x.id,name:String(x.name||'친구').slice(0,14)}));refreshArcade();return}
+ if(m.op==='probe'){window.A25NET?.send({type:'duel',op:'pong',n:Number(m.n)||0});return}
+ if(!fighterFrame||!fighterOnline){if(m.op==='start')window.A25NET?.send({type:'duel',op:'cancel'});return}
+ if(m.op==='wait'){foot.textContent='같은 방 친구를 기다리는 중 · 친구도 문구점 오락기에서 온라인 대전을 누르면 바로 붙어요';return}
+ if(m.op==='start'){
+  duelLive=true;duelFoe=String(m.foe?.name||'친구').slice(0,14);
+  const st={type:'net-start',side:m.side?1:0,seed:Number(m.seed)|0,delay:Number(m.delay)|0,foe:duelFoe};
+  if(fighterPaid)toFighter(st);else duelPending=st;
+  foot.textContent=duelFoe+' 님과 온라인 대전 · 둘 다 1P 키: 방향키 이동, Q 풋워크, A 훼이크, S 왼발, D 오른발 · Esc 나가기';
+  window.MEMO?.add('문구점 오락기',duelFoe+' 님과 온라인 태권 대전을 붙었다.',0);focusFighter();return;
+ }
+ if(m.op==='msg'){if(duelLive)toFighter({type:'net-msg',msg:m.msg});return}
+ if(m.op==='leave'){if(duelLive){duelLive=false;fighterOnline=false;toFighter({type:'net-leave',why:m.why==='gone'?'gone':'left'})}return}
+}
+/* 네트워크 코드는 이 아래쪽 글뭉치에서 만들어지므로 문서를 다 읽은 뒤에 붙는다 */
+document.addEventListener('DOMContentLoaded',()=>window.A25NET?.subscribe?.(duelMessage));
 function prizePixel(canvas,item){const c=canvas.getContext('2d');c.imageSmoothingEnabled=false;const p=(x,y,w,h,col)=>{c.fillStyle=col;c.fillRect(x,y,w,h)};c.clearRect(0,0,64,64);p(14,45,36,3,'#8b726244');p(17,14,30,34,'#654d5c');p(19,12,26,34,item.color);p(19,12,26,4,'#ffffff66');p(19,28,26,2,'#eee3cf');p(25,20,14,13,'#fbeaca');p(27,22,10,9,item.color);p(30,18,4,18,'#fff6db99');p(27,25,10,2,'#fff6df99')}
 function openCapsule(){show('capsule','100원 뽑기','문방구 앞 · 작은 장난감들');drawCapsule()}
 function drawCapsule(){body.innerHTML=`<div class="capsule-station"><div class="capsule-stand"><div class="capsule-top">뽑 기</div><div class="capsule-glass" id="capsuleGlass"></div><div class="capsule-knob">↻</div><div class="capsule-base">동전　100원</div></div><div class="capsule-info"><h3>무엇이 나올까?</h3><p>가게 앞 플라스틱 뽑기통. 동전을 넣고 빨간 손잡이를 한 바퀴 돌린다.</p><div class="capsule-result" id="capsuleResult"></div><div class="capsule-actions" id="capsuleActions"></div><div class="capsule-collection" id="capsuleCollection"></div></div></div>`;
@@ -2301,7 +2365,7 @@ function handleKey(k,e){
  return false;
 }
 function resetCollection(){collection={};best=0;pcMessage='';guestPass=null;save()}
-function debug(){return{open,mode,spinning,best,score:fighterBest,playing:fighterPaid,loading:fighterLoading,collection:{...collection},pcActive,seat,guestPass:guestPass?{...guestPass,remainingSeconds:remainingTime()}:null}}
+function debug(){return{open,mode,spinning,best,score:fighterBest,playing:fighterPaid,loading:fighterLoading,online:fighterOnline,duel:duelLive,foe:duelFoe,lobby:duelLobby.map(x=>x.name),collection:{...collection},pcActive,seat,guestPass:guestPass?{...guestPass,remainingSeconds:remainingTime()}:null}}
 window.PLAYROOM={get isOpen(){return open},close,handleKey,openArcade,openCapsule,openPc,openPcCounter,resetCollection,debug};
 })();
 
@@ -4021,7 +4085,7 @@ const player=window.__GAME_DEBUG__?.player;
 const localName=Q('a25Name'),roomField=Q('a25Room'),connectBtn=Q('a25Connect'),roomCount=Q('a25Count'),status=Q('a25Status'),log=Q('a25Log'),message=Q('a25Message'),form=Q('a25Chat'),share=Q('a25Share'),panel=Q('a25Panel');
 if(!player||!panel)return;
 const friends=new Map();
-const subscribers=new Set();
+const subscribers=new Set();let duelSeen=new Set();/* A126 오락기 앞에서 상대를 기다린다고 이미 알려 준 친구 */
 function announce(d){for(const callback of subscribers){try{callback(d)}catch(e){console.warn("A26 network subscriber",e)}}}
 let ws=null,myId=null,currentRoom=null,lastSend=0,ready=false,manualClose=false;
 // The server echoes accepted chat to EVERYONE, including the speaker.
@@ -4072,6 +4136,7 @@ function connect(){
    logEntry('안내',`방 ${currentRoom}에 들어왔어. 친구를 초대해 봐!`,'system');sendState();return;
   }
   if(msg.type==='joined'){assignState(msg.player);logEntry('안내',`${msg.player.name} 님이 들어왔어.`,'system');return}
+  if(msg.type==='duel'&&msg.op==='lobby'){const list=Array.isArray(msg.waiting)?msg.waiting.filter(x=>x&&typeof x.id==='string'):[];for(const x of list)if(x.id!==myId&&!duelSeen.has(x.id))logEntry('오락기',String(x.name||'친구').slice(0,14)+' 님이 문구점 오락기에서 태권 대전 상대를 기다려요.','system');duelSeen=new Set(list.map(x=>x.id));return}
   if(msg.type==='state'){if(msg.id!==myId)assignState(msg);return}
   if(msg.type==='left'){const friend=friends.get(msg.id);if(friend)logEntry('안내',friend.name+' 님이 나갔어.','system');friends.delete(msg.id);updateCount();return}
   if(msg.type==='chat'){
@@ -4300,10 +4365,12 @@ window.A26NET={get snapshot(){return snapshot},get ready(){return connected()},p
 <script src="src/background-music.js?v=A118"></script>
 <script src="src/interface.js"></script>
 <script src="src/world-audio.js?v=A94"></script>
-<script src="src/anycall-lcd.js?v=A124"></script>
-<script src="src/anycall-nate.js?v=A124"></script>
+<script src="src/anycall-lcd.js?v=A126"></script>
+<script src="src/anycall-nate.js?v=A126"></script>
 <script src="src/anycall-games.js?v=A124"></script>
-<script src="src/anycall-phone.js?v=A124"></script>
+<script src="src/anycall-vh.js?v=A126"></script>
+<script src="src/anycall-gostop.js?v=A126"></script>
+<script src="src/anycall-phone.js?v=A126"></script>
 <script src="src/combat-settings.js?v=A118"></script>
 <script src="data/world-config.js?v=A123"></script>
 <script src="src/world-config.js?v=A123"></script>
