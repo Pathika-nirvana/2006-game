@@ -477,5 +477,9 @@
   "그림목록갱신.bat",
   "적용방법.txt",
   "편집툴_사용법.txt",
-  "편집툴_열기.bat"
+  "편집툴_열기.bat",
+  "RELEASE_A124.md",
+  "A124_게임그림_요청문.txt",
+  "src/anycall-games.js",
+  "tests/test_anycall_a124.cjs"
 ]

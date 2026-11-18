@@ -7,8 +7,8 @@ const ROOT=path.join(__dirname,'..'),read=f=>fs.readFileSync(path.join(ROOT,f),'
 
 /* 1. 파일, 버전 */
 const html=read('index.html');
-for(const f of ['src/anycall-lcd.js','src/anycall-phone.js'])assert.ok(new RegExp('<script src="'+f.replace(/[.]/g,'\\.')+'\\?v=A(99|10\\d)"></script>').test(html),'버전 '+f);
-assert.ok(/assets\/phone\/anycall-phone\.css\?v=A(99|10\d)/.test(html));
+for(const f of ['src/anycall-lcd.js','src/anycall-phone.js'])assert.ok(new RegExp('<script src="'+f.replace(/[.]/g,'\\.')+'\\?v=A(99|1\\d\\d)"></script>').test(html),'버전 '+f);
+assert.ok(/assets\/phone\/anycall-phone\.css\?v=A(99|1\d\d)/.test(html));
 for(const f of ['src/anycall-phone.js','src/anycall-lcd.js','assets/phone/anycall-phone.css','server_phone.js']){const s=read(f);assert.ok(/A(?:99|10[01])/.test(s)&&s.includes('2026-11-13'),'버전과 날짜 '+f);assert.ok(!s.includes(String.fromCharCode(0x2014)),'긴 줄표 없음 '+f)}
 assert.ok(read('server.js').includes("const PHONE=require('./server_phone.js');")&&read('server.js').includes("if(obj.type==='phone')"),'서버에 휴대폰 전달');
 
@@ -59,7 +59,7 @@ w.window=w;vm.createContext(w);
 const WT=read('src/web-town.js');vm.runInContext(WT.match(/function freq\(n\)\{[^\n]*\}/)[0]+'\n'+WT.replace(/^[\s\S]*?(const RINGS=\[)/,'$1').replace(/\nconst SMS_ART=[\s\S]*$/,'')+';window.WebTown={RINGS,PHONE_WALLS,drawWall,CONTACTS,freq,synthPlay(){return{silent:true,why:"off"}},synthStop(){}};',w);
 vm.runInContext(read('src/anycall-lcd.js'),w);if(fs.existsSync(path.join(ROOT,'src/anycall-nate.js')))vm.runInContext(read('src/anycall-nate.js'),w);vm.runInContext(read('src/anycall-phone.js'),w);
 const A=w.AnycallPhone,T=A._test,G=A.geometry,LC=w.AnycallLCD,L=()=>A.lcd;let now=1000;T.setClock(()=>now);
-assert.ok(/^A(99|10\d)$/.test(A.version));assert.ok(/^A(99|10\d)$/.test(LC.version));
+assert.ok(/^A(99|1\d\d)$/.test(A.version));assert.ok(/^A(99|1\d\d)$/.test(LC.version));
 const net$=m=>{for(const f of subs)f(m)};
 const press=(...ks)=>{for(const k of ks){A.press(k);now+=30;T.step(now)}};
 const run=ms=>{const end=now+ms;while(now<end){now+=50;T.step(now)}};
@@ -86,7 +86,7 @@ assert.equal(LC.composeJamo(['ㄱ','ㅏ','ㅂ','ㅅ']),'값');
 A.show('full');now+=10;/* 그림 두 장 불러오기 끝내기 */
 for(const t of timers.splice(0))t.f();
 assert.equal(A.state.ready,true);A.slide(true);now+=300;T.step(now);assert.equal(A.state.open,true);
-assert.equal(LC.apps.length,16,'메뉴 16칸');assert.deepEqual(LC.apps.slice(0,16).map(a=>a.id).join(),'contacts,sms,calls,camera,album,dmb,nate,games,ring,wall,melody,find,cal,calc,memo,set');
+assert.equal(LC.apps.length,17,'메뉴 17칸 (A124: 알람)');assert.deepEqual(LC.apps.map(a=>a.id).join(),'contacts,sms,calls,camera,album,dmb,nate,games,ring,wall,melody,find,cal,calc,memo,alarm,set');
 assert.equal(LC.fakeNum('p2'),LC.fakeNum('p2'));assert.ok(/^01[1679]-\d{4}-\d{4}$/.test(LC.fakeNum('p2')));
 const root=doc.body.children.find(n=>n.className.includes('ac-root')),win=root.children[1],typ=win.children.find(n=>n.className==='ac-type'),typIn=typ.children[0];
 

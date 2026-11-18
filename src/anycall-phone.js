@@ -1,6 +1,9 @@
-/* A101 · 애니콜 상판은 움직이고 하판은 고정된다. 좌표 기준은 새 상판 원본. (2026-11-13 KST) */
+/* A101 · 애니콜 상판은 움직이고 하판은 고정된다. 좌표 기준은 새 상판 원본. (2026-11-13 KST)
+   A124 (2026-11-17 KST): 휴대전화로 접속하면 진짜 진동이 같이 울린다(매너모드 진동, 누를 때 짧은 떨림, 전원, 게임).
+        설정에서 끄기 · 알림만 · 알림과 누를 때 중에서 고른다. 숫자 키를 길게 누르면 알려 준다(단축 번호, # 길게 = 매너모드).
+        게임 화면이 원하면 버튼을 누르고 있는 동안 같은 키가 계속 들어간다(롤플레잉 걷기). */
 (function(w){'use strict';
-const doc=w.document,VERSION='A101';
+const doc=w.document,VERSION='A124';
 const SRC={front:'assets/phone/anycall_front.webp',back:'assets/phone/anycall_back.webp'};
 const G=Object.freeze({
  stage:Object.freeze({x:100,y:20,w:740,h:2176}),slide:646,
@@ -8,7 +11,7 @@ const G=Object.freeze({
  hole:Object.freeze({x:228,y:300,w:482,h:601}),
  lcd:Object.freeze({x:220,y:292,w:498,h:617}),rim:42
 });
-const DUR=260,BAR=40,TYPE_H=38,MIN_H=250,POWER_HOLD=850;
+const DUR=260,BAR=40,TYPE_H=38,MIN_H=250,POWER_HOLD=850,KEY_HOLD=800,REP_WAIT=300,REP_GAP=140;
 const easeOut=t=>1-Math.pow(1-t,3);
 /* 원본 알파 경계를 8픽셀 간격으로 샘플링한 클릭 실루엣. */
 const SIL={
@@ -39,9 +42,30 @@ const KEYMAP={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',
 for(let d=0;d<10;d++){KEYMAP['Digit'+d]=String(d);KEYMAP['Numpad'+d]=String(d)}
 
 const UI_KEY='2006_anycall_ui_v1';
-const prefs={mode:'mini',h:0,x:null,y:null,keyTone:true,keyVol:3,slideTone:true,powerOn:true};
+const prefs={mode:'mini',h:0,x:null,y:null,keyTone:true,keyVol:3,slideTone:true,powerOn:true,vib:null};
 try{const s=JSON.parse(w.localStorage?.getItem(UI_KEY)||'null');if(s&&typeof s==='object'){for(const k of Object.keys(prefs))if(k in s)prefs[k]=s[k];if(prefs.mode!=='full')prefs.mode='mini';prefs.keyVol=Math.max(1,Math.min(5,Number(prefs.keyVol)||3))}}catch(_){}
 function savePrefs(){try{w.localStorage?.setItem(UI_KEY,JSON.stringify(prefs))}catch(_){}}
+
+/* ---------- 진짜 진동 (A124) ----------
+   휴대전화 브라우저(안드로이드 크롬, 삼성 인터넷)는 navigator.vibrate 로 기기를 떨게 할 수 있다.
+   아이폰 사파리는 웹 진동을 막아 두었다. iOS 18 이상에서는 스위치 단추를 누를 때 나는 짧은 떨림만 빌려 쓸 수 있을지도 몰라서
+   누를 때 떨림에만 시도한다(확인하지 못함). 컴퓨터는 진동이 없으니 설정에서 고를 수 없다.
+   prefs.vib: 'off' 끄기, 'alert' 매너모드 알림만(전화, 문자, 알람), 'all' 알림과 누를 때 */
+const NAVI=w.navigator||{};
+const VIB={mobile:false,can:false,ios:false,log:[],count:0};
+try{const ua=String(NAVI.userAgent||''),coarse=!!w.matchMedia?.('(pointer:coarse)')?.matches;
+ VIB.ios=/iPhone|iPad|iPod/i.test(ua)||(/Macintosh/i.test(ua)&&(Number(NAVI.maxTouchPoints)||0)>1);
+ VIB.can=typeof NAVI.vibrate==='function';VIB.mobile=VIB.ios||/Android|Mobile/i.test(ua)||coarse&&VIB.can}catch(_){}
+if(!['off','alert','all'].includes(prefs.vib))prefs.vib=VIB.mobile&&(VIB.can||VIB.ios)?'all':'off';
+let hapt=null;
+function iosTick(){try{if(!hapt){const inp=doc.createElement('input'),lb=doc.createElement('label');inp.type='checkbox';inp.setAttribute('switch','');inp.id='acHaptic';lb.htmlFor='acHaptic';lb.setAttribute('aria-hidden','true');
+  for(const el of [inp,lb]){el.style.position='fixed';el.style.left='-9999px';el.style.top='0';el.style.opacity='0';el.style.pointerEvents='none'}lb.append(inp);doc.body.append(lb);hapt=lb}hapt.click();return true}catch(_){return false}}
+/* kind: 'alert'(매너모드 알림) 또는 'touch'(누를 때, 게임 손맛). 실제로 떨게 했으면 true */
+function vibrate(pattern,kind='alert'){const mode=prefs.vib;VIB.count++;VIB.log.push({pattern,kind,mode});if(VIB.log.length>40)VIB.log.shift();
+ if(mode!=='alert'&&mode!=='all')return false;if(kind==='touch'&&mode!=='all')return false;
+ if(VIB.can){try{return NAVI.vibrate(pattern)!==false}catch(_){return false}}
+ if(VIB.ios&&kind==='touch'&&pattern)return iosTick();return false}
+function stopVibrate(){if(VIB.can)try{NAVI.vibrate(0)}catch(_){}}
 
 /* ---------- 소리 ---------- */
 const A={ctx:null,log:[],count:0};
@@ -58,7 +82,7 @@ function keyBeep(id){if(!prefs.keyTone)return null;const f=toneFor(id),v=prefs.k
 function slideSound(open){if(!prefs.slideTone)return;const v=.05+.05*prefs.keyVol/5;if(open){beep([1319],45,v,'triangle');beep([1976],70,v,'triangle',.05)}else{beep([1568],45,v,'triangle');beep([988],70,v,'triangle',.05)}}
 
 /* ---------- 상태 ---------- */
-const P={built:false,ready:false,loading:false,shown:false,mode:prefs.mode,pos:G.slide,open:false,anim:null,press:null,dirty:true,lcdDirty:true,k:0,cssW:0,cssH:0,raf:0,hint:null,gesture:null,power:prefs.powerOn===false?'off':'on',powerAt:0,hold:null,lastRim:null,resize:null};
+const P={built:false,ready:false,loading:false,shown:false,mode:prefs.mode,pos:G.slide,open:false,anim:null,press:null,dirty:true,lcdDirty:true,k:0,cssW:0,cssH:0,raf:0,hint:null,gesture:null,power:prefs.powerOn===false?'off':'on',powerAt:0,hold:null,rep:null,khold:null,lastRim:null,resize:null};
 let clock=()=>(w.performance?.now?w.performance.now():Date.now());
 const IMG={front:null,back:null};
 const C={front:null,back:null,lcd:null,lcdG:null,k:0};
@@ -151,6 +175,7 @@ function togglePower(now){
  lcd?.event?.(on?'poweron':'poweroff');
  const notes=on?[523,659,784,1047]:[784,659,523];
  notes.forEach((f,i)=>beep([f],i===notes.length-1?250:112,.085,'triangle',i*.105));
+ vibrate(on?[180]:[60,70,60],'alert');
  P.lcdDirty=P.dirty=true;schedule();
 }
 function drawPower(g,now,width,height){
@@ -193,6 +218,8 @@ function step(now){
  if(P.hold&&!P.hold.fired&&now-P.hold.at>=POWER_HOLD){
   P.hold.fired=true;togglePower(now);
  }
+ if(P.khold&&!P.khold.fired&&now-P.khold.at>=KEY_HOLD){P.khold.fired=true;holdKey(P.khold.id)}
+ if(P.rep&&now>=P.rep.next){if(wantsRepeat(P.rep.id)&&press(P.rep.id,'repeat'))P.rep.next=now+REP_GAP;else P.rep=null}
  if(P.power==='booting'||P.power==='stopping'){
   const boot=P.power==='booting';
   if(now-P.powerAt>=(boot?1450:1040))P.power=boot?'on':'off';
@@ -206,7 +233,7 @@ function step(now){
 /* ---------- 슬라이드 ---------- */
 const keypadOpen=()=>P.pos===0&&!P.anim;
 function slide(open){if(P.anim)return false;const want=open==null?!(P.pos===0):!!open;const to=want?0:G.slide;if(P.pos===to)return false;
- P.anim={from:P.pos,to,t0:clock(),dur:DUR};P.open=false;if(signal()!=='dead'&&P.power==='on'){slideSound(want);lcd?.event?.('slide',want)}P.dirty=true;schedule();return true}
+ P.anim={from:P.pos,to,t0:clock(),dur:DUR};P.open=false;if(signal()!=='dead'&&P.power==='on'){slideSound(want);vibrate([12,60,16],'touch');lcd?.event?.('slide',want)}P.dirty=true;schedule();return true}
 
 /* ---------- 누르기 ---------- */
 function press(id,src){if(signal()==='dead'||P.power!=='on'||(!PAD.includes(id)&&!TONE[id]))return false;if(P.anim)return false;
@@ -216,7 +243,11 @@ function press(id,src){if(signal()==='dead'||P.power!=='on'||(!PAD.includes(id)&
  else if(NAV_GLOW[id])glow={layer:'f',cx:NAV_GLOW[id][0],cy:NAV_GLOW[id][1],r:id==='nate'?52:40};
  else{const b=FRONT.find(x=>x.id===id);if(b)glow={layer:'f',cx:b.cx,cy:b.cy,r:50}}
  if(glow)P.press={...glow,id,t0:now,until:now+140};
+ if(src!=='repeat')vibrate(14,'touch');
  if(!lcd?.ownsSound?.(id))keyBeep(id);try{lcd?.key?.(id,src)}catch(err){w.console?.error?.(err)}P.lcdDirty=P.dirty=true;schedule();return true}
+/* 길게 누르기와 누르고 있는 동안 되풀이 (A124) */
+const wantsRepeat=id=>{try{return!!lcd?.repeats?.(id)}catch(_){return false}};
+function holdKey(id){if(signal()==='dead'||P.power!=='on')return;try{lcd?.event?.('hold',id)}catch(err){w.console?.error?.(err)}P.lcdDirty=P.dirty=true;schedule()}
 /* 원본 좌표로 무엇이 눌렸는지 */
 function hit(nx,ny){const fy=ny-P.pos,df=silAt(SIL.f,nx,fy);
  if(df!=null){
@@ -243,22 +274,28 @@ function releaseHold(id,src){
 function cancelPointer(e){
  if(P.hold?.id===e.pointerId)P.hold=null;
  if(P.gesture?.id===e.pointerId)P.gesture=null;
+ if(P.rep?.pid===e.pointerId)P.rep=null;
+ if(P.khold?.pid===e.pointerId)P.khold=null;
 }
 function down(e){if(e.button>0||P.gesture||P.hold)return;const n=toNative(e),h=hit(n.x,n.y);e.preventDefault();w.GameAudio?.unlock?.();if(typIn&&doc.activeElement===typIn)typIn.blur();
  if(!h){P.gesture=null;return}
  if(h.kind==='btn'||h.kind==='key'){
   if(h.id==='end'){
    beginHold(e.pointerId,e.clientX,e.clientY);try{canvas.setPointerCapture(e.pointerId)}catch(_){}
-  }else press(h.id,'pointer');
+  }else{const ok=press(h.id,'pointer');
+   if(ok&&PAD.includes(h.id))P.khold={id:h.id,pid:e.pointerId,at:clock(),fired:false,x:e.clientX,y:e.clientY};
+   if(ok&&wantsRepeat(h.id))P.rep={id:h.id,pid:e.pointerId,next:clock()+REP_WAIT,x:e.clientX,y:e.clientY};
+   if(P.khold||P.rep)try{canvas.setPointerCapture(e.pointerId)}catch(_){}}
   return;
  }
  P.gesture={kind:h.kind,x:e.clientX,y:e.clientY,ox:prefs.x,oy:prefs.y,drag:false,id:e.pointerId};try{canvas.setPointerCapture(e.pointerId)}catch(_){}}
 function move(e){
  const hold=P.hold;
  if(hold?.id===e.pointerId&&Math.hypot(e.clientX-hold.x,e.clientY-hold.y)>9)P.hold=null;
+ for(const k of ['rep','khold']){const r=P[k];if(r&&r.pid===e.pointerId&&Math.hypot(e.clientX-r.x,e.clientY-r.y)>14)P[k]=null}
  const s=P.gesture;if(!s||s.id!==e.pointerId||P.mode==='full')return;const dx=e.clientX-s.x,dy=e.clientY-s.y;if(!s.drag&&Math.hypot(dx,dy)>6)s.drag=true;
  if(s.drag){prefs.x=s.ox+dx;prefs.y=s.oy+dy;layout()}}
-function up(e){if(releaseHold(e.pointerId,'pointer'))return;const s=P.gesture;if(!s||s.id!==e.pointerId)return;P.gesture=null;if(s.drag){savePrefs();return}
+function up(e){if(P.rep?.pid===e.pointerId)P.rep=null;if(P.khold?.pid===e.pointerId)P.khold=null;if(releaseHold(e.pointerId,'pointer'))return;const s=P.gesture;if(!s||s.id!==e.pointerId)return;P.gesture=null;if(s.drag){savePrefs();return}
  if(s.kind==='body'){slide();P.lastRim=null;return}
  const now=clock(),L=P.lastRim;if(L&&now-L.t<420&&Math.hypot(e.clientX-L.x,e.clientY-L.y)<28){P.lastRim=null;setMode(P.mode==='full'?'mini':'full');return}
  P.lastRim={t:now,x:e.clientX,y:e.clientY}}
@@ -277,13 +314,16 @@ function gameBusy(){return!!(w.PLAYROOM?.isOpen||w.SHOPS?.isOpen||w.MEMO?.isOpen
 function keyId(e){if(e.key&&/^[0-9*#]$/.test(e.key))return e.key;return KEYMAP[e.code]||null}
 function onKey(e){if(!P.shown)return;const t=e.target||doc.activeElement;if(e.isComposing||e.keyCode===229||['INPUT','TEXTAREA','SELECT'].includes(t?.tagName)||t?.isContentEditable)return;if(e.ctrlKey||e.metaKey||e.altKey)return;
  const code=e.code;
- if(P.mode==='full'){if(/^F\d+$/.test(code)||code==='Tab')return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation?.();if(e.repeat&&!['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Backspace'].includes(code))return;
-  if(code==='KeyN'){hide();return}if(code==='Space'){slide();return}const id=keyId(e);if(id==='end')beginHold('Escape');else if(id)press(id,'key');return}
+ if(P.mode==='full'){if(/^F\d+$/.test(code)||code==='Tab')return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation?.();const id=keyId(e);
+  if(e.repeat){if(id&&PAD.includes(id))keyRepeat(id);else if(id&&(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Backspace'].includes(code)||wantsRepeat(id)))press(id,'repeat');return}
+  if(code==='KeyN'){hide();return}if(code==='Space'){slide();return}if(id==='end')beginHold('Escape');else if(id)press(id,'key');return}
  if(gameBusy())return;const id=keyId(e);if(!id)return;
- if(PAD.includes(id)||id==='clr'&&code==='Backspace'){e.preventDefault();e.stopPropagation();e.stopImmediatePropagation?.();if(!e.repeat||id==='clr')press(id,'key')}}
+ if(PAD.includes(id)||id==='clr'&&code==='Backspace'){e.preventDefault();e.stopPropagation();e.stopImmediatePropagation?.();if(!e.repeat)press(id,'key');else if(id==='clr')press(id,'repeat');else keyRepeat(id)}}
+/* 키보드로 숫자 키를 누르고 있으면: 처음 한 번은 '길게 누름', 게임이 원하면 계속 들어감 */
+function keyRepeat(id){if(wantsRepeat(id))press(id,'repeat');if(P.kbHeld!==id){P.kbHeld=id;holdKey(id)}}
 w.addEventListener('keydown',onKey,true);
-w.addEventListener('keyup',e=>{if(e.code==='Escape'&&releaseHold('Escape','key')){e.preventDefault();e.stopImmediatePropagation?.()}},true);
-w.addEventListener('blur',()=>{P.hold=null;P.gesture=null});
+w.addEventListener('keyup',e=>{const id=keyId(e);if(id&&P.kbHeld===id)P.kbHeld=null;if(e.code==='Escape'&&releaseHold('Escape','key')){e.preventDefault();e.stopImmediatePropagation?.()}},true);
+w.addEventListener('blur',()=>{P.hold=null;P.gesture=null;P.rep=null;P.khold=null;P.kbHeld=null});
 
 /* ---------- 보이기 ---------- */
 function setMode(m){P.mode=m==='full'?'full':'mini';prefs.mode=P.mode;savePrefs();if(P.mode==='full')w.__GAME_DEBUG__?.clearInput?.();if(P.shown)layout()}
@@ -335,7 +375,14 @@ const host={
   if(had!==!!cfg&&P.shown)layout()},
  typingValue(v){if(!typIn||!P.typing)return;if(typIn.value!==v)typIn.value=v},
  get typingShown(){return!!P.typing},
- buzz(){if(!canvas)return;canvas.classList.remove('ac-buzz');void canvas.offsetWidth;canvas.classList.add('ac-buzz');clearTimeout(P.buzzT);P.buzzT=setTimeout(()=>canvas.classList.remove('ac-buzz'),760);P.buzzed=(P.buzzed||0)+1},
+ /* 매너모드 진동: 화면 속 휴대폰이 떨리고, 휴대전화로 접속했으면 기기도 같은 박자로 떤다 */
+ buzz(pattern){if(P.power==='on'||P.power==='booting')vibrate(pattern||[320,140,320],'alert');if(!canvas)return;canvas.classList.remove('ac-buzz');void canvas.offsetWidth;canvas.classList.add('ac-buzz');clearTimeout(P.buzzT);P.buzzT=setTimeout(()=>canvas.classList.remove('ac-buzz'),760);P.buzzed=(P.buzzed||0)+1},
+ vibrate,stopVibrate,
+ get vibInfo(){return{mobile:VIB.mobile,can:VIB.can,ios:VIB.ios,mode:prefs.vib}},
+ setVib(mode){if(['off','alert','all'].includes(mode)){prefs.vib=mode;savePrefs();if(mode==='off')stopVibrate()}return prefs.vib},
+ /* 휴대폰 게임이 소리를 박자에 맞춰 미리 걸어 둘 때 쓰는 소리 판 (효과음이 꺼져 있으면 null) */
+ audioCtx(){const s=audioState();if(!s.on||!s.vol)return null;const c=audioCtx();if(c&&c.state==='suspended'&&c.resume)try{c.resume()}catch(_){}return c},
+ audioVol(){const s=audioState();return s.on?s.vol:0},
  alert(o){if(!P.shown){if(o?.kind==='call')show();else toast('[휴대폰] '+(o?.text||'알림')+' · 메뉴의 휴대폰 탭이나 N 키로 꺼내 봐')}},
  toast,
  gameCanvas(){return doc.getElementById('game')},
@@ -359,7 +406,8 @@ const host={
 w.AnycallPhone={version:VERSION,geometry:G,duration:DUR,keymap:KEYMAP,pad:PAD.slice(),keyNames:KEY_NAMES,
  show,hide,toggle,setMode,slide,press,sceneChanged,bagCard,bagDetail,
  get lcd(){build();return lcd},
- get state(){return{power:P.power,shown:P.shown,mode:P.mode,pos:P.pos,open:keypadOpen(),sliding:!!P.anim,ready:P.ready,cssW:P.cssW,cssH:P.cssH,k:P.k,x:prefs.x,y:prefs.y,h:prefs.h,keyTone:prefs.keyTone,keyVol:prefs.keyVol}},
- _test:{cache:C,hit,toneFor,beeps:()=>A.log.slice(),beepCount:()=>A.count,step:now=>step(now),setClock(fn){clock=fn},sil:SIL,front:FRONT,nav:NAV,padCols:PAD_COLS,padRows:PAD_ROWS,layout,paint:()=>paint(clock()),get canvas(){return canvas}}};
+ get state(){return{power:P.power,shown:P.shown,mode:P.mode,pos:P.pos,open:keypadOpen(),sliding:!!P.anim,ready:P.ready,cssW:P.cssW,cssH:P.cssH,k:P.k,x:prefs.x,y:prefs.y,h:prefs.h,keyTone:prefs.keyTone,keyVol:prefs.keyVol,vib:prefs.vib,vibMobile:VIB.mobile,vibCan:VIB.can}},
+ _test:{cache:C,hit,toneFor,beeps:()=>A.log.slice(),beepCount:()=>A.count,step:now=>step(now),setClock(fn){clock=fn},sil:SIL,front:FRONT,nav:NAV,padCols:PAD_COLS,padRows:PAD_ROWS,layout,paint:()=>paint(clock()),get canvas(){return canvas},
+  vib:VIB,vibLog:()=>VIB.log.slice(),vibrate,setVibSupport(o){Object.assign(VIB,o)},down:e=>down(e),up:e=>up(e),onKey:e=>onKey(e),get P(){return P}}};
 if(doc?.body)build();else doc?.addEventListener?.('DOMContentLoaded',build);
 })(window);

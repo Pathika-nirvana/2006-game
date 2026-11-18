@@ -1,4 +1,11 @@
-/* A101 애니콜 액정 화면 (버전 A101 · 2026-11-13 KST)
+/* A101 애니콜 액정 화면 (버전 A101 · 2026-11-13 KST), A124 고침 (2026-11-17 KST)
+   A124: 전화와 문자 놀이 더하기.
+         전화: 발신 번호 표시 제한(*23# + 번호), 소리샘(못 받으면 음성 메시지 남기기, 1번 길게 = 음성 사서함), 콜키퍼(꺼져 있을 때 온 전화 알림 문자),
+               ARS 안내(1588-0530, 숫자를 눌러 고르기, 상담원 연결 대기), 114 안내(가게 번호 찾고 바로 연결), 080 광고 수신 거부,
+               단축 번호(숫자 길게), # 길게 = 매너모드, 엄마와 민호가 먼저 거는 전화(번호로 대답 고르기, 있는 곳에 따라 대답이 바뀜), 가짜 전화, 알람.
+         문자: 문자 그림, 여러 명에게 보내기(*로 표시), 전달, 수신 확인(같은 방 친구가 읽으면 표시), 스팸 문자와 스팸 차단,
+               행운의 문자, 삐삐 숫자 암호 풀이(1004, 8282 ...).
+         벨소리 방식에 '벨+진동'. 휴대전화로 접속하면 진짜 진동(설정). 게임 두 개(src/anycall-games.js): 쿵짝 리듬왕, 골목대장 전설.
    A100: NATE를 2006년 무선 인터넷처럼 따로 만든 브라우저(src/anycall-nate.js)로 바꿈. 카메라 조준과 파일 저장, 메뉴 색 테마,
          배경 화면 받기, 숫자 바로가기(번호를 누르고 NATE), 컬러링(친구가 나에게 걸 때 연결음 대신 노래).
    휴대폰 몸체(src/anycall-phone.js)와 떨어져 있는 화면 내용. 가로 150 × 세로 184 칸을 기준으로 그린다.
@@ -74,7 +81,43 @@ const BOOK=[
  {id:'bro',n:'우리 형',num:'017-2006-0530',talk:['왜 ㅡㅡ','형 바빠. 끊어.']},
  {id:'teacher',n:'학원 쌤',num:'011-0530-0909',voice:true},
  {id:'bunsik',n:'은하분식',num:'02-530-2006',talk:['네~ 은하분식입니다!','떡볶이요? 학교 끝나면 바로 와~ 따끈하게 해 줄게']},
- {id:'china',n:'중국집 (짜장)',num:'02-530-8282',talk:['네, 중국집입니다~','짜장면 한 그릇이요? 지금 바로 출발합니다!']}];
+ {id:'china',n:'중국집 (짜장)',num:'02-530-8282',talk:['네, 중국집입니다~','짜장면 한 그릇이요? 지금 바로 출발합니다!']},
+ {id:'ars',n:'은하 ARS 안내',num:'1588-0530',ars:'info'}];
+/* A124: 114 안내로 찾을 수 있는 동네 가게 (전화번호부에는 없고, 한 번 걸면 통화 기록에 남는다) */
+const PLACE_BOOK=[
+ {id:'bunsik',key:'1',n:'은하분식',num:'02-530-2006'},
+ {id:'china',key:'2',n:'중국집 (짜장)',num:'02-530-8282'},
+ {id:'stationery',key:'3',n:'별빛문구완구',num:'02-530-0117',talk:['네~ 별빛문구입니다!','딱지랑 쫀쫀이 새로 들어왔어~ 학교 끝나고 들러!']},
+ {id:'super',key:'4',n:'우리슈퍼',num:'02-530-3535',talk:['네, 우리슈퍼예요~','오늘 아이스크림 반값! 얼른 와~']},
+ {id:'pcroom',key:'5',n:'동네 PC방',num:'02-530-1717',talk:['네~ PC방입니다.','지금 자리 세 개 남았어요. 학생은 한 시간 천 원!']}];
+const SPEED_DEF={'2':'mom','3':'dad','4':'minho','5':'home','6':'bro','7':'bunsik','8':'china','9':'ars'};
+/* 삐삐 시절부터 쓰던 숫자 암호. 숫자만 온 문자를 읽으면 뜻을 알려 준다 */
+const PAGER={'1004':'천사','8282':'빨리빨리','486':'사랑해','0124':'영원히','012486':'영원히 사랑해','0179':'영원한 친구','1010235':'열렬히 사모','7979':'친구친구'};
+/* 광고 문자. 080 번호로 걸면 수신 거부가 되지만 그래도 가끔 온다 */
+const SPAM=[
+ '(광고)공짜폰 교체 대상자 선정! 최신 슬라이드폰 0원 1588-0530 무료수신거부 080-530-0000',
+ '(광고)은하피자 1+1 오늘 단 하루! 배달 02-530-1234 무료수신거부 080-530-0000',
+ '[축하] 경품 이벤트 당첨! MP3 플레이어를 받으세요. 확인 1588-0530',
+ '(광고)영어 학습지 일주일 무료 체험! 신청은 답장으로~ 무료수신거부 080-530-0000',
+ '(광고)[NATE] 벨소리 무제한 월 3,000원! 첫 달 공짜 무료수신거부 080-530-0000'];
+const CHAIN='[행운의 문자] 이 문자를 받고 3명에게 전달하면 행운이 와요. 안 보내면 3일 동안 숙제가 두 배!! 진짜임';
+const ART_MORE=[['떡볶이 ㄱ?','┌─────┐\n│떡볶이 ㄱ?│\n└─────┘'],['메롱','(=^ㅁ^=) 메롱~\n약 오르지? ㅋㅋ'],['꿀꿀','(￣(oo)￣) 꿀꿀\n배고프다~'],['월드컵','대~한민국!\n짝짝 짝 짝짝\n오 필승 코리아']];
+/* 엄마와 민호가 먼저 거는 전화. 숫자로 대답을 고른다. c = {scene 지금 있는 곳, indoor 실내인지} */
+const SCRIPTS={
+ mom:{who:'mom',miss:'왜 전화 안 받아? 저녁 먹게 빨리 들어와!!',start:'q',nodes:{
+  q:{say:'어디야? 저녁 먹을 시간 다 됐다.',opts:[['지금 집에 가는 중이에요','home'],['PC방이에요...','pc'],['친구랑 놀이터에 있어요','park']]},
+  home:{say:c=>c.scene==='pcroom'?'근데 뒤에서 왜 키보드 소리가 나? 다 들린다!! 당장 와!':'그래, 차 조심하고 빨리 와~ 손 씻고!',after:c=>c.scene==='pcroom'?'mom_angry':'mom_ok'},
+  pc:{say:c=>c.scene==='pcroom'?'또 PC방이야?! 딱 30분만 하고 와. 엄마가 시계 본다!':'PC방? 근데 왜 밖이야? 장난치지 말고 빨리 와!',after:()=>'mom_pc'},
+  park:{say:c=>c.scene==='playground'?'그래, 6시 전에는 들어와~ 넘어지지 말고!':c.scene==='pcroom'?'놀이터에서 웬 게임 소리가 나? 거짓말하면 혼난다!':'놀이터? 알았어. 늦지 말고 와~',after:c=>c.scene==='pcroom'?'mom_angry':'mom_ok'}}},
+ minho:{who:'minho',miss:'야 전화 좀 받아 ㅡㅡ 은하분식 앞에서 기다린다',start:'q',nodes:{
+  q:{say:'야 너 어디야? ㅋㅋ 이따 PC방 ㄱ?',opts:[['ㄱㄱ 지금 감','go'],['숙제 해야 돼 ㅠㅠ','hw'],['떡볶이 먼저 먹자','food']]},
+  go:{say:c=>c.scene==='pcroom'?'어? 너 벌써 와 있냐? 뒤돌아 봐 ㅋㅋㅋ':'ㅇㅋ 17번 자리 맡아 놓는다! 빨리 와',after:()=>'minho_pc'},
+  hw:{say:'숙제? 알림장 사진 찍어서 보내 줘 ㅋㅋ 나도 안 함',after:()=>'minho_hw'},
+  food:{say:'ㅇㅋ 은하분식 앞에서 봐. 핫도그는 내가 쏜다!',after:()=>'minho_food'}}},
+ fake_mom:{who:'mom',fake:true,start:'a',nodes:{a:{say:'응, 엄마야. 지금 당장 집으로 와! 할머니 오셨어~',next:'b'},b:{say:'(가짜 전화예요. 이제 자연스럽게 빠져나가세요 ㅋㅋ)'}}},
+ fake_minho:{who:'minho',fake:true,start:'a',nodes:{a:{say:'야! 큰일 났어. 빨리 놀이터로 와 봐!',next:'b'},b:{say:'(가짜 전화예요. "어? 지금 갈게!" 하고 나가면 돼요)'}}}};
+const AFTER={mom_angry:['mom','6시까지 안 오면 저녁 없다!! 진짜야'],mom_ok:['mom','김치찌개 데워 놓을게 ^^ 조심히 와'],mom_pc:['mom','30분 지났다. 지금 출발해!'],
+ minho_pc:['minho','17번 자리 맡음 ㅋㅋ 빨리 와'],minho_hw:['minho','알림장 사진 ㄱㄱ 나 수학 익힘책 몇 쪽이야?'],minho_food:['minho','은하분식 앞 도착! 어디쯤이야?']};
 const OWN_REPLY={dad:'아빠 운전 중. 이따 보자 ^^',bunsik:'[은하분식] 문자 주문은 안 받아요~ 가게로 와 ^^',china:'[중국집] 배달은 전화로 해 주세요~'};
 const PHRASES=['뭐해? ㅋㅋ','PC방 ㄱㄱ?','놀이터로 나와~','숙제 뭐였지?','떡볶이 먹으러 갈래?','지금 집에 가는 중','엄마 사랑해 ♡','배고파 ㅠㅠ','학원 늦을 것 같아','ㅇㅋ 알았어','문자 그만~ 알 다 깨짐 ㅋㅋ','내일 학교 쉬는 날 맞지?'];
 const EMO=['^^','^_^','*^^*','ㅋㅋㅋ','ㅎㅎ','ㅠㅠ','ㅡㅡ;','-_-','♡','♥','★','☆','~','!','?','.','♪','(^o^)/','orz','=3=','ㅇㅋ','ㄱㄱ','ㅂㅂ','ㄴㄴ'];
@@ -93,7 +136,8 @@ const EVENTS={'5-1':'근로자의 날','5-5':'어린이날 (쉬는 날)','5-8':'
 const SCENES={street:'동네 큰길',pcroom:'동네 PC방',stationery:'별빛문구완구',supermarket:'우리슈퍼',courtyard:'주택가의 작은 마당',lobby:'아파트 공동현관',hall:'아파트 2층 복도',rooftop:'공동주택 옥상',hidden_alley:'주택 사이 좁은 뒷골목',back_alley:'문구점 뒤 주택 골목',main_road:'상가와 학원이 있는 큰길',side_alley:'주택가 샛길',apartment_path:'아파트 안쪽 길',playground:'아파트 놀이터'};
 const STREET=[[950,'동일초등학교 앞'],[1290,'담장길 · 은하분식'],[1690,'문방구가 있는 골목'],[2310,'주택가'],[3040,'큰길과 골목 경계'],[1e9,'아파트 단지 쪽']];
 const INDOOR=new Set(['pcroom','stationery','supermarket','lobby','hall']);
-const GAMES=[{id:'mole',name:'두더지 잡기',free:true},{id:'snake',name:'지렁이 게임',free:true},{id:'run',name:'점프 달리기',price:2000},{id:'ball',name:'숫자 야구',price:2000}];
+const GAMES=[{id:'mole',name:'두더지 잡기',free:true},{id:'snake',name:'지렁이 게임',free:true},{id:'run',name:'점프 달리기',price:2000},{id:'ball',name:'숫자 야구',price:2000},
+ {id:'rhythm',name:'쿵짝 리듬왕',price:3000,big:true},{id:'rpg',name:'골목대장 전설',price:3500,big:true}];
 const PRICE={sms:30,callPer10:18,ring:700,wall:500,theme:1000,color:300};
 /* 메뉴 색 테마 (NATE 폰꾸미기에서 받음) */
 const THEMES={blue:{name:'기본 파랑',title:['#3d82e0','#1546a0'],sel:['#ffae4a','#f07a10']},pink:{name:'딸기 우유',title:['#ff8ac0','#d6407a'],sel:['#ff9ad0','#e84d8a']},black:{name:'블랙 메탈',title:['#5a5f6a','#1a1d24'],sel:['#6ac8ff','#2a7ad8']},green:{name:'풀잎 초록',title:['#5ac06a','#2a7a3a'],sel:['#ffd34a','#e8a400']}};
@@ -106,7 +150,7 @@ const APPS=[];
 const BUILTIN=[['contacts','전화번호부','전화부','contacts'],['sms','문자','문자','sms'],['calls','통화 기록','통화기록','calls'],['camera','카메라','카메라','camera'],
  ['album','사진첩','사진첩','album'],['dmb','DMB 방송','DMB','dmb'],['nate','NATE','NATE','nate'],['games','게임','게임','game'],
  ['ring','벨소리','벨소리','ring'],['wall','배경 화면','배경화면','wall'],['melody','멜로디 작곡','작곡','melody'],['find','친구 찾기','친구찾기','gps'],
- ['cal','달력','달력','cal'],['calc','계산기','계산기','calc'],['memo','메모장','메모장','memo'],['set','설정','설정','set']];
+ ['cal','달력','달력','cal'],['calc','계산기','계산기','calc'],['memo','메모장','메모장','memo'],['alarm','알람 · 가짜 전화','알람','alarm'],['set','설정','설정','set']];
 for(const [id,name,short,icon] of BUILTIN)APPS.push({id,name,short,icon,builtin:true});
 function registerApp(app){if(!app||!app.id||!app.name)throw Error('앱에는 id 와 name 이 있어야 해');const i=APPS.findIndex(a=>a.id===app.id);if(i>=0)APPS[i]=app;else APPS.push(app);return APPS.length}
 
@@ -136,18 +180,23 @@ const ICON={
  calc(g,x,y){g.fillStyle='#4a5468';rr(g,x+4,y+1,14,20,2);g.fill();R(g,x+6,y+3,10,5,'#b8e8a8');for(let i=0;i<3;i++)for(let j=0;j<3;j++)R(g,x+6+j*3.6,y+10+i*3.6,2.6,2.6,j===2&&i===2?'#ff8a3a':'#e9eef8')},
  memo(g,x,y){R(g,x+4,y+2,14,18,'#fff6b0');g.strokeStyle='#b8a040';g.lineWidth=.8;g.strokeRect(x+4.5,y+2.5,13,17);for(let i=0;i<4;i++)R(g,x+6,y+6+i*3.4,10,.8,'#b8a040');g.fillStyle='#e8402a';g.beginPath();g.moveTo(x+14,y+16);g.lineTo(x+20,y+8);g.lineTo(x+21,y+9);g.lineTo(x+15,y+17);g.fill()},
  set(g,x,y){for(let i=0;i<8;i++){const a=i*Math.PI/4;R(g,x+11+Math.cos(a)*7-1.6,y+11+Math.sin(a)*7-1.6,3.2,3.2,'#7b8494')}circ(g,x+11,y+11,6.5,'#7b8494');circ(g,x+11,y+11,2.6,'#e9eef8')},
- app(g,x,y){g.fillStyle='#3a9a8a';rr(g,x+3,y+3,16,16,4);g.fill();T(g,'+',x+11,y+16,{size:13,bold:true,color:'#fff',align:'center'})}};
+ app(g,x,y){g.fillStyle='#3a9a8a';rr(g,x+3,y+3,16,16,4);g.fill();T(g,'+',x+11,y+16,{size:13,bold:true,color:'#fff',align:'center'})},
+ alarm(g,x,y){circ(g,x+5,y+5,3.4,'#e8402a');circ(g,x+17,y+5,3.4,'#e8402a');circ(g,x+11,y+12,8,'#e8402a');circ(g,x+11,y+12,6.2,'#fff');g.strokeStyle='#1d2633';g.lineWidth=1.3;g.beginPath();g.moveTo(x+11,y+12);g.lineTo(x+11,y+7.5);g.moveTo(x+11,y+12);g.lineTo(x+14.5,y+13.5);g.stroke();R(g,x+5,y+19,2.4,2,'#8a1e14');R(g,x+15,y+19,2.4,2,'#8a1e14')},
+ vm(g,x,y){g.fillStyle='#4a5468';rr(g,x+1,y+5,20,12,2);g.fill();circ(g,x+7,y+11,3,'#fff');circ(g,x+15,y+11,3,'#fff');circ(g,x+7,y+11,1.2,'#4a5468');circ(g,x+15,y+11,1.2,'#4a5468');R(g,x+7,y+13.6,8,1,'#fff')}};
 
+const wall=()=>{try{return w.Date.now()}catch(_){return Date.now()}};
 function fakeNum(id){let h=0;for(const ch of String(id))h=(h*31+ch.charCodeAt(0))>>>0;return ['011','016','017','019'][h%4]+'-'+(1000+h%9000)+'-'+(1000+Math.floor(h/9000)%9000)}
 function placeOf(p){if(!p)return'동네 어딘가';if(p.playground)return'아파트 놀이터';if(p.scene==='street'){const a=STREET.find(([x])=>p.x<x);return a?a[1]:'동네 큰길'}return SCENES[p.scene]||'동네 어딘가'}
 
 function create(host){
  const now=()=>host.now();
  /* ---------- 저장 ---------- */
- const D={v:2,wall:'cat',ring:'r4',inbox:SEED_INBOX.map(m=>({...m})),sent:[],calls:SEED_CALLS.map(c=>({...c})),best:{mole:0,snake:0,run:0,ball:0},n:3,bill:{sms:0,sec:0,data:0,info:0},momWarned:false,got:{},mel:[],memos:[],alert:'ring',theme:'blue',coloring:null,emoBox:[],bm:[],payLog:[]};
- try{const s=JSON.parse(w.localStorage?.getItem(STORE)||'null');if(s&&typeof s==='object'){for(const k of ['wall','ring','alert','theme','coloring'])if(typeof s[k]==='string')D[k]=s[k];for(const k of ['inbox','sent','calls','mel','memos','emoBox','bm','payLog'])if(Array.isArray(s[k]))D[k]=s[k].slice(0,30);
-  for(const k of ['best','bill','got'])if(s[k]&&typeof s[k]==='object')Object.assign(D[k],s[k]);if(Number.isFinite(s.n))D.n=s.n;D.momWarned=!!s.momWarned}}catch(_){}
- if(!['ring','vib','mute'].includes(D.alert))D.alert='ring';
+ const D={v:2,wall:'cat',ring:'r4',inbox:SEED_INBOX.map(m=>({...m})),sent:[],calls:SEED_CALLS.map(c=>({...c})),best:{mole:0,snake:0,run:0,ball:0},n:3,bill:{sms:0,sec:0,data:0,info:0},momWarned:false,got:{},mel:[],memos:[],alert:'ring',theme:'blue',coloring:null,emoBox:[],bm:[],payLog:[],
+  vm:[],spam:[],ck:[],gifts:[],speed:{...SPEED_DEF},spamBlock:false,optout:false,npc:true,prevAlert:'ring',chain:0,chainDone:false,games:{}};
+ try{const s=JSON.parse(w.localStorage?.getItem(STORE)||'null');if(s&&typeof s==='object'){for(const k of ['wall','ring','alert','theme','coloring','prevAlert'])if(typeof s[k]==='string')D[k]=s[k];for(const k of ['inbox','sent','calls','mel','memos','emoBox','bm','payLog','vm','spam','ck','gifts'])if(Array.isArray(s[k]))D[k]=s[k].slice(0,30);
+  for(const k of ['best','bill','got','speed','games'])if(s[k]&&typeof s[k]==='object'&&!Array.isArray(s[k]))Object.assign(D[k],s[k]);if(Number.isFinite(s.n))D.n=s.n;if(Number.isFinite(s.chain))D.chain=s.chain;D.momWarned=!!s.momWarned;
+  for(const k of ['spamBlock','optout','chainDone'])D[k]=!!s[k];if(s.npc===false)D.npc=false}}catch(_){}
+ if(!['ring','vib','both','mute'].includes(D.alert))D.alert='ring';if(!['ring','both','mute'].includes(D.prevAlert))D.prevAlert='ring';
  const save=()=>{try{w.localStorage?.setItem(STORE,JSON.stringify(D))}catch(_){}};
  let PH=[];try{const p=JSON.parse(w.localStorage?.getItem(PSTORE)||'[]');if(Array.isArray(p))PH=p.filter(x=>x&&typeof x.url==='string').slice(0,12)}catch(_){}
  const savePhotos=()=>{try{w.localStorage?.setItem(PSTORE,JSON.stringify(PH.filter(p=>p.url).map(({id,url,time,place})=>({id,url,time,place}))))}catch(_){host.toast?.('사진첩 저장 공간이 꽉 찼어요')}};
@@ -175,21 +224,33 @@ function create(host){
  const peerAlive=id=>NET.peers().some(p=>p.id===id);
 
  /* ---------- 화면 상태 ---------- */
- const S={scr:'idle',arg:null,sel:0,stack:[],dial:'',pop:null,confirm:null,blink:-1,dirty:true,tune:null,preview:0,call:null,ed:null,hinted:false,buzzAt:0};
+ const S={scr:'idle',arg:null,sel:0,stack:[],dial:'',pop:null,confirm:null,blink:-1,dirty:true,tune:null,preview:0,call:null,ed:null,hinted:false,buzzAt:0,
+  resume:null,alarm:null,fake:null,marks:[],q:null,everShown:false,life:{t0:wall(),minho:false,mom:false,spamN:0,spamAt:0,chain:false,eveningSeen:false,nextTry:0}};
  const appOf=id=>APPS.find(a=>a.id===id);
  const cur=()=>SCR[S.scr]||appOf(S.scr);
- function afterNav(){if(S.scr!=='camera')host.cameraFrame?.(null);const sc=cur();if(sc?.typing&&S.ed)host.typing({value:S.ed.text(),placeholder:sc.typing(),max:S.ed.max,get:()=>S.ed?S.ed.text():'',onInput:v=>{if(!S.ed)return;S.ed.setText(v);dirty()},onEnter:()=>{key('ok')}});else host.typing(null)}
- function go(scr,arg){S.stack.push({scr:S.scr,arg:S.arg,sel:S.sel,ed:S.ed});S.scr=scr;S.arg=arg==null?null:arg;S.sel=0;S.ed=null;enter();afterNav();dirty()}
- function replace(scr,arg){S.scr=scr;S.arg=arg==null?null:arg;S.sel=0;S.ed=null;enter();afterNav();dirty()}
- function back(){stopTune();S.confirm=null;if(!S.stack.length){home();return}const p=S.stack.pop();S.scr=p.scr;S.arg=p.arg;S.sel=p.sel;S.ed=p.ed||null;afterNav();dirty()}
- function home(){stopTune();S.stack=[];S.scr='idle';S.arg=null;S.sel=0;S.ed=null;S.confirm=null;afterNav();dirty()}
+ function afterNav(){if(S.scr!=='camera')host.cameraFrame?.(null);const sc=cur();if(sc?.typing&&S.ed){const ph=sc.typing();if(ph){host.typing({value:S.ed.text(),placeholder:ph,max:S.ed.max,get:()=>S.ed?S.ed.text():'',onInput:v=>{if(!S.ed)return;S.ed.setText(v);dirty()},onEnter:()=>{key('ok')}});return}}host.typing(null)}
+ /* A124: 화면을 떠날 때 알려 준다 (게임은 소리를 멈추고 저장한다. why 가 'call' 이면 잠시 멈춤) */
+ function leaveCur(why){const sc=cur();try{sc?.leave?.call(sc,why,api)}catch(err){w.console?.error?.(err)}}
+ function go(scr,arg){leaveCur('go');S.stack.push({scr:S.scr,arg:S.arg,sel:S.sel,ed:S.ed});S.scr=scr;S.arg=arg==null?null:arg;S.sel=0;S.ed=null;enter();afterNav();dirty()}
+ function replace(scr,arg){leaveCur('replace');S.scr=scr;S.arg=arg==null?null:arg;S.sel=0;S.ed=null;enter();afterNav();dirty()}
+ function back(){stopTune();S.confirm=null;leaveCur('back');if(!S.stack.length){home();return}const p=S.stack.pop();S.scr=p.scr;S.arg=p.arg;S.sel=p.sel;S.ed=p.ed||null;afterNav();dirty()}
+ function home(){stopTune();leaveCur('home');S.stack=[];S.scr='idle';S.arg=null;S.sel=0;S.ed=null;S.confirm=null;afterNav();dirty()}
+ /* 전화가 오면 게임 화면을 기억해 두었다가, 끊으면 돌아간다 */
+ const GAME_SCR=new Set(['rhythm','rpg','mole','snake','run','ball']);
+ function keepForResume(){if(GAME_SCR.has(S.scr)&&!S.resume){S.resume={scr:S.scr,arg:S.arg,stack:S.stack.slice(),sel:S.sel};leaveCur('call')}else if(S.scr==='nate'&&NB)NB.exit(true)}
+ function finishCall(){S.call=null;host.stopVibrate?.();const r=S.resume;S.resume=null;if(r&&(SCR[r.scr]||appOf(r.scr))&&host.powered!==false){S.scr=r.scr;S.arg=r.arg;S.stack=r.stack;S.sel=r.sel;S.ed=null;const sc=cur();try{sc?.resume?.call(sc,api)}catch(_){}afterNav();dirty()}else home()}
  function enter(){const sc=cur();sc?.enter?.call(sc,api)}
  function dirty(){S.dirty=true;host.invalidate()}
  function pop(text,ms=1600,modal=false){S.pop={text,until:now()+ms,modal};dirty()}
  function ask(text,yes){S.confirm={text,yes};dirty()}
  function stopTune(){if(S.tune){S.tune=null;host.stopTune()}S.preview=0}
  function playRing(r){stopTune();if(!r)return;S.tune=r[0];const res=host.playTune(r,()=>{if(S.tune===r[0]){S.tune=null;dirty()}});if(res?.silent&&res.why==='off'&&host.shown)pop('효과음이 꺼져 있어\n소리가 안 나요');dirty()}
- function notifyAlert(kind,text){if(D.alert==='ring'){if(kind==='sms'&&!S.call)playRing(ringById('r9'))}else if(D.alert==='vib')host.buzz();host.alert({kind,text})}
+ const rings_=()=>D.alert==='ring'||D.alert==='both',vibs_=()=>D.alert==='vib'||D.alert==='both';
+ function notifyAlert(kind,text){if(rings_()&&kind==='sms'&&!S.call&&!GAME_SCR.has(S.scr))playRing(ringById('r9'));if(vibs_())host.buzz(kind==='sms'?[200,90,200]:undefined);host.alert({kind,text})}
+ const vmNew=()=>D.vm.filter(v=>!v.heard).length;
+ const ALERT_NAME={ring:'벨소리',vib:'진동 (매너모드)',both:'벨+진동',mute:'무음'};
+ /* 짧은 목소리 흉내 (사람이 말하는 것처럼 낮은 소리가 몇 번 난다) */
+ function voice(n=5,base=230){for(let i=0;i<n;i++)host.beep([base+((i*53+n*17)%9)*11],65,.03,'triangle',i*.11)}
  function editorFor(max){S.ed=Editor({max,now});return S.ed}
  function edChanged(){if(S.ed)host.typingValue(S.ed.text())}
 
@@ -197,7 +258,8 @@ function create(host){
  function status(g){g.fillStyle=grad(g,0,TOP,'#33435f','#0d1524');g.fillRect(0,0,W,TOP);
   if(host.signal&&host.signal!=='normal')T(g,'×',7,10,{size:10,bold:true,color:'#ff8580'});else for(let i=0;i<5;i++){const hh=2+i*1.7;R(g,3+i*3,10-hh,2,hh,'#e8f0ff')}
   let x=21;if(unread()){R(g,x,3.5,9,6,'#ffd34a');g.strokeStyle='#8a5a00';g.lineWidth=.8;g.beginPath();g.moveTo(x,3.5);g.lineTo(x+4.5,7);g.lineTo(x+9,3.5);g.stroke();x+=12}
-  if(D.alert==='vib'){g.strokeStyle='#e8f0ff';g.lineWidth=1;g.strokeRect(x+2.5,3,4,7);g.beginPath();g.moveTo(x+.5,4);g.lineTo(x+.5,9);g.moveTo(x+8.5,4);g.lineTo(x+8.5,9);g.stroke();x+=12}
+  if(vmNew()){g.fillStyle='#e8f0ff';rr(g,x,3.5,10,6,1.5);g.fill();circ(g,x+3,6.5,1.4,'#33435f');circ(g,x+7,6.5,1.4,'#33435f');x+=12}
+  if(vibs_()){g.strokeStyle='#e8f0ff';g.lineWidth=1;g.strokeRect(x+2.5,3,4,7);g.beginPath();g.moveTo(x+.5,4);g.lineTo(x+.5,9);g.moveTo(x+8.5,4);g.lineTo(x+8.5,9);g.stroke();if(D.alert==='both')circ(g,x+4.5,1.8,1.3,'#ffd34a');x+=12}
   else if(D.alert==='mute'||!host.audioOn()||!host.prefs.keyTone){R(g,x,5,2.5,3,'#e8f0ff');g.fillStyle='#e8f0ff';g.beginPath();g.moveTo(x+2.5,5);g.lineTo(x+5.5,2.5);g.lineTo(x+5.5,10.5);g.lineTo(x+2.5,8);g.fill();g.strokeStyle='#ff6a5a';g.lineWidth=1;g.beginPath();g.moveTo(x+7,4);g.lineTo(x+10,9);g.moveTo(x+10,4);g.lineTo(x+7,9);g.stroke();x+=12}
   if(host.signal==='none'){T(g,'서비스 지역 아님',x,9.5,{size:7,color:'#ffb2ad'});x+=49}else if(NET.ready()){T(g,'방',x+1,9.5,{size:7.5,bold:true,color:'#7dff8a'});x+=10}
   if(S.scr!=='idle')T(g,nowStr(),W/2+8,9.5,{size:8.5,bold:true,color:'#e8f0ff',align:'center'});
@@ -246,56 +308,128 @@ function create(host){
  function edHelp(g,ed,y){const s=ed.mode==='ko'?'1ㅣ *ㆍ 0ㅡ  #띄움 ▶다음':ed.mode==='en'?'2abc~9wxyz 1.,?! #띄움':'숫자 그대로 · ▶띄움';T(g,s,W/2,y,{size:7.5,color:'#6b778a',align:'center'})}
 
  /* ---------- 전화 ---------- */
- function call(target){if(host.signal&&host.signal!=='normal'){pop('통신 신호가 없습니다');return}stopTune();if(S.call&&S.call.phase!=='ended')return;let who=typeof target==='string'?(findNum(target)||{n:target,num:target,unknown:true}):target;
-  const c={who,phase:'dial',t0:now(),lines:[],talk0:0,result:null,ring:0};const digits=String(who.num||'').replace(/\D/g,'');
-  if(who.peer){if(!NET.ready()||!peerAlive(who.peer)){pop('같은 방에 있어야\n걸 수 있어요');return}c.cid=Math.random().toString(36).slice(2,10);c.real=true;NET.send('ring',{to:who.peer,call:c.cid})}
+ const sceneCtx=()=>{const sc=host.scene?.()||'street',p=host.place?.()||{};return{scene:sc,indoor:INDOOR.has(sc),area:p.area||'동네',weather:p.weather||'맑음'}};
+ const placeWho=p=>BOOK.find(b=>b.id===p.id)||p;
+ const ARS_NUM={'114':'114','0805300000':'optout','15880530':'info'};
+ function call(target,o={}){if(host.signal&&host.signal!=='normal'){pop('통신 신호가 없습니다');return}stopTune();if(S.call&&S.call.phase!=='ended')return;
+  let hide=!!o.hide;
+  /* *23# 을 앞에 붙이면 발신 번호 표시 제한 */
+  if(typeof target==='string'&&target.startsWith('*23#')){hide=true;target=target.slice(4);if(!/\d/.test(target)){pop('*23# 다음에 걸 번호를\n눌러 주세요');return}}
+  const raw=typeof target==='string'?target.replace(/\D/g,''):'';
+  let who=typeof target==='string'?(findNum(target)||(()=>{const p=PLACE_BOOK.find(q=>q.num.replace(/\D/g,'')===raw);return p?placeWho(p):null})()||{n:target,num:target,unknown:true}):target;
+  const digits=String(who.num||'').replace(/\D/g,''),ars=who.ars||ARS_NUM[digits]||null;
+  if(ars&&who.unknown)who={n:ars==='114'?'안내 114':ars==='optout'?'광고 수신 거부':'은하 ARS 안내',num:who.num,ars};
+  const c={who,phase:'dial',t0:now(),lines:[],talk0:0,result:null,ring:0,hide};
+  if(who.peer){if(!NET.ready()||!peerAlive(who.peer)){pop('같은 방에 있어야\n걸 수 있어요');return}c.cid=Math.random().toString(36).slice(2,10);c.real=true;NET.send('ring',hide?{to:who.peer,call:c.cid,hide:1}:{to:who.peer,call:c.cid})}
+  else if(ars)c.ars={kind:ars,node:null,arg:null,text:'',t0:0,keys:''};
   else if(who.unknown){if(/^(112|119|113|122)$/.test(digits))c.result={msg:'긴급 전화는 장난으로 걸면 안 돼요!\n(게임 속 휴대폰이라 연결되지 않아요)',fast:true};
-   else if(digits==='114')c.result={msg:'안내 114입니다~\n동네 가게 번호는 전화번호부에 있어요',fast:false};
    else if(digits.length<7)c.result={msg:'번호를 확인하고\n다시 걸어 주세요',fast:true};else c.result={msg:'지금 거신 번호는\n없는 번호입니다.\n확인하시고 다시 걸어 주십시오.',fast:false}}
   else if(who.voice)c.result={msg:'지금은 전화를 받을 수 없어\n소리샘으로 연결됩니다.\n삐 소리가 나면 말씀하세요.',voice:true};
   else if(who.noAnswer)c.result={msg:'전화를 받지 않습니다.\n(집에 아무도 없나 봐)',late:true};
-  D.calls.unshift({t:'out',n:who.n,num:who.num,time:nowStr(),peer:who.peer||null});D.calls=D.calls.slice(0,30);save();
+  else if(hide&&who.talk)c.prank=true;
+  D.calls.unshift({t:'out',n:(hide?'(번호 숨김) ':'')+who.n,num:who.num,time:nowStr(),peer:who.peer||null});D.calls=D.calls.slice(0,30);save();
   S.call=c;S.dial='';S.stack=[];S.scr='call';S.sel=0;S.ed=null;afterNav();dirty()}
- function endCall(msg){const c=S.call;if(!c||c.phase==='ended')return;stopTune();if(c.talk0)charge('sec',Math.round((now()-c.talk0)/1000));c.phase='ended';c.endAt=now()+1400;c.endMsg=msg||'통화 종료';S.ed=null;afterNav();dirty()}
- function hang(msg){const c=S.call;if(!c)return;if(c.real&&c.phase!=='ended')NET.send('hang',{to:c.who.peer,call:c.cid});endCall(msg)}
+ function endCall(msg){const c=S.call;if(!c||c.phase==='ended')return;stopTune();host.stopVibrate?.();if(c.talk0)charge('sec',Math.round((now()-c.talk0)/1000));c.phase='ended';c.endAt=now()+1400;c.endMsg=msg||'통화 종료';S.ed=null;afterNav();dirty()}
+ function hang(msg){const c=S.call;if(!c)return;if(c.real&&c.phase!=='ended'&&c.phase!=='vmprompt'&&c.phase!=='vmrec')NET.send('hang',{to:c.who.peer,call:c.cid});endCall(msg)}
  function incoming(m){
-  if(host.powered===false||host.signal&&host.signal!=='normal'){NET.send('decline',{to:m.from,call:m.call});return}
-  const who={n:m.name||'친구',num:fakeNum(m.from),peer:m.from,friend:true};
-  if(S.call&&S.call.phase!=='ended'){NET.send('busy',{to:m.from,call:m.call});D.calls.unshift({t:'miss',n:who.n,num:who.num,time:nowStr(),peer:m.from});save();return}
+  const off=host.powered===false,nosig=!!(host.signal&&host.signal!=='normal');
+  /* 꺼져 있거나 신호가 없으면 거절로 알리고, 켜지면 콜키퍼 문자로 알려 준다 */
+  if(off||nosig){NET.send('decline',{to:m.from,call:m.call,why:off?'off':'signal'});D.ck.push(m.hide?{n:'발신 번호 표시 제한',num:'',time:nowStr()}:{n:m.name||'친구',num:fakeNum(m.from),time:nowStr()});D.ck=D.ck.slice(-5);save();return}
+  const who=m.hide?{n:'발신 번호 표시 제한',num:'',peer:m.from,friend:true,hidden:true}:{n:m.name||'친구',num:fakeNum(m.from),peer:m.from,friend:true};
+  if(S.call&&S.call.phase!=='ended'){NET.send('busy',{to:m.from,call:m.call});D.calls.unshift({t:'miss',n:who.n,num:who.num,time:nowStr(),peer:who.hidden?null:m.from});save();return}
   if(D.coloring&&allRings().some(r=>r[0]===D.coloring))NET.send('tone',{to:m.from,call:m.call,ring:D.coloring});
+  keepForResume();
   S.call={who,cid:m.call,real:true,incoming:true,phase:'ring',t0:now(),lines:[],talk0:0};S.dial='';S.stack=[];S.scr='call';S.sel=0;S.ed=null;afterNav();
   host.alert({kind:'call',text:who.n+'에게서 전화가 왔어요'});dirty()}
- function answer(){const c=S.call;if(!c||c.phase!=='ring')return;stopTune();NET.send('answer',{to:c.who.peer,call:c.cid});c.phase='live';c.talk0=now();c.lines.push({sys:1,text:'통화가 연결됐어요'});
-  D.calls.unshift({t:'in',n:c.who.n,num:c.who.num,time:nowStr(),peer:c.who.peer});save();editorFor(70);afterNav();dirty()}
- function decline(missed){const c=S.call;if(!c||c.phase!=='ring')return;NET.send('decline',{to:c.who.peer,call:c.cid});D.calls.unshift({t:'miss',n:c.who.n,num:c.who.num,time:nowStr(),peer:c.who.peer});save();endCall(missed?'부재중 전화':'전화를 거절했어요')}
+ /* 엄마와 민호가 먼저 거는 전화 (가짜 전화도 같은 방법) */
+ function npcCall(id){const sc=SCRIPTS[id],who=sc&&BOOK.find(b=>b.id===sc.who);if(!who||S.call&&S.call.phase!=='ended'||host.powered===false||host.signal&&host.signal!=='normal')return false;
+  stopTune();keepForResume();S.call={who,npc:true,script:id,incoming:true,phase:'ring',t0:now(),lines:[],talk0:0};S.dial='';S.stack=[];S.scr='call';S.sel=0;S.ed=null;afterNav();
+  host.alert({kind:'call',text:who.n+'에게서 전화가 왔어요'});dirty();return true}
+ function sayNode(c){const sc=SCRIPTS[c.script],nd=sc.nodes[c.node];if(!nd){hang('통화 종료');return}const ctx=sceneCtx(),text=typeof nd.say==='function'?nd.say(ctx):nd.say;
+  c.lines.push({me:0,text});voice(6);c.opts=nd.opts||null;c.sel=0;c.done=nd.opts?null:{at:now()+(nd.next?2600:3600),next:nd.next||null,after:nd.after?(typeof nd.after==='function'?nd.after(ctx):nd.after):null};dirty()}
+ function pickOpt(i){const c=S.call;if(!c||!c.opts||!c.opts[i])return false;const [label,next]=c.opts[i];c.lines.push({me:1,text:label});c.opts=null;c.node=next;c.wait=now()+900;dirty();return true}
+ function answer(){const c=S.call;if(!c||c.phase!=='ring')return;stopTune();host.stopVibrate?.();
+  if(c.npc){c.phase='script';c.talk0=now();c.node=SCRIPTS[c.script].start;D.calls.unshift({t:'in',n:c.who.n,num:c.who.num,time:nowStr()});save();sayNode(c);return}
+  NET.send('answer',{to:c.who.peer,call:c.cid});c.phase='live';c.talk0=now();c.lines.push({sys:1,text:'통화가 연결됐어요'});
+  D.calls.unshift({t:'in',n:c.who.n,num:c.who.num,time:nowStr(),peer:c.who.hidden?null:c.who.peer});save();editorFor(70);afterNav();dirty()}
+ function decline(missed){const c=S.call;if(!c||c.phase!=='ring')return;host.stopVibrate?.();
+  if(c.npc){D.calls.unshift({t:'miss',n:c.who.n,num:c.who.num,time:nowStr()});save();const sc=SCRIPTS[c.script];if(sc.miss&&!sc.fake)later(()=>receive({from:c.who.n,fromId:c.who.id,text:sc.miss}),4000);endCall(missed?'부재중 전화':'전화를 거절했어요');return}
+  NET.send('decline',{to:c.who.peer,call:c.cid});D.calls.unshift({t:'miss',n:c.who.n,num:c.who.num,time:nowStr(),peer:c.who.hidden?null:c.who.peer});save();endCall(missed?'부재중 전화':'전화를 거절했어요')}
  function sayLine(){const c=S.call,ed=S.ed;if(!c||c.phase!=='live'||!ed)return;const text=ed.text().trim();if(!text)return;NET.send('talk',{to:c.who.peer,call:c.cid,text});c.lines.push({me:1,text});ed.clear();edChanged();dirty()}
+ /* 소리샘: 친구가 안 받거나, 꺼져 있거나, 거절하면 음성 메시지를 남긴다 (글로 쓰면 목소리처럼 전해진다) */
+ const VM_MSG={off:'전원이 꺼져 있어 삐 소리 후\n소리샘으로 연결되오며\n통화료가 부과됩니다.',signal:'전화기가 꺼져 있거나\n전파가 닿지 않는 곳에 있어\n소리샘으로 연결됩니다.',none:'연결이 되지 않아 삐 소리 후\n소리샘으로 연결되오며\n통화료가 부과됩니다.'};
+ function toVoicemail(why){const c=S.call;if(!c||['ended','vmprompt','vmrec'].includes(c.phase))return;stopTune();c.phase='vmprompt';c.vmAt=now();c.vmMsg=VM_MSG[why]||VM_MSG.none;S.ed=null;afterNav();dirty()}
+ function leaveVm(){const c=S.call,ed=S.ed;if(!c||c.phase!=='vmrec'||!ed)return;const text=ed.text().trim();if(!text){pop('남길 말을 써 주세요',1000);return}
+  if(c.who.peer)NET.send('vm',{to:c.who.peer,text});else if(c.who.id==='teacher')later(()=>receive({from:c.who.n,fromId:'teacher',text:'소리샘 메시지 잘 들었어요. 내일 학원에서 봐요 ^^'}),9000);
+  c.vmSaved=true;endCall('메시지가 저장되었습니다')}
+ function gotVm(m){D.vm.unshift({id:'v'+(++D.n),from:m.name||'친구',fromPeer:m.from||null,text:String(m.text||''),time:nowStr(),heard:false});D.vm=D.vm.slice(0,10);save();
+  receive({from:'소리샘',text:'[소리샘] 새 음성 메시지가 '+vmNew()+'개 있어요. 1번을 길게 누르면 들을 수 있어요.'})}
+ /* 콜키퍼: 꺼져 있을 때 온 전화를 켜자마자 문자로 알려 준다 */
+ function deliverCallkeeper(){if(!D.ck.length||host.powered===false||host.signal&&host.signal!=='normal')return;const L=D.ck.splice(0);save();
+  receive({from:'콜키퍼',text:'[콜키퍼] 전화기가 꺼져 있을 때 온 전화예요.\n'+L.map(x=>x.n+(x.num?'('+x.num+')':'')+' '+x.time).join('\n')})}
+ /* ARS 안내: 숫자를 눌러 고른다. 별표는 처음으로 */
+ const ARS_TREE={
+  info:{root:{say:'안녕하세요. 은하 ARS 정보센터입니다. 1번 동네 날씨, 2번 오늘의 운세, 3번 월드컵 경기 일정, 4번 가요 순위 투표, 0번 상담원 연결. 다시 들으시려면 별표를 눌러 주세요.',keys:{'1':'wx','2':'luck','3':'wc','4':'vote','0':'agent'}},
+   wx:{say:c=>'지금 '+c.area+' 날씨는 '+c.weather+'입니다. 오늘 낮 기온은 25도 안팎이고 자외선이 강하니 모자를 쓰세요. 처음으로 가시려면 별표.'},
+   luck:{say:'태어난 해의 끝자리 숫자를 눌러 주세요.',any:'luck2'},
+   luck2:{say:(c,d)=>'끝자리 '+d+'번 친구의 오늘 운세입니다. '+FORTUNE[Number(d)%FORTUNE.length]+'. 처음으로 가시려면 별표.'},
+   wc:{say:'2006 독일 월드컵 대한민국 경기 일정입니다. 6월 13일 밤 10시 토고전, 19일 새벽 4시 프랑스전, 24일 새벽 4시 스위스전. 대~한민국! 처음으로는 별표.'},
+   vote:{say:'이번 주 가요 순위 투표입니다. 1번 반짝반짝 첫사랑, 2번 질주, 3번 여름별, 4번 너에게 쓰는 일기. 번호를 누르면 투표되고 정보이용료 200원이 부과됩니다.',keys:{'1':'voted','2':'voted','3':'voted','4':'voted'}},
+   voted:{say:(c,d)=>d+'번 노래에 투표하셨습니다. 투표해 주셔서 감사합니다. 정보이용료 200원이 부과되었습니다. 처음으로는 별표.',pay:['ARS 가요 순위 투표',200]},
+   agent:{say:'상담원을 연결해 드리겠습니다. 잠시만 기다려 주십시오.',hold:true}},
+  '114':{root:{say:'안녕하십니까, 안내 114입니다. 찾으시는 곳의 번호를 눌러 주세요. 1번 은하분식, 2번 중국집, 3번 별빛문구, 4번 우리슈퍼, 5번 동네 PC방.',keys:{'1':'p','2':'p','3':'p','4':'p','5':'p'}},
+   p:{say:(c,d)=>{const pl=PLACE_BOOK.find(x=>x.key===d);return'문의하신 '+pl.n+'의 번호는 '+pl.num+'입니다. 바로 연결하시려면 1번을 눌러 주세요. 연결 요금 80원이 부과됩니다. 다시 찾으시려면 별표.'},keys:{'1':'connect'}},
+   connect:{connect:true}},
+  optout:{root:{say:'광고 문자 수신 거부 서비스입니다. 수신 거부를 원하시면 1번을 눌러 주세요.',keys:{'1':'done'}},
+   done:{say:'수신 거부 처리되었습니다. 앞으로 광고 문자가 줄어듭니다. 이용해 주셔서 감사합니다.',optout:true}}};
+ function arsGo(next,d){const c=S.call,A=c&&c.ars;if(!A)return;const tree=ARS_TREE[A.kind],nd=tree[next];if(!nd)return;
+  if(nd.connect){const pl=PLACE_BOOK.find(x=>x.key===A.arg);if(!pl)return;charge('info',80);D.payLog.unshift({name:'114 안내 연결',won:80,time:nowStr()});D.payLog=D.payLog.slice(0,30);
+   if(c.talk0)charge('sec',Math.round((now()-c.talk0)/1000));c.talk0=0;S.call=null;call(placeWho(pl));return}
+  A.node=next;if(next==='p')A.arg=d;const arg=next==='p'||next==='luck2'||next==='voted'?d:A.arg;A.text=typeof nd.say==='function'?nd.say(sceneCtx(),arg):nd.say;A.t0=now();A.bad=false;
+  if(nd.pay){charge('info',nd.pay[1]);D.payLog.unshift({name:nd.pay[0],won:nd.pay[1],time:nowStr()});D.payLog=D.payLog.slice(0,30);save()}
+  if(nd.optout){D.optout=true;save()}
+  if(nd.hold){A.hold=true;A.holdAt=now()+Math.max(1800,A.text.length*55)}dirty()}
+ function arsKey(id){const c=S.call,A=c.ars;if(!A||!A.node)return;if(id==='*'){arsGo('root');return}if(A.hold)return;if(!/^[0-9#]$/.test(id))return;A.keys=(A.keys+id).slice(-8);
+  const nd=ARS_TREE[A.kind][A.node],nx=nd.keys?.[id]||(nd.any&&/^[0-9]$/.test(id)?nd.any:null);if(nx)arsGo(nx,id);else{A.bad=true;A.badAt=now()}dirty()}
 
  /* ---------- 문자 ---------- */
- function sendSms(to,text,photo){if(host.signal&&host.signal!=='normal')return 'no-signal';const id='m'+(++D.n);D.sent.unshift({id,to:to.n,toId:to.id,text,time:nowStr(),photo:photo?1:0});D.sent=D.sent.slice(0,30);charge('sms',1);save();
-  if(to.peer){if(!NET.send(photo?'photo':'sms',photo?{to:to.peer,photo,text}:{to:to.peer,text}))return 'offline';return 'net'}
+ function sendSms(to,text,photo){if(host.signal&&host.signal!=='normal')return 'no-signal';const id='m'+(++D.n);D.sent.unshift({id,to:to.n,toId:to.id,text,time:nowStr(),photo:photo?1:0,peer:to.peer?1:0});D.sent=D.sent.slice(0,30);charge('sms',1);save();
+  if(String(text).includes('[행운의 문자]')){D.chain++;save();if(D.chain>=3&&!D.chainDone){D.chainDone=true;save();later(()=>receive({from:'단짝 민호',fromId:'minho',text:'ㅋㅋ 진짜 3명한테 보냈냐? 행운은 모르겠고 떡볶이는 내가 쏜다 ㅋㅋ'}),7000)}}
+  if(to.peer){if(!NET.send(photo?'photo':'sms',photo?{to:to.peer,photo,text,mid:id}:{to:to.peer,text,mid:id}))return 'offline';return 'net'}
   const rules=(w.WebTown?.CONTACTS||[]).find(c=>c[0]===to.id);let reply=null;if(rules)reply=(rules[2].find(([re])=>re.test(text))||[null,rules[3]])[1];else if(OWN_REPLY[to.id])reply=OWN_REPLY[to.id];
   if(reply&&to.id!=='home')later(()=>receive({from:to.n,fromId:to.id,text:reply}),2600+Math.round(Math.random()*1800));return 'local'}
- function receive(m){D.inbox.unshift({id:'r'+(++D.n),from:m.from,fromId:m.fromId||null,fromPeer:m.fromPeer||null,text:m.text,photo:m.photo||null,time:nowStr(),read:false});D.inbox=D.inbox.slice(0,30);save();syncLabel();
+ function receive(m){D.inbox.unshift({id:'r'+(++D.n),from:m.from,fromId:m.fromId||null,fromPeer:m.fromPeer||null,text:m.text,photo:m.photo||null,time:nowStr(),read:false,mid:m.mid||null,spam:m.spam?1:0});D.inbox=D.inbox.slice(0,30);save();syncLabel();
   if(host.powered===false)return;
-  notifyAlert('sms',(m.photo?'포토 메일 · ':'문자 · ')+m.from);if(host.shown&&!S.call)pop((m.photo?'포토 메일 왔숑~\n':'문자 왔숑~\n')+m.from,2200);dirty()}
+  notifyAlert('sms',(m.photo?'포토 메일 · ':'문자 · ')+m.from);if(host.shown&&!S.call&&!GAME_SCR.has(S.scr))pop((m.photo?'포토 메일 왔숑~\n':'문자 왔숑~\n')+m.from,2200);dirty()}
+ /* 스팸 차단을 켜 두면 광고 문자는 소리 없이 스팸 보관함으로 */
+ function spamIn(text){if(D.spamBlock){D.spam.unshift({id:'s'+(++D.n),from:'광고 문자',text,time:nowStr()});D.spam=D.spam.slice(0,20);save();return}receive({from:'모르는 번호',text,spam:1})}
  function contactOf(m){if(m.fromPeer){const f=friends().find(x=>x.peer===m.fromPeer);return f||null}return BOOK.find(b=>b.id===m.fromId)||null}
+ const oneLine=s=>String(s||'').replace(/\s*\n\s*/g,' ');
+ /* 숫자만 온 문자: 삐삐 숫자 암호 풀이 */
+ function pagerHint(text){const t=String(text||'').trim();if(!/^[0-9 ]+$/.test(t))return'';const parts=t.split(/\s+/).map(x=>PAGER[x]?x+' = '+PAGER[x]:null).filter(Boolean);return parts.length?'[숫자 암호] '+parts.join(' · '):''}
 
  /* ---------- 네트워크 받기 ---------- */
  function onNet(m){if(!m||typeof m!=='object')return;const c=S.call;
-  if((m.type==='left'&&c&&c.real&&c.who.peer===m.id)||(m.type==='network_close'&&c&&c.real)){endCall('연결이 끊겼어요');return}
+  if((m.type==='left'&&c&&c.real&&c.who.peer===m.id)||(m.type==='network_close'&&c&&c.real)){if(c.phase==='vmrec'||c.phase==='vmprompt'){if(m.type==='network_close')endCall('연결이 끊겼어요')}else endCall('연결이 끊겼어요');return}
   if(m.type!=='phone')return;const mine=c&&c.real&&c.cid===m.call&&c.who.peer===m.from&&c.phase!=='ended';
-  if(m.op==='sms')receive({from:m.name||'친구',fromPeer:m.from,text:m.text||''});
-  else if(m.op==='photo')receive({from:m.name||'친구',fromPeer:m.from,text:m.text||'(사진)',photo:typeof m.photo==='string'?m.photo:null});
+  if(m.op==='sms')receive({from:m.name||'친구',fromPeer:m.from,text:m.text||'',mid:typeof m.mid==='string'?m.mid:null});
+  else if(m.op==='photo')receive({from:m.name||'친구',fromPeer:m.from,text:m.text||'(사진)',photo:typeof m.photo==='string'?m.photo:null,mid:typeof m.mid==='string'?m.mid:null});
   else if(m.op==='ring')incoming(m);
   else if(m.op==='tone'&&mine&&c.phase==='dial'&&typeof m.ring==='string'&&allRings().some(r=>r[0]===m.ring)){c.tone=m.ring;c.ring=0}
   else if(m.op==='answer'&&mine&&c.phase==='dial'){stopTune();c.phase='live';c.talk0=now();c.lines.push({sys:1,text:'통화가 연결됐어요'});editorFor(70);afterNav()}
-  else if(m.op==='decline'&&mine)endCall('상대방이 받지 않아요');
+  else if(m.op==='decline'&&mine&&c.phase==='dial')toVoicemail(m.why==='off'||m.why==='signal'?m.why:'none');
   else if(m.op==='busy'&&mine)endCall('상대방이 통화 중이에요');
   else if(m.op==='hang'&&mine)endCall('상대방이 전화를 끊었어요');
   else if(m.op==='talk'&&mine&&c.phase==='live'){c.lines.push({me:0,text:String(m.text||'')});host.beep([1320],40,.04,'sine')}
+  else if(m.op==='vm')gotVm(m);
+  else if(m.op==='seen'){const s=D.sent.find(x=>x.id===m.mid);if(s&&!s.seenAt){s.seenAt=nowStr();save();if(host.shown&&!S.call&&!GAME_SCR.has(S.scr)&&!S.pop)pop('✓ '+(m.name||'친구')+'님이\n문자를 읽었어요',1300)}}
+  else if(m.op==='gift'){const it=String(m.item||'');if(/^[a-z0-9:_-]{1,16}$/i.test(it)){const name=giftName(it);if(name){D.got[it]=1;D.gifts.unshift({from:m.name||'친구',item:it,name,time:nowStr()});D.gifts=D.gifts.slice(0,20);save();receive({from:'NATE 선물',text:'[NATE 선물] '+(m.name||'친구')+'님이 ‘'+name+'’을(를) 선물했어요!'+(m.text?' "'+String(m.text).slice(0,30)+'"':'')})}}}
   else if(m.op==='sent'&&(m.for==='sms'||m.for==='photo'))S.ack={ok:true,at:now()};
-  else if(m.op==='error'){if(m.for==='sms'||m.for==='photo')S.ack={ok:false,msg:m.message,at:now()};else if(m.for==='ring'&&c&&c.real)endCall(m.message||'연결할 수 없어요');else pop(m.message||'보내지 못했어요')}
+  else if(m.op==='sent'&&m.for==='gift')S.giftAck={ok:true,at:now()};
+  else if(m.op==='error'){if(m.for==='sms'||m.for==='photo')S.ack={ok:false,msg:m.message,at:now()};else if(m.for==='gift')S.giftAck={ok:false,msg:m.message,at:now()};else if(m.for==='ring'&&c&&c.real)endCall(m.message||'연결할 수 없어요');else if(m.for==='vm'||m.for==='seen'){}else pop(m.message||'보내지 못했어요')}
   dirty()}
+ /* 선물로 받을 수 있는 것: 벨소리(r1~), 게임(rhythm, rpg ...) */
+ function giftName(id){const r=allRings().find(x=>x[0]===id);if(r&&!String(id).startsWith('mel:'))return'벨소리 '+r[1];const g=GAMES.find(x=>x.id===id&&!x.free);return g?'게임 '+g.name:null}
  const unsub=w.A25NET?.subscribe?.(onNet);
 
  /* ---------- 화면들 ---------- */
@@ -304,10 +438,12 @@ function create(host){
    T(g,c.hh+(blink?':':' ')+c.mm,W/2,52,{size:31,bold:true,color:'#fff',align:'center',shadow:'rgba(0,0,0,.6)'});
    T(g,c.date,W/2,67,{size:10,bold:true,color:'#fff',align:'center',shadow:'rgba(0,0,0,.6)'});T(g,'독일 월드컵 D-10',W/2,80,{size:8.5,bold:true,color:'#ffe08a',align:'center',shadow:'rgba(0,0,0,.6)'});
    const n=unread();if(n&&!S.dial){g.fillStyle='rgba(255,255,255,.88)';rr(g,22,86,W-44,17,4);g.fill();ICON.sms(g,25,83.5);T(g,'새 문자 '+n+'통',W/2+9,98.5,{size:9.5,bold:true,color:'#1d2633',align:'center'})}
+   const v=vmNew();if(v&&!S.dial){const y=n?106:86;g.fillStyle='rgba(255,255,255,.88)';rr(g,22,y,W-44,17,4);g.fill();ICON.vm(g,25,y-2.5);T(g,'음성 메시지 '+v+' (1 길게)',W/2+9,y+12.5,{size:8.5,bold:true,color:'#1d2633',align:'center'})}
+   if(S.alarm&&!S.dial){const m=Math.max(0,Math.ceil((S.alarm.at-t)/60000));T(g,'⏰ 알람 '+m+'분 뒤',W-5,H-BOT-5,{size:8.5,bold:true,color:'#fff',align:'right',shadow:'rgba(0,0,0,.7)'})}
    if(S.dial){const y=H-BOT-48;g.fillStyle='rgba(255,255,255,.93)';g.fillRect(0,y,W,48);R(g,0,y,W,1,'#9fb4d6');T(g,'번호 입력',5,y+11,{size:8.5,color:'#4a5a76'});
     const s=S.dial,size=s.length>11?16:s.length>8?19:22;T(g,s,W-6,y+39,{size,bold:true,color:'#0d1524',align:'right',max:W-12})}
    soft(g,'메뉴',S.dial?'':'NATE',S.dial?'통화':'문자함')},
-  key(id){if(DIG.includes(id)){if(S.dial.length<16)S.dial+=id;if(S.dial==='*#06#'){S.dial='';pop('애니콜 SCH-A99\n2006년 5월 출고\n버전 A99',2600)}return true}
+  key(id){if(DIG.includes(id)){if(S.dial.length<16)S.dial+=id;if(S.dial==='*#06#'){S.dial='';pop('애니콜 SCH-A99\n2006년 5월 출고\n버전 A124',2600)}return true}
    if(id==='clr'){if(S.dial)S.dial=S.dial.slice(0,-1);return true}if(id==='end'){S.dial='';return true}
    if(id==='send'){if(S.dial)call(S.dial);else go('calls');return true}if(id==='ok'){if(S.dial)call(S.dial);else go('inbox');return true}
    if(id==='menu'){S.dial='';go('menu');return true}if(id==='nate'){const code=S.dial;S.dial='';go('nate',code||null);return true}if(id==='up'){go('ring','music');return true}if(id==='down'){go('find');return true}
@@ -335,50 +471,85 @@ function create(host){
  SCR.person={draw(g){const p=S.arg;status(g);title(g,p.n);body(g);ICON.contacts(g,W/2-11,TOP+TITLE+6);
    T(g,p.n,W/2,TOP+TITLE+42,{size:13,bold:true,color:'#16202e',align:'center'});T(g,p.num,W/2,TOP+TITLE+56,{size:10.5,color:'#2f4a7a',align:'center'});
    if(p.friend)T(g,'같은 방 친구 · '+placeOf(NET.peers().find(x=>x.id===p.peer)),W/2,TOP+TITLE+69,{size:8.5,color:'#1f8a3a',align:'center',max:W-8});
+   else{const sd=Object.keys(D.speed).find(k=>D.speed[k]===p.id);if(sd)T(g,'단축 번호 '+sd+' (길게 누르기)',W/2,TOP+TITLE+69,{size:8.5,color:'#6b778a',align:'center'})}
    list(g,this.items(),S.sel,TOP+TITLE+74);soft(g,'','선택','통화')},
-  items(){return[{label:'전화 걸기',mark:'☎'},{label:'문자 보내기',mark:'✉'}]},
-  key(id){const p=S.arg;if(id==='send'){call(p);return true}return listKey(id,this.items(),(x,i)=>i===0?call(p):go('compose',{to:p}))}};
+  items(){const p=S.arg,L=[{label:'전화 걸기',mark:'☎'},{label:'문자 보내기',mark:'✉'},{label:'번호 숨기고 걸기 (*23#)',mark:'?'}];if(!p.friend&&!p.ars)L.push({label:'단축 번호 정하기',mark:'#'});return L},
+  key(id){const p=S.arg;if(id==='send'){call(p);return true}return listKey(id,this.items(),(x,i)=>i===0?call(p):i===1?go('compose',{to:p}):i===2?call(p,{hide:true}):go('speedSet',p))}};
+ /* 단축 번호: 대기 화면에서 숫자를 길게 누르면 바로 건다. 1번은 소리샘 */
+ SCR.speedSet={draw(g){const p=S.arg;status(g);title(g,'단축 번호 정하기');body(g);T(g,p.n,W/2,TOP+TITLE+26,{size:12,bold:true,color:'#16202e',align:'center'});
+   T(g,'2~9 중 하나를 눌러 주세요',W/2,TOP+TITLE+46,{size:9.5,color:'#2f4a7a',align:'center'});
+   for(let d=2;d<=9;d++){const who=BOOK.find(b=>b.id===D.speed[d]);T(g,d+'  '+(who?who.n:'비어 있음'),20+((d-2)%2)*66,TOP+TITLE+64+Math.floor((d-2)/2)*15,{size:8.5,color:D.speed[d]===p.id?'#e8402a':'#44506a',bold:D.speed[d]===p.id,max:62})}
+   T(g,'1번은 소리샘 (음성 사서함)',W/2,H-BOT-6,{size:8,color:'#6b778a',align:'center'});soft(g,'','','')},
+  key(id){if(/^[2-9]$/.test(id)){const p=S.arg;for(const k of Object.keys(D.speed))if(D.speed[k]===p.id)delete D.speed[k];D.speed[id]=p.id;save();back();pop('단축 번호 '+id+'번\n'+p.n);return true}if(id==='clr'||id==='left'){back();return true}return true}};
+ SCR.speedList={items(){const L=[{label:'1  소리샘 (음성 사서함)',num:false,d:'1'}];for(let d=2;d<=9;d++){const who=BOOK.find(b=>b.id===D.speed[d]);L.push({label:d+'  '+(who?who.n:'비어 있음'),dim:!who,num:false,d:String(d),who})}return L},
+  draw(g){status(g);title(g,'단축 번호');list(g,this.items(),S.sel);T(g,'대기 화면에서 숫자를 길게 누르세요',W/2,H-BOT-5,{size:7.5,color:'#6b778a',align:'center'});soft(g,'','걸기','')},
+  key(id){return listKey(id,this.items(),x=>{if(x.d==='1')go('vmbox');else if(x.who)call(x.who);else pop('전화번호부에서\n사람을 고르고 정해요')})}};
 
- SCR.sms={items(){return[{label:'받은 문자함',sub:unread()?'새 '+unread():D.inbox.length+'통'},{label:'문자 쓰기'},{label:'보낸 문자함',sub:D.sent.length+'통'},{label:'상용구 보기'}]},
+ SCR.sms={items(){return[{label:'받은 문자함',sub:unread()?'새 '+unread():D.inbox.length+'통'},{label:'문자 쓰기'},{label:'보낸 문자함',sub:D.sent.length+'통'},{label:'상용구 보기'},{label:'문자 그림 보내기',sub:ARTS().length+'개'},
+   {label:'소리샘 음성 사서함',sub:vmNew()?'새 '+vmNew():D.vm.length+'개'},{label:'스팸 보관함',sub:D.spam.length+'통'},{label:'스팸 차단',sub:D.spamBlock?'켜짐':'꺼짐'}]},
   draw(g){status(g);title(g,'문자');list(g,this.items(),S.sel);soft(g,'','선택','')},
-  key(id){return listKey(id,this.items(),(x,i)=>i===0?go('inbox'):i===1?go('compose',{}):i===2?go('outbox'):go('phrases',{view:true}))}};
- SCR.inbox={items(){return D.inbox.map(m=>({label:m.from+'  '+(m.photo?'[사진] ':'')+m.text,sub:m.time,mark:m.read?'·':'●',markColor:m.read?'#9aa6ba':'#f07a10',bold:!m.read,num:false,m}))},
-  draw(g){status(g);title(g,'받은 문자함',unread()?'새 '+unread():'');list(g,this.items(),S.sel);soft(g,'답장','읽기','통화')},
+  key(id){return listKey(id,this.items(),(x,i)=>i===0?go('inbox'):i===1?go('compose',{}):i===2?go('outbox'):i===3?go('phrases',{view:true}):i===4?go('phrases',{art:true}):i===5?go('vmbox'):i===6?go('spambox'):(D.spamBlock=!D.spamBlock,save(),pop(D.spamBlock?'스팸 차단 켜짐\n광고 문자는 소리 없이\n스팸 보관함으로 가요':'스팸 차단 꺼짐',1800)))}};
+ SCR.inbox={items(){return D.inbox.map(m=>({label:m.from+'  '+(m.photo?'[사진] ':'')+oneLine(m.text),sub:m.time,mark:m.read?'·':'●',markColor:m.read?'#9aa6ba':'#f07a10',bold:!m.read,num:false,m}))},
+  draw(g){status(g);title(g,'받은 문자함',unread()?'새 '+unread():'');list(g,this.items(),S.sel);soft(g,'메뉴','읽기','통화')},
   key(id){const it=this.items(),m=it[S.sel]?.m;if(id==='send'&&m){const p=contactOf(m);if(p)call(p);else pop('전화할 수 없는\n문자예요');return true}
-   if(id==='menu'&&m){const p=contactOf(m);if(p)go('compose',{to:p});else pop('답장할 수 없는\n문자예요');return true}
+   if(id==='menu'&&m){go('readMenu',m);return true}
    return listKey(id,it,x=>{x.m.read=true;save();syncLabel();go('read',x.m)})}};
- SCR.outbox={items(){return D.sent.map(m=>({label:m.to+'  '+(m.photo?'[사진] ':'')+m.text,sub:m.time,mark:'✓',markColor:'#2bb24c',num:false,m}))},
-  draw(g){status(g);title(g,'보낸 문자함');list(g,this.items(),S.sel);soft(g,'','읽기','')},
-  key(id){return listKey(id,this.items(),x=>go('read',{...x.m,photo:null,from:'받는 사람: '+x.m.to,sent:true}))}};
- SCR.read={enter(){S.scroll=0},draw(g){const m=S.arg;status(g);title(g,m.from,m.time);body(g,'#fffef6');let y0=TOP+TITLE+4;
+ SCR.outbox={items(){return D.sent.map(m=>({label:m.to+'  '+(m.photo?'[사진] ':'')+oneLine(m.text),sub:m.seenAt?'읽음':m.time,mark:'✓',markColor:m.seenAt?'#e8402a':'#2bb24c',num:false,m}))},
+  draw(g){status(g);title(g,'보낸 문자함');list(g,this.items(),S.sel);T(g,'빨간 ✓ = 친구가 읽음 (수신 확인)',W/2,H-BOT-5,{size:7.5,color:'#6b778a',align:'center'});soft(g,'전달','읽기','')},
+  key(id){const m=this.items()[S.sel]?.m;if(id==='menu'&&m){go('compose',{fw:m.text});return true}return listKey(id,this.items(),x=>go('read',{...x.m,photo:null,from:'받는 사람: '+x.m.to,sent:true,seenText:x.m.seenAt?'친구가 '+x.m.seenAt+'에 읽었어요':''}))}};
+ SCR.spambox={items(){return D.spam.map(m=>({label:oneLine(m.text),sub:m.time,mark:'!',markColor:'#e8402a',num:false,m}))},
+  draw(g){status(g);title(g,'스팸 보관함',D.spam.length+'통');list(g,this.items(),S.sel);soft(g,'비우기','읽기','')},
+  key(id){if(id==='menu'){if(D.spam.length)ask('스팸 보관함을 비울까요?',()=>{D.spam=[];save();S.sel=0;pop('비웠어요')});return true}return listKey(id,this.items(),x=>go('read',{...x.m,from:'스팸: '+x.m.from,sent:true}))}};
+ SCR.read={enter(){S.scroll=0;const m=S.arg;if(m&&m.fromPeer&&m.mid&&!m.seen&&!m.sent){m.seen=1;save();NET.send('seen',{to:m.fromPeer,mid:m.mid})}},
+  draw(g){const m=S.arg;status(g);title(g,m.from,m.time);body(g,'#fffef6');let y0=TOP+TITLE+4;
    if(m.photo){const im=photoImg(m.id);if(im){g.drawImage(im,W/2-48,y0,96,72)}else R(g,W/2-48,y0,96,72,'#ccd');y0+=76}
-   const lines=wrap(g,m.text,W-14,11.5,false),vis=Math.max(1,Math.floor((H-BOT-y0-8)/15));S.maxScroll=Math.max(0,lines.length-vis);
-   lines.slice(S.scroll||0,(S.scroll||0)+vis).forEach((l,i)=>T(g,l,7,y0+13+i*15,{size:11.5,color:'#1b2433'}));
-   T(g,smsBytes(m.text)+'바이트',W-5,H-BOT-4,{size:8,color:'#9a8a5a',align:'right'});soft(g,m.sent?'':'답장',m.photo?'저장':'',m.sent?'':'통화')},
+   const extra=[pagerHint(m.text),m.seenText||''].filter(Boolean).join('\n'),body2=m.text+(extra?'\n\n'+extra:'');
+   const lines=wrap(g,body2,W-14,11.5,false),vis=Math.max(1,Math.floor((H-BOT-y0-8)/15));S.maxScroll=Math.max(0,lines.length-vis);
+   lines.slice(S.scroll||0,(S.scroll||0)+vis).forEach((l,i)=>T(g,l,7,y0+13+i*15,{size:11.5,color:/^\[숫자 암호\]|^친구가 /.test(l)?'#c0501a':'#1b2433'}));
+   T(g,smsBytes(m.text)+'바이트',W-5,H-BOT-4,{size:8,color:'#9a8a5a',align:'right'});soft(g,m.sent?'':'메뉴',m.photo?'저장':'',m.sent?'':'통화')},
   key(id){const m=S.arg;if(id==='up'){S.scroll=Math.max(0,(S.scroll||0)-1);return true}if(id==='down'){S.scroll=Math.min(S.maxScroll||0,(S.scroll||0)+1);return true}
    if((id==='ok'||id==='nate')&&m.photo){if(PH.length>=12)PH.pop();PH.unshift({id:'p'+(++D.n),url:m.photo,time:m.time,place:'포토 메일 · '+m.from});savePhotos();save();pop('사진첩에 저장했어요');return true}
    if(id==='clr'||id==='ok'||id==='left'){back();return true}const p=contactOf(m);
    if(id==='send'&&!m.sent){if(p)call(p);else pop('전화할 수 없는\n문자예요');return true}
-   if(id==='menu'&&!m.sent){if(p)go('compose',{to:p});else pop('답장할 수 없는\n문자예요');return true}return false}};
- /* 문자 쓰기: 받는 사람 → 글 (숫자판 한글 입력, 자판 입력, 상용구, 이모티콘) → 보내기 */
- SCR.compose={enter(){S.step=S.arg?.to?1:0;if(S.step===1)editorFor(80)},
+   if(id==='menu'&&!m.sent){go('readMenu',m);return true}return false}};
+ /* 받은 문자 메뉴: 답장, 전달, 전화, 번호로 걸기(문자 속 번호), 스팸 신고, 지우기 */
+ SCR.readMenu={items(){const m=S.arg,p=contactOf(m),num=/(0\d{1,2}-\d{3,4}-\d{4}|1\d{3}-\d{4})/.exec(m.text||'');const L=[];if(p)L.push({label:'답장',k:'re'});L.push({label:'전달 (다른 사람에게)',k:'fw'});if(p)L.push({label:'전화 걸기',k:'call'});
+   if(num)L.push({label:'문자 속 번호로 걸기',sub:num[1].slice(-9),k:'num',num:num[1]});if(!p)L.push({label:'스팸으로 신고',k:'spam'});L.push({label:'지우기',k:'del'});return L},
+  draw(g){status(g);title(g,'문자 메뉴');list(g,this.items(),S.sel);soft(g,'','선택','')},
+  key(id){const m=S.arg;return listKey(id,this.items(),x=>{const p=contactOf(m);
+   if(x.k==='re')replace('compose',{to:p});else if(x.k==='fw')replace('compose',{fw:m.text});else if(x.k==='call'){call(p)}else if(x.k==='num'){call(x.num)}
+   else if(x.k==='spam'){D.inbox=D.inbox.filter(q=>q!==m);D.spam.unshift({id:'s'+(++D.n),from:m.from,text:m.text,time:m.time});D.spam=D.spam.slice(0,20);save();syncLabel();home();go('sms');pop('스팸 보관함으로 옮겼어요')}
+   else ask('이 문자를 지울까요?',()=>{D.inbox=D.inbox.filter(q=>q!==m);save();syncLabel();home();go('inbox');pop('지웠어요')})})}};
+ /* 문자 쓰기: 받는 사람 → 글 (숫자판 한글 입력, 자판 입력, 상용구, 이모티콘, 문자 그림) → 보내기
+    받는 사람 고를 때 * 로 여러 명(5명까지) 표시하면 한꺼번에 보낸다. 전달(fw)이면 글이 미리 들어 있다 */
+ SCR.compose={enter(){S.step=S.arg?.to?1:0;S.marks=[];if(S.step===1)editorFor(80)},
   typing(){return S.step===1?'자판으로 바로 쓰기 · Enter 보내기':null},
-  items(){return book().filter(p=>p.id!=='home').map(p=>({label:p.n,sub:p.friend?'같은 방':p.num.slice(-4),mark:p.friend?'●':'',markColor:'#2bb24c',num:false,p}))},
-  draw(g,t){status(g);if(S.step===0){title(g,'받는 사람 고르기');list(g,this.items(),S.sel);soft(g,'','선택','');return}
-   const to=S.arg.to;title(g,'문자 쓰기',to.n);drawEditor(g,S.ed,TOP+TITLE,H-BOT-10,t,'받는 사람: '+to.n);edHelp(g,S.ed,H-BOT-2.5);soft(g,S.ed.modeName(),'이모티콘','보내기')},
-  key(id){if(S.step===0){const it=this.items();return listKey(id,it,x=>{S.arg={to:x.p};S.step=1;S.sel=0;editorFor(80);afterNav()})}
+  items(){return book().filter(p=>p.id!=='home'&&!p.ars).map(p=>({label:p.n,sub:S.marks.includes(p.id)?'✓ 보냄':p.friend?'같은 방':p.num.slice(-4),mark:S.marks.includes(p.id)?'✓':p.friend?'●':'',markColor:S.marks.includes(p.id)?'#e8402a':'#2bb24c',num:false,p}))},
+  draw(g,t){status(g);if(S.step===0){title(g,S.marks.length?'받는 사람 '+S.marks.length+'명':'받는 사람 고르기');list(g,this.items(),S.sel);T(g,'* 여러 명 표시 (5명까지)',W/2,H-BOT-5,{size:7.5,color:'#6b778a',align:'center'});soft(g,'','선택','');return}
+   const tos=S.arg.toList||[S.arg.to],nm=tos[0].n+(tos.length>1?' 외 '+(tos.length-1)+'명':'');title(g,S.arg.fw?'전달':'문자 쓰기',nm);drawEditor(g,S.ed,TOP+TITLE,H-BOT-10,t,'받는 사람: '+nm);edHelp(g,S.ed,H-BOT-2.5);soft(g,S.ed.modeName(),'이모티콘','보내기')},
+  key(id){if(S.step===0){const it=this.items();
+    if(id==='*'){const p=it[S.sel]?.p;if(!p)return true;const i=S.marks.indexOf(p.id);if(i>=0)S.marks.splice(i,1);else if(S.marks.length>=5)pop('5명까지 보낼 수 있어요',900);else S.marks.push(p.id);return true}
+    return listKey(id,it,x=>{const list2=S.marks.length?it.filter(y=>S.marks.includes(y.p.id)).map(y=>y.p):[x.p];S.arg={...S.arg,to:list2[0],toList:list2.length>1?list2:null};S.step=1;S.sel=0;editorFor(80);if(S.arg.fw){S.ed.setText(S.arg.fw);edChanged()}afterNav()})}
    const ed=S.ed;if(id==='menu'){ed.nextMode();return true}if(id==='nate'){go('phrases',{ed});return true}
-   if(id==='ok'||id==='send'){const text=ed.text().trim();if(!text){pop('보낼 글을 써 주세요');return true}replace('sending',{to:S.arg.to,text});return true}
+   if(id==='ok'||id==='send'){const text=ed.text().trim();if(!text){pop('보낼 글을 써 주세요');return true}replace('sending',{to:S.arg.to,toList:S.arg.toList||null,text});return true}
    if(id==='clr'&&!ed.tokens.length){back();return true}if(id==='up'||id==='down')return true;
    if(ed.key(id)){edChanged();return true}if(ed.bytes()>=ed.max)pop('80바이트까지만 쓸 수 있어요',900);return true}};
- SCR.phrases={items(){return[...D.emoBox.map(t=>({label:'보관함  '+t,num:false,v:t})),...PHRASES.map(t=>({label:t,num:false,v:t})),...EMO.map(t=>({label:'이모티콘  '+t,num:false,v:t}))]},
-  draw(g){status(g);title(g,S.arg?.view?'상용구':'상용구 · 이모티콘');list(g,this.items(),S.sel);soft(g,'',S.arg?.view?'':'넣기','')},
-  key(id){return listKey(id,this.items(),x=>{if(S.arg?.view)return;const ed=S.arg.ed;back();if(ed&&!ed.insert(x.v))pop('80바이트까지만 쓸 수 있어요',900);edChanged()})}};
- SCR.sending={enter(){S.t0=now();S.ack=null;S.res=sendSms(S.arg.to,S.arg.text,S.arg.photo||null)},draw(g,t){status(g);title(g,S.arg.photo?'포토 메일 보내기':'문자 보내기');body(g);
-   const p=clamp((t-S.t0)/1300,0,1);ICON.sms(g,W/2-11+Math.sin(t/90)*2,50);T(g,(S.arg.to.n)+'에게',W/2,90,{size:10.5,bold:true,color:'#16202e',align:'center'});
-   wrap(g,'"'+S.arg.text+'"',W-24,9.5,false).slice(0,2).forEach((l,i)=>T(g,l,W/2,105+i*12,{size:9.5,color:'#44506a',align:'center'}));
+ const ARTS=()=>[...(w.WebTown?.SMS_ART||[]),...ART_MORE];
+ /* 상용구 목록: 보관함, 상용구, 이모티콘, 문자 그림 (art 이면 문자 그림만 보고 고르면 바로 문자 쓰기) */
+ SCR.phrases={items(){const arts=ARTS().map(a=>({label:(S.arg?.art?'':'문자 그림  ')+a[0],sub:smsBytes(a[1])+'B',num:false,v:a[1]}));if(S.arg?.art)return arts;return[...D.emoBox.map(t=>({label:'보관함  '+oneLine(t),num:false,v:t})),...PHRASES.map(t=>({label:t,num:false,v:t})),...EMO.map(t=>({label:'이모티콘  '+t,num:false,v:t})),...arts]},
+  draw(g){status(g);title(g,S.arg?.art?'문자 그림':S.arg?.view?'상용구':'상용구 · 이모티콘 · 그림');list(g,this.items(),S.sel);if(S.arg?.art){const v=this.items()[S.sel]?.v;if(v){const L=String(v).split('\n'),hh=L.length*12+6,y=H-BOT-hh-2;g.fillStyle='rgba(255,254,240,.97)';rr(g,6,y,W-12,hh,4);g.fill();g.strokeStyle='#f07a10';g.lineWidth=1;g.stroke();L.forEach((l,i)=>T(g,l,W/2,y+11+i*12,{size:9.5,color:'#1b2433',align:'center',max:W-16}))}}soft(g,'',S.arg?.view?'':S.arg?.art?'보내기':'넣기','')},
+  key(id){return listKey(id,this.items(),x=>{if(S.arg?.art){replace('compose',{fw:x.v});return}if(S.arg?.view)return;const ed=S.arg.ed;back();if(ed&&!ed.insert(x.v))pop('80바이트까지만 쓸 수 있어요',900);edChanged()})}};
+ /* 보내기: 여러 명이면 한 사람씩 차례로 (같은 방 친구에게는 서버가 너무 빨리 보내지 않게 1.3초 간격) */
+ SCR.sending={enter(){S.t0=now();S.ack=null;const L=S.arg.toList;if(L&&L.length>1){S.q={list:L.slice(),i:0,ok:0,fail:0,next:now(),wait:null};S.res='multi'}else{S.q=null;S.res=sendSms(S.arg.to,S.arg.text,S.arg.photo||null)}},
+  draw(g,t){status(g);const q=S.q;title(g,S.arg.photo?'포토 메일 보내기':q?'여러 명에게 보내기':'문자 보내기');body(g);
+   const p=q?clamp((q.i+(q.wait?.5:0))/q.list.length,0,1):clamp((t-S.t0)/1300,0,1);ICON.sms(g,W/2-11+Math.sin(t/90)*2,50);
+   T(g,q?(q.list[Math.min(q.i,q.list.length-1)].n+'에게 ('+Math.min(q.i+1,q.list.length)+'/'+q.list.length+')'):(S.arg.to.n)+'에게',W/2,90,{size:10.5,bold:true,color:'#16202e',align:'center',max:W-10});
+   wrap(g,'"'+oneLine(S.arg.text)+'"',W-24,9.5,false).slice(0,2).forEach((l,i)=>T(g,l,W/2,105+i*12,{size:9.5,color:'#44506a',align:'center'}));
    R(g,16,134,W-32,8,'#c9d4e6');R(g,16,134,(W-32)*p,8,'#2bb24c');T(g,p<1?'전송 중...':'잠시만요...',W/2,156,{size:10,bold:true,color:'#2f4a7a',align:'center'});soft(g,'','','')},
-  needs(t){if(t-S.t0<1300)return true;const r=S.res;
+  needs(t){const q=S.q;if(q){if(q.wait){const a=S.ack;if(a&&a.ok||t-q.wait.at>5000||a&&!a.ok){if(a&&a.ok)q.ok++;else q.fail++;q.wait=null;q.i++;q.next=t+1300}else return true}
+     if(!q.wait&&q.i<q.list.length&&t>=q.next){const to=q.list[q.i];S.ack=null;const r=sendSms(to,S.arg.text,null);if(r==='net')q.wait={at:t};else{if(r==='local')q.ok++;else q.fail++;q.i++;q.next=t+(to.peer?1300:250)}}
+     if(q.i>=q.list.length&&!q.wait){S.q=null;back();pop(q.fail?q.ok+'명 전송 · '+q.fail+'명 실패':q.ok+'명에게 보냈어요!',1600)}return true}
+   if(t-S.t0<1300)return true;const r=S.res;
    if(r==='no-signal'){back();pop('통신 신호가 없습니다');return true}
    if(r==='offline'){back();pop('같은 방에 있어야\n보낼 수 있어요');return true}
    if(r==='net'){if(S.ack&&S.ack.ok){back();pop('전송 완료!',1300);return true}if(S.ack&&!S.ack.ok){back();pop(S.ack.msg||'보내지 못했어요');return true}if(t-S.t0>6000){back();pop('보내지 못했어요');return true}return true}
@@ -386,37 +557,65 @@ function create(host){
 
  SCR.calls={items(){return D.calls.map(c=>({label:c.n,sub:c.time,mark:c.t==='out'?'↗':c.t==='in'?'↙':'✕',markColor:c.t==='miss'?'#e8402a':c.t==='in'?'#2bb24c':'#2f6fd6',num:false,c}))},
   draw(g){status(g);title(g,'통화 기록',D.calls.length+'건');list(g,this.items(),S.sel);soft(g,'','선택','통화')},
-  key(id){const it=this.items();if(id==='send'||id==='ok'||id==='nate'){const c=it[S.sel]?.c;if(c){const f=c.peer&&friends().find(x=>x.peer===c.peer);call(f||findNum(c.num)||c.num)}return true}return listKey(id,it,()=>{})}};
- SCR.call={typing(){return S.call&&S.call.phase==='live'&&S.call.real?'통화 중 말하기 · Enter 보내기':null},
+  key(id){const it=this.items();if(id==='send'||id==='ok'||id==='nate'){const c=it[S.sel]?.c;if(c&&!c.num){pop('번호가 숨겨진\n전화예요');return true}if(c){const f=c.peer&&friends().find(x=>x.peer===c.peer);call(f||findNum(c.num)||c.num)}return true}return listKey(id,it,()=>{})}};
+ SCR.call={typing(){const c=S.call;return c&&c.phase==='live'&&c.real?'통화 중 말하기 · Enter 보내기':c&&c.phase==='vmrec'?'소리샘에 남길 말 · Enter 남기기':null},
   draw(g,t){const c=S.call;if(!c){home();return}g.fillStyle=grad(g,TOP,H,'#1b3a6a','#08101e');g.fillRect(0,TOP,W,H-TOP);status(g);const who=c.who;
-   if(c.real&&c.phase==='live'){R(g,0,TOP,W,30,'rgba(0,0,0,.25)');ICON.calls(g,4,TOP+4);T(g,who.n,30,TOP+13,{size:11,bold:true,color:'#fff',max:W-34});const s=Math.floor((t-c.talk0)/1000);
-    T(g,'통화 중  '+String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0'),30,TOP+25,{size:8.5,bold:true,color:'#7dff8a'});
-    let y=H-BOT-46;const shown=[];for(let i=c.lines.length-1;i>=0&&shown.length<4;i--)shown.unshift(c.lines[i]);let yy=TOP+34;
-    for(const l of shown){const ls=wrap(g,l.text,W-30,9,false).slice(0,2),hh=ls.length*11+4,x=l.sys?W/2-50:l.me?W-8-Math.min(W-30,Math.max(...ls.map(z=>(g.font=fnt(9),g.measureText(z).width)))+8):8;
-     const bw=l.sys?100:Math.min(W-30,Math.max(...ls.map(z=>(g.font=fnt(9),g.measureText(z).width)))+8);g.fillStyle=l.sys?'rgba(255,255,255,.18)':l.me?'#ffe27a':'#ffffff';rr(g,x,yy,bw,hh,4);g.fill();
-     ls.forEach((z,i)=>T(g,z,l.sys?W/2:x+4,yy+10+i*11,{size:9,color:l.sys?'#cfe':'#16202e',align:l.sys?'center':'left'}));yy+=hh+3;if(yy>y)break}
+   const clockOf=t0=>{const s=Math.max(0,Math.floor((t-t0)/1000));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')};
+   const bubbles=(lines,y,limit)=>{let yy=y;const shown=[];for(let i=lines.length-1;i>=0&&shown.length<4;i--)shown.unshift(lines[i]);
+    for(const l of shown){const ls=wrap(g,l.text,W-38,9,false).slice(0,3),tw=Math.max(...ls.map(z=>(g.font=fnt(9),g.measureText(z).width))),bw=l.sys?100:Math.min(W-30,tw+8),hh=ls.length*11+4,x=l.sys?W/2-50:l.me?W-8-bw:8;
+     g.fillStyle=l.sys?'rgba(255,255,255,.18)':l.me?'#ffe27a':'#ffffff';rr(g,x,yy,bw,hh,4);g.fill();ls.forEach((z,i)=>T(g,z,l.sys?W/2:x+4,yy+10+i*11,{size:9,color:l.sys?'#cfe':'#16202e',align:l.sys?'center':'left'}));yy+=hh+3;if(yy>limit)break}};
+   const head=(sub,col)=>{R(g,0,TOP,W,30,'rgba(0,0,0,.25)');ICON.calls(g,4,TOP+4);T(g,who.n,30,TOP+13,{size:11,bold:true,color:'#fff',max:W-34});T(g,sub,30,TOP+25,{size:8.5,bold:true,color:col||'#7dff8a',max:W-34})};
+   if(c.real&&c.phase==='live'){head('통화 중  '+clockOf(c.talk0));bubbles(c.lines,TOP+34,H-BOT-46);
     if(S.ed)drawEditor(g,S.ed,H-BOT-36,H-BOT,t,'말하기');soft(g,S.ed?S.ed.modeName():'','말하기','종료');return}
-   ICON.calls(g,W/2-11,TOP+10);T(g,who.unknown?'모르는 번호':who.n,W/2,TOP+52,{size:14,bold:true,color:'#fff',align:'center',max:W-10});T(g,who.num||'',W/2,TOP+67,{size:10,color:'#bcd4ff',align:'center'});
+   /* 엄마, 민호 전화: 번호로 대답 고르기 */
+   if(c.phase==='script'){head((SCRIPTS[c.script].fake?'가짜 전화 · ':'통화 중  ')+clockOf(c.talk0));const oh=c.opts?c.opts.length*15+4:0;bubbles(c.lines,TOP+34,H-BOT-oh-6);
+    if(c.opts){const y0=H-BOT-oh;R(g,0,y0,W,oh,'rgba(255,255,255,.94)');c.opts.forEach((o,i)=>{const y=y0+2+i*15,on=i===c.sel;if(on)R(g,0,y,W,15,'#ffd9a8');T(g,(i+1)+'. '+o[0],5,y+11,{size:9.5,bold:on,color:'#16202e',max:W-10})})}
+    soft(g,'',c.opts?'대답':'','종료');return}
+   /* 소리샘 */
+   if(c.phase==='vmprompt'||c.phase==='vmrec'){head(c.phase==='vmrec'?'소리샘 녹음 중  '+clockOf(c.talk0):'소리샘 연결 중',c.phase==='vmrec'?'#ff9a8a':'#ffd27a');
+    if(c.phase==='vmprompt')wrap(g,c.vmMsg,W-16,9.5,true).forEach((l,i)=>T(g,l,W/2,TOP+56+i*13,{size:9.5,bold:true,color:'#ffe7b0',align:'center'}));
+    else{if(Math.floor(t/500)%2===0)circ(g,W-10,TOP+21,3,'#ff4a3a');T(g,'삐- 이제 말씀하세요 (글로 쓰기)',W/2,TOP+44,{size:8.5,color:'#cfe',align:'center'});if(S.ed)drawEditor(g,S.ed,TOP+52,H-BOT-2,t,'음성 메시지');}
+    soft(g,c.phase==='vmrec'&&S.ed?S.ed.modeName():'',c.phase==='vmrec'?'남기기':'','종료');return}
+   /* ARS: 안내 말이 한 글자씩 나온다 */
+   if(c.phase==='ars'||c.phase==='agent'){const A=c.ars;head((c.phase==='agent'?'상담원 연결 대기  ':'ARS 연결  ')+clockOf(c.talk0),'#ffd27a');
+    let txt=A.text;if(c.phase==='agent')txt=A.agentText||txt;const shown=txt.slice(0,Math.floor((t-A.t0)/55));
+    wrap(g,shown,W-14,9.5,false).slice(-8).forEach((l,i)=>T(g,l,7,TOP+44+i*12,{size:9.5,color:'#fff'}));
+    if(A.bad&&t-A.badAt<1600)T(g,'잘못 누르셨습니다',W/2,H-BOT-26,{size:9,bold:true,color:'#ff9a8a',align:'center'});
+    R(g,0,H-BOT-14,W,14,'rgba(0,0,0,.35)');T(g,'누른 번호: '+(A.keys||'-'),5,H-BOT-4,{size:8.5,color:'#cfe'});T(g,'* 처음으로',W-5,H-BOT-4,{size:8.5,color:'#ffd27a',align:'right'});
+    soft(g,'','','종료');return}
+   ICON.calls(g,W/2-11,TOP+10);T(g,who.unknown?'모르는 번호':who.n,W/2,TOP+52,{size:14,bold:true,color:'#fff',align:'center',max:W-10});T(g,who.hidden?'번호 없음':who.num||'',W/2,TOP+67,{size:10,color:'#bcd4ff',align:'center'});
    if(c.phase==='ring'){const k=Math.floor(t/300)%2;T(g,'전화가 왔어요!',W/2,TOP+92,{size:11,bold:true,color:k?'#ffd27a':'#fff',align:'center'});T(g,'통화 버튼: 받기',W/2,TOP+112,{size:9,color:'#7dff8a',align:'center'});T(g,'종료 버튼: 거절',W/2,TOP+125,{size:9,color:'#ff9a8a',align:'center'});soft(g,'','받기','거절');return}
-   if(c.phase==='dial'){const dots='.'.repeat(1+Math.floor((t-c.t0)/400)%3);T(g,'전화 거는 중'+dots,W/2,TOP+92,{size:10.5,bold:true,color:'#ffd27a',align:'center'});if(c.real)T(g,'같은 방 친구에게 거는 중',W/2,TOP+108,{size:8.5,color:'#9fc0ff',align:'center'})}
+   if(c.phase==='dial'){const dots='.'.repeat(1+Math.floor((t-c.t0)/400)%3);T(g,'전화 거는 중'+dots,W/2,TOP+92,{size:10.5,bold:true,color:'#ffd27a',align:'center'});if(c.hide)T(g,'발신 번호 표시 제한 (*23#)',W/2,TOP+108,{size:8.5,color:'#ffb35a',align:'center'});else if(c.real)T(g,'같은 방 친구에게 거는 중',W/2,TOP+108,{size:8.5,color:'#9fc0ff',align:'center'})}
    else if(c.phase==='talk'){const s=Math.floor((t-c.talk0)/1000);T(g,'통화 중  '+String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0'),W/2,TOP+86,{size:10,bold:true,color:'#7dff8a',align:'center'});
     let y=TOP+100;for(const l of c.lines.slice(-3)){const ls=wrap(g,l,W-26,9.5,false);g.fillStyle='rgba(255,255,255,.92)';rr(g,8,y-2,W-16,ls.length*12+6,4);g.fill();ls.forEach((x,i)=>T(g,x,13,y+8+i*12,{size:9.5,color:'#16202e'}));y+=ls.length*12+9}}
    else if(c.phase==='msg'){wrap(g,c.result.msg,W-16,9.5,true).forEach((l,i)=>T(g,l,W/2,TOP+92+i*13,{size:9.5,bold:true,color:'#ffe7b0',align:'center'}))}
-   else T(g,c.endMsg||'통화 종료',W/2,TOP+96,{size:11,bold:true,color:'#ff9a8a',align:'center',max:W-8});
+   else T(g,c.endMsg||'통화 종료',W/2,TOP+96,{size:11,bold:true,color:c.vmSaved?'#7dff8a':'#ff9a8a',align:'center',max:W-8});
    soft(g,'','','종료')},
   needs(t){const c=S.call;if(!c)return false;
-   if(c.phase==='ring'){if(t-c.t0>25000){decline(true);return true}if(D.alert==='ring'&&!S.tune)playRing(ringById(D.ring));if(D.alert==='vib'&&t-S.buzzAt>1500){S.buzzAt=t;host.buzz()}return Math.floor(t/300)!==S.rk&&((S.rk=Math.floor(t/300)),true)}
-   if(c.phase==='dial'&&c.real){if(c.tone){if(!S.tune)playRing(ringById(c.tone))}else if(t>=c.ring){c.ring=t+3000;host.beep([440,480],1000,.05,'sine')}if(t-c.t0>30000)hang('상대방이 받지 않아요');return Math.floor(t/400)!==S.rk&&((S.rk=Math.floor(t/400)),true)}
+   if(c.phase==='ring'){if(t-c.t0>25000){decline(true);return true}if(rings_()&&!S.tune)playRing(ringById(D.ring));if(vibs_()&&t-S.buzzAt>1500){S.buzzAt=t;host.buzz([420,160,420])}return Math.floor(t/300)!==S.rk&&((S.rk=Math.floor(t/300)),true)}
+   if(c.phase==='dial'&&c.real){if(c.tone){if(!S.tune)playRing(ringById(c.tone))}else if(t>=c.ring){c.ring=t+3000;host.beep([440,480],1000,.05,'sine')}if(t-c.t0>30000){NET.send('hang',{to:c.who.peer,call:c.cid});toVoicemail('none')}return Math.floor(t/400)!==S.rk&&((S.rk=Math.floor(t/400)),true)}
+   if(c.phase==='dial'&&c.ars){if(t>=c.ring){c.ring=t+3000;host.beep([440,480],900,.05,'sine')}if(t-c.t0>=1700){stopTune();c.phase='ars';c.talk0=t;arsGo('root')}return true}
    if(c.phase==='dial'){if(!c.result?.fast&&t>=c.ring){c.ring=t+3000;host.beep([440,480],1000,.05,'sine')}const wait=c.result?.fast?700:c.result?.late?6200:2400;if(t-c.t0>=wait){if(c.result){c.phase='msg';c.msgAt=t;if(c.result.voice)host.beep([1000],600,.05,'sine',2.6)}else{c.phase='talk';c.talk0=t;c.next=t}}return true}
-   if(c.phase==='talk'){const lines=c.who.talk||['여보세요?'];if(t>=c.next&&c.lines.length<lines.length){c.lines.push(lines[c.lines.length]);c.next=t+1900}if(c.lines.length>=lines.length&&t>=c.next+1600)hang('상대방이 전화를 끊었어요');return true}
+   if(c.phase==='talk'){const lines=c.prank?(c.who.id==='mom'?['여보세요? 누구세요?','...왜 말이 없어? 장난 전화면 끊는다!']:['여보세요?','...누구세요? 장난 전화 하지 마세요!']):(c.who.talk||['여보세요?']);if(t>=c.next&&c.lines.length<lines.length){c.lines.push(lines[c.lines.length]);c.next=t+1900}if(c.lines.length>=lines.length&&t>=c.next+1600)hang('상대방이 전화를 끊었어요');return true}
    if(c.phase==='live')return Math.floor(t/500)!==S.rk&&((S.rk=Math.floor(t/500)),true);
-   if(c.phase==='msg'){if(t-c.msgAt>=(c.result.voice?6000:4200))hang('통화 종료');return true}
-   if(c.phase==='ended'&&t>=c.endAt){S.call=null;home();return true}return false},
+   if(c.phase==='msg'){if(c.result.voice&&t-c.msgAt>=3200){c.phase='vmrec';c.talk0=t;editorFor(70);afterNav();return true}if(!c.result.voice&&t-c.msgAt>=4200)hang('통화 종료');return true}
+   if(c.phase==='vmprompt'){if(t-c.vmAt>=3400){host.beep([1000],500,.06,'sine');c.phase='vmrec';c.talk0=t;editorFor(70);afterNav()}return true}
+   if(c.phase==='vmrec'){if(t-c.talk0>40000){if(S.ed&&S.ed.text().trim())leaveVm();else hang('녹음 시간이 끝났어요')}return Math.floor(t/500)!==S.rk&&((S.rk=Math.floor(t/500)),true)}
+   if(c.phase==='script'){if(c.wait&&t>=c.wait){c.wait=0;sayNode(c);return true}if(c.done&&t>=c.done.at){const d=c.done;c.done=null;if(d.next){c.node=d.next;sayNode(c)}else{if(d.after&&AFTER[d.after]){const [who,text]=AFTER[d.after],b=BOOK.find(x=>x.id===who);later(()=>receive({from:b.n,fromId:who,text}),9000+Math.round(Math.random()*5000))}hang('통화 종료')}return true}return Math.floor(t/500)!==S.rk&&((S.rk=Math.floor(t/500)),true)}
+   if(c.phase==='ars'){const A=c.ars;if(A.hold&&t>=A.holdAt){c.phase='agent';A.agentT0=t;A.queue=7;A.agentText='지금은 모든 상담원이 통화 중이오니 잠시만 기다려 주십시오. 대기 고객 7명.';A.t0=t;playRing(ringById('r5'))}return true}
+   if(c.phase==='agent'){const A=c.ars,el=t-A.agentT0;if(!S.tune&&el<26000)playRing(ringById('r5'));const q=Math.max(1,7-Math.floor(el/3500));
+    if(el<26000&&q!==A.queue){A.queue=q;A.agentText='지금은 모든 상담원이 통화 중이오니 잠시만 기다려 주십시오. 대기 고객 '+q+'명.';A.t0=t}
+    if(el>=26000&&!A.done){A.done=true;stopTune();A.agentText='네~ 상담원 김은하입니다. 무엇을 도와드릴까요? ...앗, 죄송해요! 지금 점심시간이라 조금 뒤에 다시 걸어 주세요~ ^^';A.t0=t;voice(8,300)}
+    if(A.done&&el>=26000+A.agentText.length*55+2600)hang('통화 종료');return true}
+   if(c.phase==='ended'&&t>=c.endAt){finishCall();return true}return false},
   key(id){const c=S.call;if(!c)return true;
    if(c.phase==='ring'){if(id==='send'||id==='ok')answer();else if(id==='end'||id==='clr')decline(false);return true}
-   if(id==='end'){if(c.phase==='ended'){S.call=null;home()}else hang(c.phase==='talk'||c.phase==='live'?'통화 종료':'전화를 끊었어요');return true}
+   if(id==='end'){if(c.phase==='ended')finishCall();else hang(['talk','live','script','ars','agent','vmrec'].includes(c.phase)?'통화 종료':'전화를 끊었어요');return true}
    if(c.phase==='live'&&S.ed){if(id==='ok'||id==='send'){sayLine();return true}if(id==='menu'){S.ed.nextMode();return true}if(id==='nate'){go('phrases',{ed:S.ed});return true}if(S.ed.key(id))edChanged();return true}
-   if(id==='clr'){if(c.phase==='ended'){S.call=null;home()}else hang(c.phase==='talk'?'통화 종료':'전화를 끊었어요');return true}return true}};
+   if(c.phase==='vmrec'&&S.ed){if(id==='ok'||id==='send'){leaveVm();return true}if(id==='menu'){S.ed.nextMode();return true}if(id==='clr'&&!S.ed.tokens.length){hang('통화 종료');return true}if(S.ed.key(id))edChanged();return true}
+   if(c.phase==='script'){if(c.opts){const n=c.opts.length;if(id==='up'){c.sel=(c.sel-1+n)%n;return true}if(id==='down'){c.sel=(c.sel+1)%n;return true}if(id==='ok'||id==='nate'||id==='send'){pickOpt(c.sel);return true}if(/^[1-9]$/.test(id)){pickOpt(+id-1);return true}}if(id==='clr'){hang('통화 종료');return true}return true}
+   if(c.phase==='ars'||c.phase==='agent'){if(id==='clr'){hang('통화 종료');return true}if(c.phase==='ars')arsKey(id);return true}
+   if(id==='clr'){if(c.phase==='ended')finishCall();else hang(c.phase==='talk'?'통화 종료':'전화를 끊었어요');return true}return true}};
 
  /* ---------- 카메라와 사진첩 ---------- */
  const FILTERS=[['기본','none'],['흑백','grayscale(1)'],['옛날 사진','sepia(.85) contrast(1.05)'],['뽀샤시','brightness(1.18) saturate(1.3) contrast(.9)']];
@@ -546,9 +745,11 @@ function create(host){
     if(id==='menu')D.ring='mel:'+mel.id;save();stopTune();pop(id==='menu'?'‘'+mel.name+'’\n벨소리로 정했어요':'‘'+mel.name+'’\n저장했어요 (벨소리 목록)');M.notes=[];return true}return true}};
 
  /* ---------- 게임 ---------- */
- SCR.games={items(){return GAMES.map(gm=>({label:gm.name,sub:has(gm.id)?'최고 '+(D.best[gm.id]||0):'NATE '+gm.price.toLocaleString('ko-KR')+'원',dim:!has(gm.id),gm}))},
-  draw(g){status(g);title(g,'게임');list(g,this.items(),S.sel);T(g,'숫자판은 슬라이드를 올리고!',W/2,H-BOT-6,{size:8.5,color:'#6b778a',align:'center'});soft(g,'','시작','')},
-  key(id){return listKey(id,this.items(),x=>{if(has(x.gm.id))go(x.gm.id);else ask('‘'+x.gm.name+'’은 NATE에서 받아야 해요.\n정보이용료 '+x.gm.price.toLocaleString('ko-KR')+'원\n받을까요?',()=>go('dl',{id:x.gm.id,price:x.gm.price,name:x.gm.name}))})}};
+ SCR.games={items(){return GAMES.map(gm=>{const own=has(gm.id),sum=own&&GX?.summary?.(gm.id);return{label:gm.name+(gm.big?' ★':''),sub:own?(sum||'최고 '+(D.best[gm.id]||0)):'NATE '+gm.price.toLocaleString('ko-KR')+'원',dim:!own,gm}})},
+  draw(g){status(g);title(g,'게임');list(g,this.items(),S.sel);T(g,'★ 새 게임은 NATE 게임에서 받아요',W/2,H-BOT-6,{size:8,color:'#6b778a',align:'center'});soft(g,'','시작','')},
+  key(id){return listKey(id,this.items(),x=>{const gm=x.gm;if(has(gm.id)){if(SCR[gm.id])go(gm.id);else pop('게임 파일을\n찾을 수 없어요');return}
+   if(gm.big)ask('‘'+gm.name+'’은(는) NATE 게임에서 받아요.\n지금 NATE에 접속할까요?\n(데이터 통화료 별도)',()=>go('nate','game:'+gm.id));
+   else ask('‘'+gm.name+'’은 NATE에서 받아야 해요.\n정보이용료 '+gm.price.toLocaleString('ko-KR')+'원\n받을까요?',()=>go('dl',{id:gm.id,price:gm.price,name:gm.name}))})}};
  SCR.mole={enter(){const t=now();S.g={score:0,end:t+30000,holes:Array(9).fill(0),cur:4,next:t+700,over:false,flash:null,sec:30}},
   draw(g,t){const G2=S.g;status(g);title(g,'두더지 잡기',G2.over?'':Math.max(0,Math.ceil((G2.end-t)/1000))+'초');body(g,'#8fd16a');
    T(g,'점수 '+G2.score,6,TOP+TITLE+12,{size:10,bold:true,color:'#1d3a12'});T(g,'최고 '+D.best.mole,W-6,TOP+TITLE+12,{size:9,color:'#2d4a22',align:'right'});
@@ -632,20 +833,61 @@ function create(host){
    if(id==='clr'&&!ed.tokens.length){back();return true}if(id==='up'||id==='down')return true;if(ed.key(id))edChanged();return true}};
 
  /* ---------- 설정 ---------- */
- SCR.set={items(){const p=host.prefs;return[{label:'벨소리 방식',sub:{ring:'벨소리',vib:'진동',mute:'무음'}[D.alert]},{label:'키음',sub:p.keyTone?'켜짐':'꺼짐'},{label:'키음 크기',sub:'■'.repeat(p.keyVol)+'□'.repeat(5-p.keyVol)},{label:'슬라이드 소리',sub:p.slideTone?'켜짐':'꺼짐'},{label:'이번 달 요금',sub:billTotal().toLocaleString('ko-KR')+'원'},{label:'받은 문자 다 읽음'},{label:'휴대폰 정보'}]},
+ const VIB_NAME={off:'끄기',alert:'알림만',all:'알림+누를 때'};
+ SCR.set={items(){const p=host.prefs,vi=host.vibInfo||{};return[{label:'벨소리 방식',sub:ALERT_NAME[D.alert].replace(' (매너모드)','')},{label:'키음',sub:p.keyTone?'켜짐':'꺼짐'},{label:'키음 크기',sub:'■'.repeat(p.keyVol)+'□'.repeat(5-p.keyVol)},{label:'슬라이드 소리',sub:p.slideTone?'켜짐':'꺼짐'},
+   {label:'진짜 진동 (휴대전화)',sub:vi.mobile?VIB_NAME[vi.mode]||'끄기':'컴퓨터는 없음',dim:!vi.mobile},{label:'엄마·친구 전화 오기',sub:D.npc?'켜짐':'꺼짐'},{label:'단축 번호'},
+   {label:'이번 달 요금',sub:billTotal().toLocaleString('ko-KR')+'원'},{label:'받은 문자 다 읽음'},{label:'휴대폰 정보'}]},
   draw(g){status(g);title(g,'설정');list(g,this.items(),S.sel);soft(g,'','바꾸기','')},
   key(id){const p=host.prefs,i=S.sel;if((id==='left'||id==='right')&&i===2){p.keyVol=clamp(p.keyVol+(id==='left'?-1:1),1,5);host.savePrefs();host.keyBeep('5');return true}
-   return listKey(id,this.items(),(x,j)=>{if(j===0){D.alert={ring:'vib',vib:'mute',mute:'ring'}[D.alert];save();if(D.alert==='vib')host.buzz()}else if(j===1)p.keyTone=!p.keyTone;else if(j===2)p.keyVol=p.keyVol%5+1;else if(j===3)p.slideTone=!p.slideTone;
-    else if(j===4)go('bill');else if(j===5){D.inbox.forEach(m=>m.read=true);save();syncLabel();pop('모두 읽음으로\n바꿨어요')}else pop('애니콜 슬라이드폰\n2006년 5월\n버전 A99',2200);host.savePrefs()})}};
+   return listKey(id,this.items(),(x,j)=>{if(j===0){D.alert={ring:'vib',vib:'both',both:'mute',mute:'ring'}[D.alert];if(D.alert!=='vib')D.prevAlert=D.alert==='mute'?'ring':D.alert;save();if(vibs_())host.buzz([200,90,200])}else if(j===1)p.keyTone=!p.keyTone;else if(j===2)p.keyVol=p.keyVol%5+1;else if(j===3)p.slideTone=!p.slideTone;
+    else if(j===4){const vi=host.vibInfo||{};if(!vi.mobile){pop('휴대전화(안드로이드)로\n접속하면 진짜 진동을\n쓸 수 있어요',2400);return}const next={off:'alert',alert:'all',all:'off'}[vi.mode]||'alert';host.setVib?.(next);
+     if(next!=='off'){const ok=host.vibrate?.([200,90,200],'alert');pop(next==='all'?'진짜 진동: 알림+누를 때\n(매너모드 진동과 누를 때 떨림)':'진짜 진동: 알림만\n(매너모드 전화, 문자, 알람)',2200);if(!ok&&vi.ios)later(()=>pop('아이폰은 웹 진동을 막아 두어서\n누를 때 짧은 떨림만 될 수 있어요',2800),2300)}else pop('진짜 진동 끔',1200)}
+    else if(j===5){D.npc=!D.npc;save();pop(D.npc?'엄마와 친구가 가끔\n먼저 전화해요':'먼저 오는 전화 끔',1600)}else if(j===6)go('speedList');
+    else if(j===7)go('bill');else if(j===8){D.inbox.forEach(m=>m.read=true);save();syncLabel();pop('모두 읽음으로\n바꿨어요')}else pop('애니콜 슬라이드폰\n2006년 5월\n버전 A124',2200);host.savePrefs()})}};
  SCR.bill={draw(g){status(g);title(g,'이번 달 요금');body(g,'#fffef6');const b=D.bill,rows=[['문자 '+b.sms+'건',b.sms*PRICE.sms],['통화 '+b.sec+'초',Math.ceil(b.sec/10)*PRICE.callPer10],['NATE 데이터',b.data],['정보이용료',b.info]];
    rows.forEach(([a,v],i)=>{T(g,a,8,TOP+TITLE+18+i*16,{size:10,color:'#2a3446'});T(g,v.toLocaleString('ko-KR')+'원',W-8,TOP+TITLE+18+i*16,{size:10,bold:true,color:'#2a3446',align:'right'})});
    R(g,6,TOP+TITLE+80,W-12,1,'#999');T(g,'합계',8,TOP+TITLE+96,{size:11,bold:true,color:'#16202e'});const tot=billTotal();T(g,tot.toLocaleString('ko-KR')+'원',W-8,TOP+TITLE+96,{size:12,bold:true,color:tot>=10000?'#e8402a':'#16202e',align:'right'});
    T(g,'만 원이 넘으면 엄마한테 혼나요!',W/2,TOP+TITLE+116,{size:8.5,color:'#8a6a3a',align:'center'});soft(g,'','다음 달로','')},
   key(id){if(id==='ok'||id==='nate'){ask('다음 달로 넘길까요?\n(요금이 0원이 돼요)',()=>{D.bill={sms:0,sec:0,data:0,info:0};D.momWarned=false;save();pop('새 달이 시작됐어요')});return true}if(id==='clr'){back();return true}return true}};
 
+ /* ---------- 소리샘 음성 사서함 (1번 길게) ---------- */
+ SCR.vmbox={items(){return D.vm.map(v=>({label:(v.heard?'':'새 ')+v.from,sub:v.time,mark:v.heard?'·':'●',markColor:v.heard?'#9aa6ba':'#e8402a',bold:!v.heard,num:false,v}))},
+  draw(g){status(g);title(g,'소리샘',vmNew()?'새 '+vmNew():D.vm.length+'개');if(!D.vm.length){body(g);ICON.vm(g,W/2-11,TOP+TITLE+18);T(g,'저장된 음성 메시지가',W/2,TOP+TITLE+58,{size:10,color:'#44506a',align:'center'});T(g,'없어요',W/2,TOP+TITLE+72,{size:10,color:'#44506a',align:'center'});
+    T(g,'친구가 전화를 못 받으면',W/2,TOP+TITLE+96,{size:8.5,color:'#6b778a',align:'center'});T(g,'소리샘에 남길 수 있어요',W/2,TOP+TITLE+108,{size:8.5,color:'#6b778a',align:'center'});soft(g,'','','');return}
+   list(g,this.items(),S.sel);soft(g,'지우기','듣기','전화')},
+  key(id){const it=this.items(),v=it[S.sel]?.v;if(id==='menu'&&v){ask('이 음성 메시지를 지울까요?',()=>{D.vm=D.vm.filter(x=>x!==v);save();S.sel=0;pop('지웠어요')});return true}
+   if(id==='send'&&v){const f=v.fromPeer&&friends().find(x=>x.peer===v.fromPeer);if(f)call(f);else pop('같은 방에 없는\n친구예요');return true}
+   return listKey(id,it,x=>go('vmplay',x.v))}};
+ SCR.vmplay={enter(){const v=S.arg;S.t0=now();S.vmLen=0;if(v&&!v.heard){v.heard=true;save()}},
+  draw(g,t){const v=S.arg;g.fillStyle=grad(g,TOP,H,'#2a3348','#0d1220');g.fillRect(0,TOP,W,H-TOP);status(g);title(g,'소리샘 · '+v.from,v.time);
+   const intro=v.time+'에 받은 메시지입니다.',all=intro+'\n\n'+v.text,n=Math.floor((t-S.t0)/70);S.vmLen=all.length;
+   wrap(g,all.slice(0,n),W-14,10,false).slice(-8).forEach((l,i)=>T(g,l,7,TOP+TITLE+16+i*13,{size:10,color:'#fff'}));
+   for(let i=0;i<9;i++){const hh=n<all.length?2+Math.abs(Math.sin(t/90+i*1.7))*9:2;R(g,W/2-27+i*6,H-BOT-30-hh/2,3,hh,'#7dff8a')}
+   if(n>=all.length)T(g,'1 다시 듣기 · 3 지우기 · 통화 걸기',W/2,H-BOT-6,{size:8,color:'#ffd27a',align:'center'});soft(g,'','','통화')},
+  needs(t){const n=Math.floor((t-S.t0)/70);if(n<=(S.vmLen||1)&&Math.floor(t/350)!==S.vmTick){S.vmTick=Math.floor(t/350);voice(2,200);return true}return n<=(S.vmLen||1)+2},
+  ownsSound:id=>id==='1'||id==='3',
+  key(id){const v=S.arg;if(id==='1'){S.t0=now();return true}if(id==='3'){ask('이 음성 메시지를 지울까요?',()=>{D.vm=D.vm.filter(x=>x!==v);save();back();pop('지웠어요')});return true}
+   if(id==='send'){const f=v.fromPeer&&friends().find(x=>x.peer===v.fromPeer);if(f)call(f);else pop('같은 방에 없는\n친구예요');return true}if(id==='clr'||id==='ok'||id==='left'){back();return true}return true}};
+
+ /* ---------- 알람과 가짜 전화 ---------- */
+ SCR.alarm={items(){const L=[{label:'1분 뒤 알람',ms:60000},{label:'3분 뒤 알람',ms:180000},{label:'5분 뒤 알람',ms:300000},{label:'10분 뒤 알람',ms:600000}];
+   if(S.alarm)L.push({label:'알람 끄기',sub:Math.max(0,Math.ceil((S.alarm.at-now())/60000))+'분 남음',off:true});
+   L.push({label:'가짜 전화: 엄마 (10초 뒤)',fake:'fake_mom'},{label:'가짜 전화: 민호 (10초 뒤)',fake:'fake_minho'});return L},
+  draw(g){status(g);title(g,'알람 · 가짜 전화',S.alarm?'⏰ 켜짐':'');list(g,this.items(),S.sel);T(g,S.fake?'가짜 전화가 곧 와요...':'가짜 전화: 곤란할 때 빠져나오기',W/2,H-BOT-5,{size:7.5,color:S.fake?'#e8402a':'#6b778a',align:'center'});soft(g,'','고르기','')},
+  key(id){return listKey(id,this.items(),x=>{if(x.ms){S.alarm={at:now()+x.ms,label:x.label};pop('⏰ '+x.label+'\n맞췄어요',1400)}else if(x.off){S.alarm=null;pop('알람을 껐어요',1000)}
+   else if(x.fake){S.fake={at:now()+10000,script:x.fake};home();pop('10초 뒤에\n가짜 전화가 와요',1400)}})}};
+ SCR.alarmRing={enter(){S.t0=now();S.buzzAt=0},draw(g,t){const k=Math.floor(t/400)%2;g.fillStyle=grad(g,TOP,H,k?'#ff8a3a':'#e8402a','#5a0e08');g.fillRect(0,TOP,W,H-TOP);status(g);
+   ICON.alarm(g,W/2-11+(k?-2:2),TOP+14);const c=host.clock();T(g,c.hh+':'+c.mm,W/2,TOP+70,{size:26,bold:true,color:'#fff',align:'center',shadow:'rgba(0,0,0,.5)'});
+   T(g,'알람!',W/2,TOP+92,{size:13,bold:true,color:'#ffe7b0',align:'center'});T(g,'확인: 끄기 · *: 5분 뒤 다시',W/2,TOP+118,{size:9,color:'#fff',align:'center'});soft(g,'','끄기','')},
+  needs(t){if(rings_()&&!S.tune)playRing(ringById('r10'));if(vibs_()&&t-S.buzzAt>1300){S.buzzAt=t;host.buzz([500,250,500])}if(t-S.t0>60000){stopAlarm();return true}return Math.floor(t/400)!==S.ak&&((S.ak=Math.floor(t/400)),true)},
+  key(id){if(id==='*'){S.alarm={at:now()+300000,label:'5분 뒤 다시'};stopAlarm();pop('5분 뒤에 다시 울려요',1400);return true}stopAlarm();return true}};
+ function stopAlarm(){stopTune();host.stopVibrate?.();if(S.scr==='alarmRing'){const r=S.resume;S.resume=null;if(r){S.scr=r.scr;S.arg=r.arg;S.stack=r.stack;S.sel=r.sel;S.ed=null;const sc=cur();try{sc?.resume?.call(sc,api)}catch(_){}afterNav();dirty()}else home()}}
+ function ringAlarm(){S.alarm=null;stopTune();keepForResume();S.stack=[];S.scr='alarmRing';S.arg=null;S.sel=0;S.ed=null;enter();afterNav();host.alert({kind:'call',text:'알람'});dirty()}
+
  /* ---------- 몸체가 부르는 것 ---------- */
  function key(id){if(S.confirm){if(id==='ok'||id==='nate'||id==='send'){const f=S.confirm.yes;S.confirm=null;f()}else if(id==='clr'||id==='end')S.confirm=null;dirty();return}
   if(S.pop&&S.pop.modal){S.pop=null;dirty();return}if(S.pop)S.pop=null;
+  if(S.scr==='alarmRing'){SCR.alarmRing.key(id);dirty();return}
   if(id==='end'&&S.scr==='nate'&&NB){NB.exit(true);dirty();return}
   if(id==='end'&&S.scr!=='call'){S.dial='';home();return}
   const sc=cur();if(sc?.key)sc.key.call(sc,id,api);dirty()}
@@ -654,28 +896,63 @@ function create(host){
   confirmBox(g);popup(g);S.blink=Math.floor(t/600)}
  function needs(t){let n=S.dirty;if(S.pop&&t>=S.pop.until){S.pop=null;n=true}if(S.scr==='idle'&&Math.floor(t/600)!==S.blink)n=true;if(host.hintActive(t)!==S.hinted){S.hinted=host.hintActive(t);n=true}
   if(S.ed&&Math.floor(t/500)!==S.edBlink){S.edBlink=Math.floor(t/500);n=true}
+  if(tick(t))n=true;
   const sc=cur();if(sc?.needs&&sc.needs.call(sc,t,api))n=true;if(S.call&&S.scr!=='call'&&SCR.call.needs.call(SCR.call,t,api))n=true;return n}
+ /* 알람, 가짜 전화, 그리고 살아 있는 동네(광고 문자, 민호와 엄마 전화, 행운의 문자) */
+ const QUIET=new Set(['idle','menu','contacts','person','sms','inbox','outbox','read','calls','album','photo','wall','ring','find','cal','calc','memo','set','bill','games','vmbox','alarm','speedList','spambox']);
+ function tick(t=now()){if(host.powered===false)return false;let ch=false;
+  if(S.alarm&&t>=S.alarm.at&&!S.call&&S.scr!=='alarmRing'){ringAlarm();ch=true}
+  if(S.fake&&t>=S.fake.at&&!S.call){const f=S.fake;S.fake=null;if(npcCall(f.script))ch=true}
+  life();return ch}
+ function life(){const L=S.life,tw=wall();if(tw<L.nextTry)return;L.nextTry=tw+15000;
+  if(!S.everShown||host.powered===false||host.signal&&host.signal!=='normal'||S.call)return;
+  const el=(tw-L.t0)/60000,quiet=QUIET.has(S.scr);
+  /* 광고 문자: 3분 뒤 처음, 그다음 7분마다 (080 수신 거부를 하면 14분마다). 한 번에 네 통까지 */
+  if(L.spamN<4&&el>=3&&tw>=L.spamAt){L.spamAt=tw+(D.optout?14:7)*60000;spamIn(SPAM[(L.spamN+D.n)%SPAM.length]);L.spamN++;return}
+  if(!D.npc)return;
+  if(!L.minho&&el>=4.5&&quiet){L.minho=true;npcCall('minho');return}
+  if(!L.eveningSeen&&host.clock().h>=18){L.eveningSeen=true;L.momAt=tw+20000}
+  if(!L.mom&&quiet&&(el>=12||L.momAt&&tw>=L.momAt)){L.mom=true;npcCall('mom');return}
+  if(!L.chain&&!D.chainDone&&el>=9&&quiet){L.chain=true;receive({from:'단짝 민호',fromId:'minho',text:CHAIN})}}
+ const ivl=w.setInterval?.(()=>{if(!host.shown&&tick())host.invalidate()},5000);
+ /* 숫자를 길게 누르면: 대기 화면에서 단축 번호, # 은 매너모드 */
+ function onHold(id){if(S.scr!=='idle'||S.call||S.confirm)return false;
+  if(id==='#'&&S.dial==='#'){S.dial='';if(D.alert==='vib'){D.alert=D.prevAlert||'ring';pop('매너모드 해제\n('+ALERT_NAME[D.alert]+')',1300)}else{D.prevAlert=D.alert==='mute'?'ring':D.alert;D.alert='vib';host.buzz([90,60,90]);pop('매너모드 설정\n(진동)',1300)}save();return true}
+  if(/^[1-9]$/.test(id)&&S.dial===id){S.dial='';if(id==='1'){go('vmbox');return true}const who=BOOK.find(b=>b.id===D.speed[id]);if(who){call(who);pop('단축 번호 '+id+'\n'+who.n,900)}else pop('단축 번호 '+id+'번이\n비어 있어요');return true}
+  return false}
  function event(type,v){
   if(type==='poweroff'||type==='signal'&&v!=='normal'){
    if(S.call?.phase==='ring')decline(true);else if(S.call)hang();
-   S.call=null;S.dial='';S.pop=null;S.ack=null;
+   S.call=null;S.dial='';S.pop=null;S.ack=null;S.resume=null;
    if(S.scr==='nate'&&NB)NB.exit(true);
    home();S.pop=null;if(type==='signal'&&v==='none')pop('통신 신호가 없습니다');
   }
+  if(type==='poweron')later(deliverCallkeeper,2600);if(type==='signal'&&v==='normal')later(deliverCallkeeper,1500);
+  if(type==='hold'){onHold(v);dirty();return}
+  if(type==='show'){S.everShown=true}
+  const sc=cur();try{sc?.event?.call(sc,type,v,api)}catch(_){}
   if(type==='slide'&&!v&&S.scr==='idle'&&S.dial)S.dial='';if(type==='hide'&&!S.call)stopTune();if(type==='show')syncLabel();dirty()}
  function ownsSound(id){const sc=cur();return!!(sc?.ownsSound&&sc.ownsSound(id))}
- /* ---------- NATE 브라우저(src/anycall-nate.js)에 주는 도구 ---------- */
+ function repeats(id){const sc=cur();return!!(sc?.repeats&&sc.repeats.call(sc,id))}
+ /* ---------- NATE 브라우저(src/anycall-nate.js)와 게임(src/anycall-games.js)에 주는 도구 ---------- */
  const kit={W,H,TOP,BOT,TITLE,R,T,grad,rr,circ,fit,wrap,fnt,clamp,ICON,host,D,now,save,charge,has,rings,allRings,ringById,playRing,stopTune,pop,ask,nowStr,
   NET,friends,placeOf,fakeNum,Editor,THEMES,allWalls,FREE_WALLS,GAMES,PRICE,EMO,status,soft,drawEditor,billTotal,edChanged,dirty,receive,
+  title,body,list,listKey,back,home,go,best,smsBytes,giftName,wall,
   setEditor(ed){S.ed=ed||null;afterNav();dirty()},
   leave(msg,toHome){if(toHome)home();else back();if(msg)pop(msg,2600)},
   goScreen:(scr,arg)=>go(scr,arg),
-  pay(name,won){charge('info',won);D.payLog.unshift({name,won,time:nowStr()});D.payLog=D.payLog.slice(0,30);save()}};
+  pay(name,won){charge('info',won);D.payLog.unshift({name,won,time:nowStr()});D.payLog=D.payLog.slice(0,30);save()},
+  /* 같은 방 친구에게 선물 보내기 (벨소리, 게임). 돈은 보내는 사람이 낸다 */
+  gift(to,item,text){if(!to?.peer||!NET.ready()||!peerAlive(to.peer))return false;S.giftAck=null;return NET.send('gift',{to:to.peer,item,text:String(text||'').slice(0,30)})},
+  get giftAck(){return S.giftAck}};
  const NB=w.AnycallNate?.create?.(kit)||null;
- const api={W,H,data:D,state:S,get nate(){return NB},go,back,home,pop,call,receive,sendSms,unread,book,friends,rings,walls,draw,key,needs,event,save,ownsSound,onNet,billTotal,
-  get photos(){return PH},get screen(){return S.scr},get dial(){return S.dial},get editor(){return S.ed},destroy(){unsub?.()}};
+ const GX=w.AnycallGames?.create?.(kit)||null;
+ if(GX)for(const [id,sc] of Object.entries(GX.screens||{}))SCR[id]=sc;
+ const api={W,H,data:D,state:S,get nate(){return NB},get games(){return GX},go,back,home,pop,call,receive,sendSms,unread,book,friends,rings,walls,draw,key,needs,event,save,ownsSound,repeats,onNet,billTotal,npcCall,tick,
+  get photos(){return PH},get screen(){return S.scr},get dial(){return S.dial},get editor(){return S.ed},destroy(){unsub?.();if(ivl)w.clearInterval?.(ivl)}};
+ kit.api=api;
  syncLabel();
  return api}
 
-w.AnycallLCD={version:'A101',THEMES,W,H,create,registerApp,apps:APPS,book:BOOK,phrases:PHRASES,Editor,composeJamo,fakeNum,placeOf};
+w.AnycallLCD={version:'A124',THEMES,W,H,create,registerApp,apps:APPS,book:BOOK,phrases:PHRASES,Editor,composeJamo,fakeNum,placeOf,SCRIPTS,PAGER,SPAM,ARS_NUM:{'114':'114','0805300000':'optout','15880530':'info'}};
 })(window);

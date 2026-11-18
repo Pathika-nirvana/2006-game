@@ -8,7 +8,7 @@ const ROOT=path.join(__dirname,'..'),read=f=>fs.readFileSync(path.join(ROOT,f),'
 
 /* 1. 파일과 순서 */
 const html=read('index.html');
-const at=f=>html.search(new RegExp('<script src="'+f+'[?]v=A10[01]"></script>'));
+const at=f=>html.search(new RegExp('<script src="'+f+'[?]v=A1\\d\\d"></script>'));
 assert.ok(at('src/anycall-lcd.js')>0&&at('src/anycall-nate.js')>at('src/anycall-lcd.js')&&at('src/anycall-phone.js')>at('src/anycall-nate.js'),'읽는 순서: 액정 → NATE → 몸체');
 assert.ok(html.includes('assets/phone/anycall-phone.css?v=A100'));
 for(const f of ['src/anycall-nate.js','src/anycall-lcd.js','src/anycall-phone.js','assets/phone/anycall-phone.css','server_phone.js']){const s=read(f);assert.ok(/A10[01]/.test(s)&&s.includes('2026-11-13'),'버전과 날짜 '+f);assert.ok(!s.includes(String.fromCharCode(0x2014)),'긴 줄표 없음 '+f)}
@@ -53,7 +53,7 @@ for(const f of ['src/web-town.js']){const WT=read(f);vm.runInContext(WT.match(/f
 vm.runInContext(read('src/portal-news.js'),w);vm.runInContext(read('src/portal-comics.js'),w);
 vm.runInContext(read('src/anycall-lcd.js'),w);vm.runInContext(read('src/anycall-nate.js'),w);vm.runInContext(read('src/anycall-phone.js'),w);
 const A=w.AnycallPhone,T=A._test,LC=w.AnycallLCD,L=()=>A.lcd,NB=()=>L().nate,BS=()=>NB().state;let now=1000;T.setClock(()=>now);
-assert.equal(A.version,'A101');assert.equal(LC.version,'A101');assert.equal(w.AnycallNate.version,'A100');
+assert.ok(/^A1\d\d$/.test(A.version));assert.ok(/^A1\d\d$/.test(LC.version));assert.ok(/^A1\d\d$/.test(w.AnycallNate.version));
 const net$=m=>{for(const f of subs)f(m)};const flush=()=>{for(const t of timers.splice(0))t.f()};
 const press=(...ks)=>{for(const k of ks){A.press(k);now+=30;T.step(now)}};
 const run=ms=>{const end=now+ms;while(now<end){now+=50;T.step(now)}};

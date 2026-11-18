@@ -18,9 +18,9 @@ assert.ok(html.includes("uiClick('phoneBtn',()=>window.AnycallPhone?.toggle());"
 assert.ok(html.includes("if(k==='KeyN'){window.AnycallPhone?.toggle();return}"),'N 키');assert.ok(html.includes('N 휴대폰 꺼내기/넣기'),'조작법 안내');
 assert.ok(html.includes('if(D.outfit)D.outfit.textContent='),'V 옷 바꾸기는 그대로 두되 지운 탭을 건드리지 않음');
 assert.ok(html.includes("window.AnycallPhone?.bagCard?.()"),'가방에 기본 소지품');
-const iWA=html.indexOf('src/world-audio.js'),iL=html.search(/<script src="src\/anycall-lcd\.js\?v=A(?:9[89]|10\d)"><\/script>/),iP=html.search(/<script src="src\/anycall-phone\.js\?v=A(?:9[89]|10\d)"><\/script>/);
-assert.ok(iWA>0&&iL>iWA&&iP>iL,'읽는 순서: 소리 → 액정 → 몸체');assert.ok(/<link rel="stylesheet" href="assets\/phone\/anycall-phone\.css\?v=A(?:9[89]|10\d)">/.test(html));assert.ok(html.includes('src/web-town.js?v=A98'));
-for(const f of ['src/anycall-phone.js','src/anycall-lcd.js','assets/phone/anycall-phone.css']){const s=read(f);assert.ok(/A(?:9[89]|10\d)/.test(s)&&s.includes('2026-11-13'),'버전과 날짜 '+f);assert.ok(!s.includes(String.fromCharCode(0x2014)),'긴 줄표 없음 '+f)}
+const iWA=html.indexOf('src/world-audio.js'),iL=html.search(/<script src="src\/anycall-lcd\.js\?v=A(?:9[89]|1\d\d)"><\/script>/),iP=html.search(/<script src="src\/anycall-phone\.js\?v=A(?:9[89]|1\d\d)"><\/script>/);
+assert.ok(iWA>0&&iL>iWA&&iP>iL,'읽는 순서: 소리 → 액정 → 몸체');assert.ok(/<link rel="stylesheet" href="assets\/phone\/anycall-phone\.css\?v=A(?:9[89]|1\d\d)">/.test(html));assert.ok(html.includes('src/web-town.js?v=A98'));
+for(const f of ['src/anycall-phone.js','src/anycall-lcd.js','assets/phone/anycall-phone.css']){const s=read(f);assert.ok(/A(?:9[89]|1\d\d)/.test(s)&&s.includes('2026-11-13'),'버전과 날짜 '+f);assert.ok(!s.includes(String.fromCharCode(0x2014)),'긴 줄표 없음 '+f)}
 assert.ok(/drawWall,/.test(read('src/web-town.js').split('w.WebTown=')[1]),'배경 화면 그리기를 내보냄');
 
 /* 3. 가짜 화면에서 모듈 읽기 */
@@ -55,7 +55,7 @@ vm.runInContext(read('src/web-town.js').replace(/^[\s\S]*?(const RINGS=\[)/,'$1'
 assert.equal(w.WebTown.RINGS.length,10,'폰꾸미기 천국 벨소리를 그대로 씀');
 vm.runInContext(read('src/anycall-lcd.js'),w);if(fs.existsSync(path.join(ROOT,'src/anycall-nate.js')))vm.runInContext(read('src/anycall-nate.js'),w);vm.runInContext(read('src/anycall-phone.js'),w);
 const A=w.AnycallPhone,T=A._test,L=()=>A.lcd,G=A.geometry;let now=1000;T.setClock(()=>now);
-assert.ok(/^A(?:9[89]|10\d)$/.test(A.version));assert.ok(/^A(?:9[89]|10\d)$/.test(w.AnycallLCD.version));
+assert.ok(/^A(?:9[89]|1\d\d)$/.test(A.version));assert.ok(/^A(?:9[89]|1\d\d)$/.test(w.AnycallLCD.version));
 const root=doc.body.children.find(n=>n.className.includes('ac-root'));assert.ok(root&&root.hidden,'몸체는 처음엔 숨어 있음');
 
 /* 4. 좌표: 실측값과 액정 칸 */

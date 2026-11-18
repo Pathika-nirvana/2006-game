@@ -603,5 +603,9 @@
   "tests/test_alley_dungeon.cjs",
   "RELEASE_A103.md",
   "RELEASE_A104.md",
-  "RELEASE_A105.md"
+  "RELEASE_A105.md",
+  "RELEASE_A124.md",
+  "A124_게임그림_요청문.txt",
+  "src/anycall-games.js",
+  "tests/test_anycall_a124.cjs"
 ]

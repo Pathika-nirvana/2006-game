@@ -1,6 +1,6 @@
 {
   "name": "2006-reminiscence",
-  "version": "0.123.0",
+  "version": "0.124.0",
   "private": true,
   "description": "2006년 동네 회상 · 공유 던전 전투와 오프라인 인물/맵 제작실",
   "scripts": {
@@ -54,7 +54,8 @@
     "test:comics": "node tests/test_portal_comics.cjs",
     "test:combat": "node tests/test_combat_a113.cjs",
     "test:a122": "node tests/test_a122.cjs && node tests/test_boot_a122.cjs",
-    "test:a123": "node tests/test_a123_server.cjs && node tests/test_a123_network.cjs && node tests/test_a123_scale.cjs && node tests/test_a123_editor.cjs && node tests/test_a123_client.cjs"
+    "test:a123": "node tests/test_a123_server.cjs && node tests/test_a123_network.cjs && node tests/test_a123_scale.cjs && node tests/test_a123_editor.cjs && node tests/test_a123_client.cjs",
+    "test:a124": "node tests/test_anycall_a98.cjs && node tests/test_anycall_a99.cjs && node tests/test_anycall_a100.cjs && node tests/test_anycall_a124.cjs"
   },
   "engines": {
     "node": ">=22"
